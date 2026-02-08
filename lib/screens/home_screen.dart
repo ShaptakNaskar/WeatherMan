@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:flutter_animate/flutter_animate.dart';
 import 'package:provider/provider.dart';
 import 'package:weatherman/config/theme.dart';
 import 'package:weatherman/models/weather.dart';
@@ -177,7 +178,7 @@ class _HomeScreenState extends State<HomeScreen> {
                 temperatureMax: today?.temperatureMax ?? weather.current.temperature,
                 temperatureMin: today?.temperatureMin ?? weather.current.temperature,
               ),
-            ),
+            ).animate().fadeIn(duration: 600.ms).slideY(begin: 0.05, end: 0, duration: 500.ms, curve: Curves.easeOut),
           ),
 
           // Refresh indicator
@@ -192,7 +193,7 @@ class _HomeScreenState extends State<HomeScreen> {
                     child: CircularProgressIndicator(
                       strokeWidth: 2,
                       valueColor: AlwaysStoppedAnimation<Color>(
-                        Colors.white.withOpacity(0.7),
+                        Colors.white.withValues(alpha: 0.7),
                       ),
                     ),
                   ),
@@ -212,21 +213,23 @@ class _HomeScreenState extends State<HomeScreen> {
                   ),
                 ),
               ),
-            ),
+            ).animate().fadeIn(duration: 400.ms, delay: 100.ms),
           ),
 
           const SliverToBoxAdapter(child: SizedBox(height: 24)),
 
           // Hourly forecast
           SliverToBoxAdapter(
-            child: HourlyForecastCard(hourly: weather.hourly),
+            child: HourlyForecastCard(hourly: weather.hourly)
+                .animate().fadeIn(duration: 600.ms, delay: 200.ms).slideY(begin: 0.03, end: 0, duration: 500.ms, curve: Curves.easeOut),
           ),
 
           const SliverToBoxAdapter(child: SizedBox(height: 16)),
 
           // Daily forecast
           SliverToBoxAdapter(
-            child: DailyForecastCard(daily: weather.daily),
+            child: DailyForecastCard(daily: weather.daily)
+                .animate().fadeIn(duration: 600.ms, delay: 350.ms).slideY(begin: 0.03, end: 0, duration: 500.ms, curve: Curves.easeOut),
           ),
 
           const SliverToBoxAdapter(child: SizedBox(height: 16)),
@@ -237,7 +240,7 @@ class _HomeScreenState extends State<HomeScreen> {
               child: WeatherDetailsGrid(
                 current: weather.current,
                 today: today,
-              ),
+              ).animate().fadeIn(duration: 600.ms, delay: 500.ms).slideY(begin: 0.03, end: 0, duration: 500.ms, curve: Curves.easeOut),
             ),
 
           // Bottom padding
@@ -257,7 +260,7 @@ class _HomeScreenState extends State<HomeScreen> {
             Icon(
               Icons.cloud_off_rounded,
               size: 64,
-              color: Colors.white.withOpacity(0.5),
+              color: Colors.white.withValues(alpha: 0.5),
             ),
             const SizedBox(height: 16),
             Text(
@@ -278,7 +281,7 @@ class _HomeScreenState extends State<HomeScreen> {
               icon: const Icon(Icons.refresh_rounded),
               label: const Text('Retry'),
               style: ElevatedButton.styleFrom(
-                backgroundColor: Colors.white.withOpacity(0.2),
+                backgroundColor: Colors.white.withValues(alpha: 0.2),
                 foregroundColor: Colors.white,
               ),
             ),
@@ -298,7 +301,7 @@ class _HomeScreenState extends State<HomeScreen> {
             Icon(
               Icons.location_off_rounded,
               size: 64,
-              color: Colors.white.withOpacity(0.5),
+              color: Colors.white.withValues(alpha: 0.5),
             ),
             const SizedBox(height: 16),
             Text(
@@ -319,7 +322,7 @@ class _HomeScreenState extends State<HomeScreen> {
               icon: const Icon(Icons.add_rounded),
               label: const Text('Add City'),
               style: ElevatedButton.styleFrom(
-                backgroundColor: Colors.white.withOpacity(0.2),
+                backgroundColor: Colors.white.withValues(alpha: 0.2),
                 foregroundColor: Colors.white,
               ),
             ),
@@ -369,7 +372,7 @@ class _CityListBottomSheet extends StatelessWidget {
             maxHeight: MediaQuery.of(context).size.height * 0.7,
           ),
           decoration: BoxDecoration(
-            color: Colors.black.withOpacity(0.8),
+            color: Colors.black.withValues(alpha: 0.5),
             borderRadius: const BorderRadius.vertical(top: Radius.circular(20)),
           ),
           child: Column(
@@ -381,7 +384,7 @@ class _CityListBottomSheet extends StatelessWidget {
                 width: 40,
                 height: 4,
                 decoration: BoxDecoration(
-                  color: Colors.white.withOpacity(0.3),
+                  color: Colors.white.withValues(alpha: 0.3),
                   borderRadius: BorderRadius.circular(2),
                 ),
               ),

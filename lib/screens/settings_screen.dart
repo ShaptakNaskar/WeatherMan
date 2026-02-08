@@ -1,6 +1,7 @@
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'package:url_launcher/url_launcher.dart';
 import 'package:weatherman/config/theme.dart';
 import 'package:weatherman/providers/settings_provider.dart';
 import 'package:weatherman/screens/debug_weather_screen.dart';
@@ -63,6 +64,19 @@ class SettingsScreen extends StatelessWidget {
                         style: Theme.of(context).textTheme.titleMedium,
                       ),
                       const SizedBox(height: 16),
+                      _AboutItem(
+                        icon: Icons.person_outline_rounded,
+                        title: 'Developer',
+                        value: 'Sappy',
+                      ),
+                      const Divider(color: AppTheme.glassBorder),
+                      _AboutLinkItem(
+                        icon: Icons.language_rounded,
+                        title: 'Website',
+                        value: 'sappy-dir.vercel.app',
+                        url: 'https://sappy-dir.vercel.app',
+                      ),
+                      const Divider(color: AppTheme.glassBorder),
                       _AboutItem(
                         icon: Icons.info_outline_rounded,
                         title: 'Version',
@@ -258,13 +272,13 @@ class _UnitButton extends StatelessWidget {
         padding: const EdgeInsets.symmetric(vertical: 16),
         decoration: BoxDecoration(
           color: isSelected
-              ? Colors.white.withOpacity(0.25)
-              : Colors.white.withOpacity(0.1),
+              ? Colors.white.withValues(alpha: 0.25)
+              : Colors.white.withValues(alpha: 0.1),
           borderRadius: BorderRadius.circular(12),
           border: Border.all(
             color: isSelected
-                ? Colors.white.withOpacity(0.4)
-                : Colors.white.withOpacity(0.15),
+                ? Colors.white.withValues(alpha: 0.4)
+                : Colors.white.withValues(alpha: 0.15),
             width: isSelected ? 2 : 1,
           ),
         ),
@@ -321,6 +335,49 @@ class _AboutItem extends StatelessWidget {
             ),
           ),
         ],
+      ),
+    );
+  }
+}
+
+class _AboutLinkItem extends StatelessWidget {
+  final IconData icon;
+  final String title;
+  final String value;
+  final String url;
+
+  const _AboutLinkItem({
+    required this.icon,
+    required this.title,
+    required this.value,
+    required this.url,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return GestureDetector(
+      onTap: () => launchUrl(Uri.parse(url), mode: LaunchMode.externalApplication),
+      child: Padding(
+        padding: const EdgeInsets.symmetric(vertical: 8),
+        child: Row(
+          children: [
+            Icon(icon, size: 20, color: AppTheme.textSecondary),
+            const SizedBox(width: 12),
+            Text(
+              title,
+              style: Theme.of(context).textTheme.bodyLarge,
+            ),
+            const Spacer(),
+            Text(
+              value,
+              style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                color: const Color(0xFF64B5F6),
+              ),
+            ),
+            const SizedBox(width: 4),
+            const Icon(Icons.open_in_new_rounded, size: 14, color: Color(0xFF64B5F6)),
+          ],
+        ),
       ),
     );
   }

@@ -7,14 +7,36 @@ class AppTheme {
   static const Color accentBlue = Color(0xFF64B5F6);
   
   // Glassmorphic colors
-  static const Color glassWhite = Color(0x40FFFFFF);
-  static const Color glassBorder = Color(0x33FFFFFF);
-  static const Color glassHighlight = Color(0x66FFFFFF);
+  static const Color glassWhite = Color(0x1FFFFFFF);
+  static const Color glassBorder = Color(0x25FFFFFF);
+  static const Color glassHighlight = Color(0x40FFFFFF);
   
   // Text colors
   static const Color textPrimary = Colors.white;
   static const Color textSecondary = Color(0xCCFFFFFF);
   static const Color textTertiary = Color(0x99FFFFFF);
+  
+  // Text shadows for readability on light backgrounds
+  static const List<Shadow> _textShadows = [
+    Shadow(
+      color: Color(0x80000000),
+      blurRadius: 6,
+      offset: Offset(0, 1),
+    ),
+    Shadow(
+      color: Color(0x40000000),
+      blurRadius: 12,
+      offset: Offset(0, 2),
+    ),
+  ];
+  
+  static const List<Shadow> _textShadowsSubtle = [
+    Shadow(
+      color: Color(0x50000000),
+      blurRadius: 4,
+      offset: Offset(0, 1),
+    ),
+  ];
   
   // Weather-adaptive background gradients
   static const LinearGradient clearDayGradient = LinearGradient(
@@ -140,48 +162,74 @@ class AppTheme {
       ),
       iconTheme: IconThemeData(color: textPrimary),
     ),
-    textTheme: const TextTheme(
+    textTheme: TextTheme(
       displayLarge: TextStyle(
         fontSize: 96,
         fontWeight: FontWeight.w200,
         color: textPrimary,
         letterSpacing: -1.5,
+        shadows: _textShadows,
       ),
       displayMedium: TextStyle(
         fontSize: 60,
         fontWeight: FontWeight.w300,
         color: textPrimary,
         letterSpacing: -0.5,
+        shadows: _textShadows,
       ),
       headlineLarge: TextStyle(
         fontSize: 32,
         fontWeight: FontWeight.w400,
         color: textPrimary,
+        shadows: _textShadows,
       ),
       headlineMedium: TextStyle(
         fontSize: 24,
         fontWeight: FontWeight.w600,
         color: textPrimary,
+        shadows: _textShadows,
       ),
       titleLarge: TextStyle(
         fontSize: 20,
         fontWeight: FontWeight.w500,
         color: textPrimary,
+        shadows: _textShadows,
+      ),
+      titleMedium: TextStyle(
+        fontSize: 18,
+        fontWeight: FontWeight.w500,
+        color: textPrimary,
+        shadows: _textShadows,
       ),
       bodyLarge: TextStyle(
         fontSize: 16,
         fontWeight: FontWeight.w400,
         color: textSecondary,
+        shadows: _textShadowsSubtle,
       ),
       bodyMedium: TextStyle(
         fontSize: 14,
         fontWeight: FontWeight.w400,
         color: textSecondary,
+        shadows: _textShadowsSubtle,
+      ),
+      bodySmall: TextStyle(
+        fontSize: 12,
+        fontWeight: FontWeight.w400,
+        color: textTertiary,
+        shadows: _textShadowsSubtle,
       ),
       labelLarge: TextStyle(
         fontSize: 14,
         fontWeight: FontWeight.w500,
         color: textPrimary,
+        shadows: _textShadowsSubtle,
+      ),
+      labelSmall: TextStyle(
+        fontSize: 11,
+        fontWeight: FontWeight.w500,
+        color: textSecondary,
+        shadows: _textShadowsSubtle,
       ),
     ),
   );

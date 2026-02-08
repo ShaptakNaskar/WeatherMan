@@ -160,7 +160,7 @@ class _DetailCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return GlassCard(
+    return LightGlassCard(
       padding: const EdgeInsets.all(16),
       child: SizedBox(
         height: 100,
@@ -222,7 +222,7 @@ class _WindCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return GlassCard(
+    return LightGlassCard(
       padding: const EdgeInsets.all(16),
       child: SizedBox(
         height: 100,
@@ -310,7 +310,7 @@ class _PressureCard extends StatelessWidget {
       description = 'High pressure';
     }
 
-    return GlassCard(
+    return LightGlassCard(
       padding: const EdgeInsets.all(16),
       child: SizedBox(
         height: 100,

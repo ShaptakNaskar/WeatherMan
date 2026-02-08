@@ -1,6 +1,5 @@
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
-import 'package:weatherman/config/theme.dart';
 import 'package:weatherman/widgets/backgrounds/dynamic_background.dart';
 import 'package:weatherman/widgets/glassmorphic/glass_card.dart';
 

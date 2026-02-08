@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:weatherman/widgets/glassmorphic/glass_card.dart';
 
 /// Simple loading placeholder without shimmer
 class WeatherLoadingShimmer extends StatelessWidget {

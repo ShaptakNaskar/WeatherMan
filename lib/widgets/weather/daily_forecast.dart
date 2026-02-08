@@ -111,7 +111,7 @@ class _DailyItem extends StatelessWidget {
             children: [
               // Day name
               SizedBox(
-                width: 60,
+                width: 80,
                 child: Text(
                   DateTimeUtils.formatDayName(forecast.date),
                   style: Theme.of(context).textTheme.bodyLarge?.copyWith(

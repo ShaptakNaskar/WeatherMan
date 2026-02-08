@@ -1,8 +1,8 @@
 import 'dart:ui';
 import 'package:flutter/material.dart';
-import 'package:weatherman/config/theme.dart';
 
 /// A glassmorphic card widget with frosted glass effect
+/// Optimized version with reduced blur for better performance
 class GlassCard extends StatelessWidget {
   final Widget child;
   final EdgeInsetsGeometry? padding;
@@ -20,7 +20,7 @@ class GlassCard extends StatelessWidget {
     this.margin,
     this.borderRadius = 20,
     this.blur = 10,
-    this.opacity = 0.2,
+    this.opacity = 0.12,
     this.borderColor,
     this.onTap,
   });
@@ -33,18 +33,11 @@ class GlassCard extends StatelessWidget {
         filter: ImageFilter.blur(sigmaX: blur, sigmaY: blur),
         child: Container(
           decoration: BoxDecoration(
-            gradient: LinearGradient(
-              begin: Alignment.topLeft,
-              end: Alignment.bottomRight,
-              colors: [
-                Colors.white.withOpacity(opacity + 0.1),
-                Colors.white.withOpacity(opacity * 0.5),
-              ],
-            ),
+            color: Colors.white.withValues(alpha: opacity),
             borderRadius: BorderRadius.circular(borderRadius),
             border: Border.all(
-              color: borderColor ?? AppTheme.glassBorder,
-              width: 1,
+              color: borderColor ?? Colors.white.withValues(alpha: 0.2),
+              width: 0.5,
             ),
           ),
           padding: padding ?? const EdgeInsets.all(16),
@@ -69,6 +62,7 @@ class GlassCard extends StatelessWidget {
 }
 
 /// A glassmorphic container without padding defaults
+/// Simplified version without backdrop filter for performance
 class GlassContainer extends StatelessWidget {
   final Widget child;
   final double borderRadius;
@@ -81,8 +75,8 @@ class GlassContainer extends StatelessWidget {
     super.key,
     required this.child,
     this.borderRadius = 16,
-    this.blur = 10,
-    this.opacity = 0.15,
+    this.blur = 8,
+    this.opacity = 0.10,
     this.borderColor,
     this.constraints,
   });
@@ -96,17 +90,10 @@ class GlassContainer extends StatelessWidget {
         child: Container(
           constraints: constraints,
           decoration: BoxDecoration(
-            gradient: LinearGradient(
-              begin: Alignment.topLeft,
-              end: Alignment.bottomRight,
-              colors: [
-                Colors.white.withOpacity(opacity + 0.05),
-                Colors.white.withOpacity(opacity * 0.3),
-              ],
-            ),
+            color: Colors.white.withValues(alpha: opacity),
             borderRadius: BorderRadius.circular(borderRadius),
             border: Border.all(
-              color: borderColor ?? Colors.white.withOpacity(0.2),
+              color: borderColor ?? Colors.white.withValues(alpha: 0.15),
               width: 0.5,
             ),
           ),
@@ -118,6 +105,7 @@ class GlassContainer extends StatelessWidget {
 }
 
 /// A small glassmorphic pill/chip widget
+/// No backdrop filter for performance in lists
 class GlassPill extends StatelessWidget {
   final Widget child;
   final EdgeInsetsGeometry? padding;
@@ -127,28 +115,53 @@ class GlassPill extends StatelessWidget {
     super.key,
     required this.child,
     this.padding,
-    this.blur = 8,
+    this.blur = 0, // Disabled blur for performance
   });
 
   @override
   Widget build(BuildContext context) {
-    return ClipRRect(
-      borderRadius: BorderRadius.circular(20),
-      child: BackdropFilter(
-        filter: ImageFilter.blur(sigmaX: blur, sigmaY: blur),
-        child: Container(
-          padding: padding ?? const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-          decoration: BoxDecoration(
-            color: Colors.white.withOpacity(0.15),
-            borderRadius: BorderRadius.circular(20),
-            border: Border.all(
-              color: Colors.white.withOpacity(0.2),
-              width: 0.5,
-            ),
-          ),
-          child: child,
+    return Container(
+      padding: padding ?? const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+      decoration: BoxDecoration(
+        color: Colors.white.withValues(alpha: 0.12),
+        borderRadius: BorderRadius.circular(20),
+        border: Border.all(
+          color: Colors.white.withValues(alpha: 0.15),
+          width: 0.5,
         ),
       ),
+      child: child,
+    );
+  }
+}
+
+/// A lightweight glass card without BackdropFilter for performance
+/// Used in dense grids where many cards are visible simultaneously
+class LightGlassCard extends StatelessWidget {
+  final Widget child;
+  final EdgeInsetsGeometry? padding;
+  final double borderRadius;
+
+  const LightGlassCard({
+    super.key,
+    required this.child,
+    this.padding,
+    this.borderRadius = 16,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: padding ?? const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: Colors.white.withValues(alpha: 0.10),
+        borderRadius: BorderRadius.circular(borderRadius),
+        border: Border.all(
+          color: Colors.white.withValues(alpha: 0.15),
+          width: 0.5,
+        ),
+      ),
+      child: child,
     );
   }
 }

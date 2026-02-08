@@ -26,6 +26,7 @@ class CurrentWeatherDisplay extends StatelessWidget {
     
     return Column(
       mainAxisSize: MainAxisSize.min,
+      crossAxisAlignment: CrossAxisAlignment.center,
       children: [
         // Location name
         Text(
@@ -47,6 +48,7 @@ class CurrentWeatherDisplay extends StatelessWidget {
             fontWeight: FontWeight.w100,
             height: 1,
           ),
+          textAlign: TextAlign.center,
         ),
 
         const SizedBox(height: 4),
