@@ -3,179 +3,217 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'package:weatherman/config/theme.dart';
+import 'package:weatherman/providers/location_provider.dart';
 import 'package:weatherman/providers/settings_provider.dart';
+import 'package:weatherman/providers/weather_provider.dart';
 import 'package:weatherman/screens/debug_weather_screen.dart';
 import 'package:weatherman/utils/unit_converter.dart';
+import 'package:weatherman/widgets/backgrounds/dynamic_background.dart';
 import 'package:weatherman/widgets/glassmorphic/glass_card.dart';
 
 /// Settings screen
 class SettingsScreen extends StatelessWidget {
   const SettingsScreen({super.key});
 
+  // Text shadows for legibility on light backgrounds
+  static const List<Shadow> _textShadows = [
+    Shadow(
+      color: Color(0x80000000),
+      blurRadius: 4,
+      offset: Offset(0, 1),
+    ),
+  ];
+
   @override
   Widget build(BuildContext context) {
-    return Container(
-      decoration: BoxDecoration(
-        gradient: AppTheme.clearDayGradient,
-      ),
-      child: Scaffold(
-        backgroundColor: Colors.transparent,
-        appBar: AppBar(
-          backgroundColor: Colors.transparent,
-          elevation: 0,
-          title: const Text('Settings'),
-          leading: IconButton(
-            icon: const Icon(Icons.arrow_back_rounded),
-            onPressed: () => Navigator.pop(context),
-          ),
-        ),
-        body: Consumer<SettingsProvider>(
-          builder: (context, settings, _) {
-            return ListView(
-              padding: const EdgeInsets.all(16),
-              children: [
-                // Temperature unit
-                GlassCard(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        'Temperature Unit',
-                        style: Theme.of(context).textTheme.titleMedium,
-                      ),
-                      const SizedBox(height: 16),
-                      _TemperatureUnitSelector(
-                        currentUnit: settings.temperatureUnit,
-                        onChanged: settings.setTemperatureUnit,
-                      ),
-                    ],
-                  ),
-                ),
+    return Consumer2<LocationProvider, WeatherProvider>(
+      builder: (context, locationProvider, weatherProvider, _) {
+        // Get the current weather code and isDay, fallback to clear day
+        final currentLocation = locationProvider.selectedLocation;
+        final weather = currentLocation != null
+            ? weatherProvider.getWeather(currentLocation)
+            : null;
+        final weatherCode = weather?.current.weatherCode ?? 0;
+        final isDay = weather?.current.isDay ?? true;
 
-                const SizedBox(height: 16),
-
-                // About
-                GlassCard(
-                  child: SizedBox(
-                    width: double.infinity,
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.center,
-                      children: [
-                        const SizedBox(height: 8),
-                        // App icon/name
-                        Icon(
-                        Icons.cloud_rounded,
-                        size: 48,
-                        color: Colors.white.withValues(alpha: 0.9),
-                      ),
-                      const SizedBox(height: 12),
-                      Text(
-                        'WeatherMan',
-                        style: Theme.of(context).textTheme.headlineMedium?.copyWith(
-                          fontWeight: FontWeight.w300,
-                          letterSpacing: 0.5,
-                        ),
-                      ),
-                      const SizedBox(height: 4),
-                      Text(
-                        'v1.0.0',
-                        style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                          color: AppTheme.textTertiary,
-                        ),
-                      ),
-                      const SizedBox(height: 20),
-                      // Made with love
-                      Text(
-                        'Made with ❤️ by Sappy',
-                        style: Theme.of(context).textTheme.bodyLarge?.copyWith(
-                          color: AppTheme.textPrimary,
-                          fontWeight: FontWeight.w400,
-                        ),
-                      ),
-                      const SizedBox(height: 8),
-                      GestureDetector(
-                        onTap: () => launchUrl(
-                          Uri.parse('https://sappy-dir.vercel.app'),
-                          mode: LaunchMode.externalApplication,
-                        ),
-                        child: Text(
-                          'Visit my website →',
-                          style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                            color: Colors.white.withValues(alpha: 0.7),
-                            decoration: TextDecoration.underline,
-                            decorationColor: Colors.white.withValues(alpha: 0.4),
-                          ),
-                        ),
-                      ),
-                      const SizedBox(height: 20),
-                      Divider(color: Colors.white.withValues(alpha: 0.12)),
-                      const SizedBox(height: 12),
-                      // Data source
-                      Text(
-                        'Weather data by Open-Meteo',
-                        style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                          color: AppTheme.textTertiary,
-                        ),
-                      ),
-                        const SizedBox(height: 4),
-                        Text(
-                          'Built with Flutter',
-                          style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                            color: AppTheme.textTertiary,
-                          ),
-                        ),
-                        const SizedBox(height: 8),
-                      ],
-                    ),
-                  ),
-                ),
-
-                // Debug section (only in debug mode)
-                if (kDebugMode) ...[
-                  const SizedBox(height: 16),
-                  GlassCard(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Row(
-                          children: [
-                            Icon(
-                              Icons.bug_report_rounded,
-                              color: Colors.orange,
-                              size: 20,
+        return DynamicBackground(
+          weatherCode: weatherCode,
+          isDay: isDay,
+          child: Scaffold(
+            backgroundColor: Colors.transparent,
+            appBar: AppBar(
+              backgroundColor: Colors.transparent,
+              elevation: 0,
+              title: Text(
+                'Settings',
+                style: TextStyle(shadows: _textShadows),
+              ),
+              leading: IconButton(
+                icon: const Icon(Icons.arrow_back_rounded),
+                onPressed: () => Navigator.pop(context),
+              ),
+            ),
+            body: Consumer<SettingsProvider>(
+              builder: (context, settings, _) {
+                return ListView(
+                  padding: const EdgeInsets.all(16),
+                  children: [
+                    // Temperature unit
+                    GlassCard(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            'Temperature Unit',
+                            style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                              shadows: _textShadows,
                             ),
-                            const SizedBox(width: 8),
+                          ),
+                          const SizedBox(height: 16),
+                          _TemperatureUnitSelector(
+                            currentUnit: settings.temperatureUnit,
+                            onChanged: settings.setTemperatureUnit,
+                          ),
+                        ],
+                      ),
+                    ),
+
+                    const SizedBox(height: 16),
+
+                    // About
+                    GlassCard(
+                      child: SizedBox(
+                        width: double.infinity,
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.center,
+                          children: [
+                            const SizedBox(height: 8),
+                            // App icon/name
+                            Icon(
+                              Icons.cloud_rounded,
+                              size: 48,
+                              color: Colors.white.withValues(alpha: 0.9),
+                              shadows: _textShadows,
+                            ),
+                            const SizedBox(height: 12),
                             Text(
-                              'Developer Options',
-                              style: Theme.of(context).textTheme.titleMedium,
+                              'WeatherMan',
+                              style: Theme.of(context).textTheme.headlineMedium?.copyWith(
+                                fontWeight: FontWeight.w300,
+                                letterSpacing: 0.5,
+                                shadows: _textShadows,
+                              ),
+                            ),
+                            const SizedBox(height: 4),
+                            Text(
+                              'v1.0.0',
+                              style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                                color: AppTheme.textTertiary,
+                                shadows: _textShadows,
+                              ),
+                            ),
+                            const SizedBox(height: 20),
+                            // Made with love
+                            Text(
+                              'Made with ❤️ by Sappy',
+                              style: Theme.of(context).textTheme.bodyLarge?.copyWith(
+                                color: AppTheme.textPrimary,
+                                fontWeight: FontWeight.w400,
+                                shadows: _textShadows,
+                              ),
+                            ),
+                            const SizedBox(height: 8),
+                            GestureDetector(
+                              onTap: () => launchUrl(
+                                Uri.parse('https://sappy-dir.vercel.app'),
+                                mode: LaunchMode.externalApplication,
+                              ),
+                              child: Text(
+                                'Visit my website →',
+                                style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                                  color: Colors.white.withValues(alpha: 0.8),
+                                  decoration: TextDecoration.underline,
+                                  decorationColor: Colors.white.withValues(alpha: 0.5),
+                                  shadows: _textShadows,
+                                ),
+                              ),
+                            ),
+                            const SizedBox(height: 20),
+                            Divider(color: Colors.white.withValues(alpha: 0.12)),
+                            const SizedBox(height: 12),
+                            // Data source
+                            Text(
+                              'Weather data by Open-Meteo',
+                              style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                                color: AppTheme.textTertiary,
+                                shadows: _textShadows,
+                              ),
+                            ),
+                            const SizedBox(height: 4),
+                            Text(
+                              'Built with Flutter',
+                              style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                                color: AppTheme.textTertiary,
+                                shadows: _textShadows,
+                              ),
+                            ),
+                            const SizedBox(height: 8),
+                          ],
+                        ),
+                      ),
+                    ),
+
+                    // Debug section (only in debug mode)
+                    if (kDebugMode) ...[
+                      const SizedBox(height: 16),
+                      GlassCard(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Row(
+                              children: [
+                                Icon(
+                                  Icons.bug_report_rounded,
+                                  color: Colors.orange,
+                                  size: 20,
+                                  shadows: _textShadows,
+                                ),
+                                const SizedBox(width: 8),
+                                Text(
+                                  'Developer Options',
+                                  style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                                    shadows: _textShadows,
+                                  ),
+                                ),
+                              ],
+                            ),
+                            const SizedBox(height: 16),
+                            _DebugButton(
+                              icon: Icons.palette_outlined,
+                              title: 'Weather Styles Preview',
+                              subtitle: 'Test different weather backgrounds',
+                              onTap: () {
+                                Navigator.push(
+                                  context,
+                                  MaterialPageRoute(
+                                    builder: (context) => const DebugWeatherScreen(),
+                                  ),
+                                );
+                              },
                             ),
                           ],
                         ),
-                        const SizedBox(height: 16),
-                        _DebugButton(
-                          icon: Icons.palette_outlined,
-                          title: 'Weather Styles Preview',
-                          subtitle: 'Test different weather backgrounds',
-                          onTap: () {
-                            Navigator.push(
-                              context,
-                              MaterialPageRoute(
-                                builder: (context) => const DebugWeatherScreen(),
-                              ),
-                            );
-                          },
-                        ),
-                      ],
-                    ),
-                  ),
-                ],
+                      ),
+                    ],
 
-                const SizedBox(height: 32),
-              ],
-            );
-          },
-        ),
-      ),
+                    const SizedBox(height: 32),
+                  ],
+                );
+              },
+            ),
+          ),
+        );
+      },
     );
   }
 }
@@ -185,6 +223,15 @@ class _DebugButton extends StatelessWidget {
   final String title;
   final String subtitle;
   final VoidCallback onTap;
+
+  // Text shadows for legibility
+  static const List<Shadow> _textShadows = [
+    Shadow(
+      color: Color(0x80000000),
+      blurRadius: 4,
+      offset: Offset(0, 1),
+    ),
+  ];
 
   const _DebugButton({
     required this.icon,
@@ -208,7 +255,7 @@ class _DebugButton extends StatelessWidget {
         ),
         child: Row(
           children: [
-            Icon(icon, color: Colors.orange),
+            Icon(icon, color: Colors.orange, shadows: _textShadows),
             const SizedBox(width: 12),
             Expanded(
               child: Column(
@@ -218,18 +265,20 @@ class _DebugButton extends StatelessWidget {
                     title,
                     style: Theme.of(context).textTheme.bodyLarge?.copyWith(
                       fontWeight: FontWeight.w500,
+                      shadows: _textShadows,
                     ),
                   ),
                   Text(
                     subtitle,
                     style: Theme.of(context).textTheme.bodySmall?.copyWith(
                       color: AppTheme.textSecondary,
+                      shadows: _textShadows,
                     ),
                   ),
                 ],
               ),
             ),
-            const Icon(Icons.chevron_right_rounded),
+            Icon(Icons.chevron_right_rounded, shadows: _textShadows),
           ],
         ),
       ),
@@ -278,6 +327,15 @@ class _UnitButton extends StatelessWidget {
   final bool isSelected;
   final VoidCallback onTap;
 
+  // Text shadows for legibility
+  static const List<Shadow> _textShadows = [
+    Shadow(
+      color: Color(0x80000000),
+      blurRadius: 4,
+      offset: Offset(0, 1),
+    ),
+  ];
+
   const _UnitButton({
     required this.label,
     required this.symbol,
@@ -310,6 +368,7 @@ class _UnitButton extends StatelessWidget {
               symbol,
               style: Theme.of(context).textTheme.headlineMedium?.copyWith(
                 fontWeight: isSelected ? FontWeight.w600 : FontWeight.w400,
+                shadows: _textShadows,
               ),
             ),
             const SizedBox(height: 4),
@@ -317,6 +376,7 @@ class _UnitButton extends StatelessWidget {
               label,
               style: Theme.of(context).textTheme.bodyMedium?.copyWith(
                 color: isSelected ? AppTheme.textPrimary : AppTheme.textSecondary,
+                shadows: _textShadows,
               ),
             ),
           ],
@@ -325,5 +385,3 @@ class _UnitButton extends StatelessWidget {
     );
   }
 }
-
-// (removed unused _AboutItem and _AboutLinkItem)
