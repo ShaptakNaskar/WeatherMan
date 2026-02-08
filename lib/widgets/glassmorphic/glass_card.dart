@@ -19,8 +19,8 @@ class GlassCard extends StatelessWidget {
     this.padding,
     this.margin,
     this.borderRadius = 20,
-    this.blur = 10,
-    this.opacity = 0.12,
+    this.blur = 12,
+    this.opacity = 0.18,
     this.borderColor,
     this.onTap,
   });
@@ -75,8 +75,8 @@ class GlassContainer extends StatelessWidget {
     super.key,
     required this.child,
     this.borderRadius = 16,
-    this.blur = 8,
-    this.opacity = 0.10,
+    this.blur = 10,
+    this.opacity = 0.15,
     this.borderColor,
     this.constraints,
   });
@@ -154,10 +154,10 @@ class LightGlassCard extends StatelessWidget {
     return Container(
       padding: padding ?? const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: Colors.white.withValues(alpha: 0.10),
+        color: Colors.white.withValues(alpha: 0.15),
         borderRadius: BorderRadius.circular(borderRadius),
         border: Border.all(
-          color: Colors.white.withValues(alpha: 0.15),
+          color: Colors.white.withValues(alpha: 0.20),
           width: 0.5,
         ),
       ),

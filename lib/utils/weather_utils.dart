@@ -119,12 +119,12 @@ class WeatherUtils {
       case 1:
         return isDay ? const Color(0xFFFFB74D) : const Color(0xFFE1BEE7);
       case 2:
-        return isDay ? const Color(0xFF90CAF9) : const Color(0xFFB39DDB);
+        return isDay ? const Color(0xFF5C8DB8) : const Color(0xFFB39DDB);
       case 3:
-        return const Color(0xFFB0BEC5);
+        return const Color(0xFF78909C);
       case 45:
       case 48:
-        return const Color(0xFFCFD8DC);
+        return const Color(0xFF90A4AE);
       case 51:
       case 53:
       case 55:

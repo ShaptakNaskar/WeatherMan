@@ -57,43 +57,72 @@ class SettingsScreen extends StatelessWidget {
                 // About
                 GlassCard(
                   child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
+                    crossAxisAlignment: CrossAxisAlignment.center,
                     children: [
+                      const SizedBox(height: 8),
+                      // App icon/name
+                      Icon(
+                        Icons.cloud_rounded,
+                        size: 48,
+                        color: Colors.white.withValues(alpha: 0.9),
+                      ),
+                      const SizedBox(height: 12),
                       Text(
-                        'About',
-                        style: Theme.of(context).textTheme.titleMedium,
+                        'GlassWeather',
+                        style: Theme.of(context).textTheme.headlineMedium?.copyWith(
+                          fontWeight: FontWeight.w300,
+                          letterSpacing: 0.5,
+                        ),
                       ),
-                      const SizedBox(height: 16),
-                      _AboutItem(
-                        icon: Icons.person_outline_rounded,
-                        title: 'Developer',
-                        value: 'Sappy',
+                      const SizedBox(height: 4),
+                      Text(
+                        'v1.0.0',
+                        style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                          color: AppTheme.textTertiary,
+                        ),
                       ),
-                      const Divider(color: AppTheme.glassBorder),
-                      _AboutLinkItem(
-                        icon: Icons.language_rounded,
-                        title: 'Website',
-                        value: 'sappy-dir.vercel.app',
-                        url: 'https://sappy-dir.vercel.app',
+                      const SizedBox(height: 20),
+                      // Made with love
+                      Text(
+                        'Made with ❤️ by Sappy',
+                        style: Theme.of(context).textTheme.bodyLarge?.copyWith(
+                          color: AppTheme.textPrimary,
+                          fontWeight: FontWeight.w400,
+                        ),
                       ),
-                      const Divider(color: AppTheme.glassBorder),
-                      _AboutItem(
-                        icon: Icons.info_outline_rounded,
-                        title: 'Version',
-                        value: '1.0.0',
+                      const SizedBox(height: 8),
+                      GestureDetector(
+                        onTap: () => launchUrl(
+                          Uri.parse('https://sappy-dir.vercel.app'),
+                          mode: LaunchMode.externalApplication,
+                        ),
+                        child: Text(
+                          'Visit my website →',
+                          style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                            color: Colors.white.withValues(alpha: 0.7),
+                            decoration: TextDecoration.underline,
+                            decorationColor: Colors.white.withValues(alpha: 0.4),
+                          ),
+                        ),
                       ),
-                      const Divider(color: AppTheme.glassBorder),
-                      _AboutItem(
-                        icon: Icons.cloud_outlined,
-                        title: 'Weather Data',
-                        value: 'Open-Meteo API',
+                      const SizedBox(height: 20),
+                      Divider(color: Colors.white.withValues(alpha: 0.12)),
+                      const SizedBox(height: 12),
+                      // Data source
+                      Text(
+                        'Weather data by Open-Meteo',
+                        style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                          color: AppTheme.textTertiary,
+                        ),
                       ),
-                      const Divider(color: AppTheme.glassBorder),
-                      _AboutItem(
-                        icon: Icons.code_rounded,
-                        title: 'Made with',
-                        value: 'Flutter ❤️',
+                      const SizedBox(height: 4),
+                      Text(
+                        'Built with Flutter',
+                        style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                          color: AppTheme.textTertiary,
+                        ),
                       ),
+                      const SizedBox(height: 8),
                     ],
                   ),
                 ),
@@ -139,16 +168,6 @@ class SettingsScreen extends StatelessWidget {
                 ],
 
                 const SizedBox(height: 32),
-
-                // Attribution
-                Center(
-                  child: Text(
-                    'Weather data provided by Open-Meteo.com',
-                    style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                      color: AppTheme.textTertiary,
-                    ),
-                  ),
-                ),
               ],
             );
           },
@@ -304,81 +323,4 @@ class _UnitButton extends StatelessWidget {
   }
 }
 
-class _AboutItem extends StatelessWidget {
-  final IconData icon;
-  final String title;
-  final String value;
-
-  const _AboutItem({
-    required this.icon,
-    required this.title,
-    required this.value,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 8),
-      child: Row(
-        children: [
-          Icon(icon, size: 20, color: AppTheme.textSecondary),
-          const SizedBox(width: 12),
-          Text(
-            title,
-            style: Theme.of(context).textTheme.bodyLarge,
-          ),
-          const Spacer(),
-          Text(
-            value,
-            style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-              color: AppTheme.textSecondary,
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-}
-
-class _AboutLinkItem extends StatelessWidget {
-  final IconData icon;
-  final String title;
-  final String value;
-  final String url;
-
-  const _AboutLinkItem({
-    required this.icon,
-    required this.title,
-    required this.value,
-    required this.url,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    return GestureDetector(
-      onTap: () => launchUrl(Uri.parse(url), mode: LaunchMode.externalApplication),
-      child: Padding(
-        padding: const EdgeInsets.symmetric(vertical: 8),
-        child: Row(
-          children: [
-            Icon(icon, size: 20, color: AppTheme.textSecondary),
-            const SizedBox(width: 12),
-            Text(
-              title,
-              style: Theme.of(context).textTheme.bodyLarge,
-            ),
-            const Spacer(),
-            Text(
-              value,
-              style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                color: const Color(0xFF64B5F6),
-              ),
-            ),
-            const SizedBox(width: 4),
-            const Icon(Icons.open_in_new_rounded, size: 14, color: Color(0xFF64B5F6)),
-          ],
-        ),
-      ),
-    );
-  }
-}
+// (removed unused _AboutItem and _AboutLinkItem)
