@@ -56,19 +56,21 @@ class SettingsScreen extends StatelessWidget {
 
                 // About
                 GlassCard(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.center,
-                    children: [
-                      const SizedBox(height: 8),
-                      // App icon/name
-                      Icon(
+                  child: SizedBox(
+                    width: double.infinity,
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.center,
+                      children: [
+                        const SizedBox(height: 8),
+                        // App icon/name
+                        Icon(
                         Icons.cloud_rounded,
                         size: 48,
                         color: Colors.white.withValues(alpha: 0.9),
                       ),
                       const SizedBox(height: 12),
                       Text(
-                        'GlassWeather',
+                        'WeatherMan',
                         style: Theme.of(context).textTheme.headlineMedium?.copyWith(
                           fontWeight: FontWeight.w300,
                           letterSpacing: 0.5,
@@ -115,15 +117,16 @@ class SettingsScreen extends StatelessWidget {
                           color: AppTheme.textTertiary,
                         ),
                       ),
-                      const SizedBox(height: 4),
-                      Text(
-                        'Built with Flutter',
-                        style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                          color: AppTheme.textTertiary,
+                        const SizedBox(height: 4),
+                        Text(
+                          'Built with Flutter',
+                          style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                            color: AppTheme.textTertiary,
+                          ),
                         ),
-                      ),
-                      const SizedBox(height: 8),
-                    ],
+                        const SizedBox(height: 8),
+                      ],
+                    ),
                   ),
                 ),
 

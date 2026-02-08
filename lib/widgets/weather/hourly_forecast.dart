@@ -122,8 +122,8 @@ class _HourlyItem extends StatelessWidget {
             Text(
               '${forecast.precipitationProbability}%',
               style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                color: const Color(0xFF64B5F6),
-                fontWeight: FontWeight.w500,
+                color: const Color(0xFF00E5FF),
+                fontWeight: FontWeight.w600,
               ),
             )
           else

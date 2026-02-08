@@ -66,7 +66,7 @@ class DynamicBackground extends StatelessWidget {
           ? const LinearGradient(
               begin: Alignment.topCenter,
               end: Alignment.bottomCenter,
-              colors: [Color(0xFF1976D2), Color(0xFF42A5F5), Color(0xFF90CAF9), Color(0xFFBBDEFB)],
+              colors: [Color(0xFF1565C0), Color(0xFF1E88E5), Color(0xFF42A5F5), Color(0xFF64B5F6)],
             )
           : const LinearGradient(
               begin: Alignment.topCenter,
@@ -81,7 +81,7 @@ class DynamicBackground extends StatelessWidget {
           ? const LinearGradient(
               begin: Alignment.topCenter,
               end: Alignment.bottomCenter,
-              colors: [Color(0xFF4A8CCB), Color(0xFF7DB1DE), Color(0xFFA8CEE8), Color(0xFFC5DFF0)],
+              colors: [Color(0xFF1565C0), Color(0xFF2E86C1), Color(0xFF5DADE2), Color(0xFF85C1E9)],
             )
           : const LinearGradient(
               begin: Alignment.topCenter,
@@ -96,7 +96,7 @@ class DynamicBackground extends StatelessWidget {
           ? const LinearGradient(
               begin: Alignment.topCenter,
               end: Alignment.bottomCenter,
-              colors: [Color(0xFF78909C), Color(0xFF90A4AE), Color(0xFFB0BEC5), Color(0xFFC5CCD3)],
+              colors: [Color(0xFF546E7A), Color(0xFF6B838F), Color(0xFF8398A4), Color(0xFF90A4AE)],
             )
           : const LinearGradient(
               begin: Alignment.topCenter,
@@ -215,7 +215,7 @@ class DynamicBackground extends StatelessWidget {
         ? const LinearGradient(
             begin: Alignment.topCenter,
             end: Alignment.bottomCenter,
-            colors: [Color(0xFF1976D2), Color(0xFF42A5F5), Color(0xFF90CAF9), Color(0xFFBBDEFB)],
+            colors: [Color(0xFF1565C0), Color(0xFF1E88E5), Color(0xFF42A5F5), Color(0xFF64B5F6)],
           )
         : const LinearGradient(
             begin: Alignment.topCenter,

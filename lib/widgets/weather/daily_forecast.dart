@@ -139,7 +139,8 @@ class _DailyItem extends StatelessWidget {
                     ? Text(
                         '${forecast.precipitationProbabilityMax}%',
                         style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                          color: const Color(0xFF64B5F6),
+                          color: const Color(0xFF00E5FF),
+                          fontWeight: FontWeight.w600,
                         ),
                       )
                     : null,
