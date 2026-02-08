@@ -1,5 +1,6 @@
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:fluttertoast/fluttertoast.dart';
 import 'package:provider/provider.dart';
 import 'package:url_launcher/url_launcher.dart';
@@ -92,201 +93,23 @@ class _SettingsScreenState extends State<SettingsScreen> {
             ),
             body: Consumer<SettingsProvider>(
               builder: (context, settings, _) {
-                return ListView(
-                  padding: const EdgeInsets.all(16),
-                  children: [
-                    // Temperature unit
-                    GlassCard(
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(
-                            'Temperature Unit',
-                            style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                              shadows: _textShadows,
-                            ),
-                          ),
-                          const SizedBox(height: 16),
-                          _TemperatureUnitSelector(
-                            currentUnit: settings.temperatureUnit,
-                            onChanged: settings.setTemperatureUnit,
-                          ),
-                        ],
-                      ),
-                    ),
-
-                    const SizedBox(height: 16),
-
-                    // Advanced View toggle
-                    GlassCard(
-                      child: Row(
-                        children: [
-                          Expanded(
-                            child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                Text(
-                                  'Advanced View',
-                                  style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                                    shadows: _textShadows,
-                                  ),
-                                ),
-                                const SizedBox(height: 4),
-                                Text(
-                                  'Show detailed weather data with extra metrics',
-                                  style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                                    color: Colors.white.withValues(alpha: 0.7),
-                                    shadows: _textShadows,
-                                  ),
-                                ),
-                              ],
-                            ),
-                          ),
-                          Switch(
-                            value: settings.advancedViewEnabled,
-                            onChanged: (value) => settings.setAdvancedViewEnabled(value),
-                            activeColor: Colors.white,
-                            activeTrackColor: Colors.white.withValues(alpha: 0.5),
-                            inactiveThumbColor: Colors.white.withValues(alpha: 0.7),
-                            inactiveTrackColor: Colors.white.withValues(alpha: 0.2),
-                          ),
-                        ],
-                      ),
-                    ),
-
-                    const SizedBox(height: 16),
-
-                    // About
-                    GlassCard(
-                      child: SizedBox(
-                        width: double.infinity,
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.center,
-                          children: [
-                            const SizedBox(height: 8),
-                            // App icon/name - tap 7 times to unlock developer options
-                            GestureDetector(
-                              onTap: _onCloudTap,
-                              child: Icon(
-                                Icons.cloud_rounded,
-                                size: 48,
-                                color: Colors.white.withValues(alpha: 0.9),
-                                shadows: _textShadows,
-                              ),
-                            ),
-                            const SizedBox(height: 12),
-                            Text(
-                              'WeatherMan',
-                              style: Theme.of(context).textTheme.headlineMedium?.copyWith(
-                                fontWeight: FontWeight.w300,
-                                letterSpacing: 0.5,
-                                shadows: _textShadows,
-                              ),
-                            ),
-                            const SizedBox(height: 4),
-                            Text(
-                              'v1.0.3',
-                              style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                                color: AppTheme.textTertiary,
-                                shadows: _textShadows,
-                              ),
-                            ),
-                            const SizedBox(height: 20),
-                            // Made with love
-                            Text(
-                              'Made with ❤️ by Sappy',
-                              style: Theme.of(context).textTheme.bodyLarge?.copyWith(
-                                color: AppTheme.textPrimary,
-                                fontWeight: FontWeight.w400,
-                                shadows: _textShadows,
-                              ),
-                            ),
-                            const SizedBox(height: 8),
-                            GestureDetector(
-                              onTap: () => launchUrl(
-                                Uri.parse('https://sappy-dir.vercel.app'),
-                                mode: LaunchMode.externalApplication,
-                              ),
-                              child: Text(
-                                'Visit my website →',
-                                style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                                  color: Colors.white.withValues(alpha: 0.8),
-                                  decoration: TextDecoration.underline,
-                                  decorationColor: Colors.white.withValues(alpha: 0.5),
-                                  shadows: _textShadows,
-                                ),
-                              ),
-                            ),
-                            const SizedBox(height: 20),
-                            Divider(color: Colors.white.withValues(alpha: 0.12)),
-                            const SizedBox(height: 12),
-                            // Data source
-                            Text(
-                              'Weather data by Open-Meteo',
-                              style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                                color: AppTheme.textTertiary,
-                                shadows: _textShadows,
-                              ),
-                            ),
-                            const SizedBox(height: 4),
-                            Text(
-                              'Built with Flutter',
-                              style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                                color: AppTheme.textTertiary,
-                                shadows: _textShadows,
-                              ),
-                            ),
-                            const SizedBox(height: 8),
-                          ],
-                        ),
-                      ),
-                    ),
-
-                    // Debug section (visible in debug mode OR when unlocked via easter egg)
-                    if (kDebugMode || _developerOptionsUnlocked) ...[
-                      const SizedBox(height: 16),
-                      GlassCard(
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Row(
-                              children: [
-                                Icon(
-                                  Icons.bug_report_rounded,
-                                  color: Colors.orange,
-                                  size: 20,
-                                  shadows: _textShadows,
-                                ),
-                                const SizedBox(width: 8),
-                                Text(
-                                  'Developer Options',
-                                  style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                                    shadows: _textShadows,
-                                  ),
-                                ),
-                              ],
-                            ),
-                            const SizedBox(height: 16),
-                            _DebugButton(
-                              icon: Icons.palette_outlined,
-                              title: 'Weather Styles Preview',
-                              subtitle: 'Test different weather backgrounds',
-                              onTap: () {
-                                Navigator.push(
-                                  context,
-                                  MaterialPageRoute(
-                                    builder: (context) => const DebugWeatherScreen(),
-                                  ),
-                                );
-                              },
-                            ),
-                          ],
-                        ),
-                      ),
-                    ],
-
-                    const SizedBox(height: 32),
-                  ],
+                return OrientationBuilder(
+                  builder: (context, orientation) {
+                    if (orientation == Orientation.landscape) {
+                      // Enable immersive fullscreen mode in landscape
+                      SystemChrome.setEnabledSystemUIMode(
+                        SystemUiMode.immersiveSticky,
+                        overlays: [],
+                      );
+                      return _buildLandscapeLayout(settings);
+                    }
+                    // Restore normal UI in portrait
+                    SystemChrome.setEnabledSystemUIMode(
+                      SystemUiMode.edgeToEdge,
+                      overlays: SystemUiOverlay.values,
+                    );
+                    return _buildPortraitLayout(settings);
+                  },
                 );
               },
             ),
@@ -294,6 +117,250 @@ class _SettingsScreenState extends State<SettingsScreen> {
         );
       },
     );
+  }
+
+  Widget _buildPortraitLayout(SettingsProvider settings) {
+    return ListView(
+      padding: const EdgeInsets.all(16),
+      children: [
+        ..._buildControlsSection(settings),
+        const SizedBox(height: 16),
+        _buildAboutSection(),
+        ..._buildDeveloperSection(settings),
+        const SizedBox(height: 32),
+      ],
+    );
+  }
+
+  Widget _buildLandscapeLayout(SettingsProvider settings) {
+    return Row(
+      children: [
+        // Left panel - About section (static)
+        SizedBox(
+          width: MediaQuery.of(context).size.width * 0.38,
+          child: Center(
+            child: SingleChildScrollView(
+              padding: const EdgeInsets.all(16),
+              child: _buildAboutSection(),
+            ),
+          ),
+        ),
+        // Divider
+        Container(
+          width: 1,
+          color: Colors.white.withValues(alpha: 0.1),
+        ),
+        // Right panel - Controls (scrollable)
+        Expanded(
+          child: ListView(
+            padding: const EdgeInsets.all(16),
+            children: [
+              ..._buildControlsSection(settings),
+              ..._buildDeveloperSection(settings),
+              const SizedBox(height: 32),
+            ],
+          ),
+        ),
+      ],
+    );
+  }
+
+  List<Widget> _buildControlsSection(SettingsProvider settings) {
+    return [
+      // Temperature unit
+      GlassCard(
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              'Temperature Unit',
+              style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                shadows: _textShadows,
+              ),
+            ),
+            const SizedBox(height: 16),
+            _TemperatureUnitSelector(
+              currentUnit: settings.temperatureUnit,
+              onChanged: settings.setTemperatureUnit,
+            ),
+          ],
+        ),
+      ),
+
+      const SizedBox(height: 16),
+
+      // Advanced View toggle
+      GlassCard(
+        child: Row(
+          children: [
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    'Advanced View',
+                    style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                      shadows: _textShadows,
+                    ),
+                  ),
+                  const SizedBox(height: 4),
+                  Text(
+                    'Show detailed weather data with extra metrics',
+                    style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                      color: Colors.white.withValues(alpha: 0.7),
+                      shadows: _textShadows,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            Switch(
+              value: settings.advancedViewEnabled,
+              onChanged: (value) => settings.setAdvancedViewEnabled(value),
+              activeColor: Colors.white,
+              activeTrackColor: Colors.white.withValues(alpha: 0.5),
+              inactiveThumbColor: Colors.white.withValues(alpha: 0.7),
+              inactiveTrackColor: Colors.white.withValues(alpha: 0.2),
+            ),
+          ],
+        ),
+      ),
+    ];
+  }
+
+  Widget _buildAboutSection() {
+    return GlassCard(
+      child: SizedBox(
+        width: double.infinity,
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.center,
+          children: [
+            const SizedBox(height: 8),
+            // App icon/name - tap 7 times to unlock developer options
+            GestureDetector(
+              onTap: _onCloudTap,
+              child: Icon(
+                Icons.cloud_rounded,
+                size: 48,
+                color: Colors.white.withValues(alpha: 0.9),
+                shadows: _textShadows,
+              ),
+            ),
+            const SizedBox(height: 12),
+            Text(
+              'WeatherMan',
+              style: Theme.of(context).textTheme.headlineMedium?.copyWith(
+                fontWeight: FontWeight.w300,
+                letterSpacing: 0.5,
+                shadows: _textShadows,
+              ),
+            ),
+            const SizedBox(height: 4),
+            Text(
+              'v1.0.4',
+              style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                color: AppTheme.textTertiary,
+                shadows: _textShadows,
+              ),
+            ),
+            const SizedBox(height: 20),
+            // Made with love
+            Text(
+              'Made with ❤️ by Sappy',
+              style: Theme.of(context).textTheme.bodyLarge?.copyWith(
+                color: AppTheme.textPrimary,
+                fontWeight: FontWeight.w400,
+                shadows: _textShadows,
+              ),
+            ),
+            const SizedBox(height: 8),
+            GestureDetector(
+              onTap: () => launchUrl(
+                Uri.parse('https://sappy-dir.vercel.app'),
+                mode: LaunchMode.externalApplication,
+              ),
+              child: Text(
+                'Visit my website →',
+                style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                  color: Colors.white.withValues(alpha: 0.8),
+                  decoration: TextDecoration.underline,
+                  decorationColor: Colors.white.withValues(alpha: 0.5),
+                  shadows: _textShadows,
+                ),
+              ),
+            ),
+            const SizedBox(height: 20),
+            Divider(color: Colors.white.withValues(alpha: 0.12)),
+            const SizedBox(height: 12),
+            // Data source
+            Text(
+              'Weather data by Open-Meteo',
+              style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                color: AppTheme.textTertiary,
+                shadows: _textShadows,
+              ),
+            ),
+            const SizedBox(height: 4),
+            Text(
+              'Built with Flutter',
+              style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                color: AppTheme.textTertiary,
+                shadows: _textShadows,
+              ),
+            ),
+            const SizedBox(height: 8),
+          ],
+        ),
+      ),
+    );
+  }
+
+  List<Widget> _buildDeveloperSection(SettingsProvider settings) {
+    if (!kDebugMode && !_developerOptionsUnlocked) {
+      return [];
+    }
+
+    return [
+      const SizedBox(height: 16),
+      GlassCard(
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              children: [
+                Icon(
+                  Icons.bug_report_rounded,
+                  color: Colors.orange,
+                  size: 20,
+                  shadows: _textShadows,
+                ),
+                const SizedBox(width: 8),
+                Text(
+                  'Developer Options',
+                  style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                    shadows: _textShadows,
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 16),
+            _DebugButton(
+              icon: Icons.palette_outlined,
+              title: 'Weather Styles Preview',
+              subtitle: 'Test different weather backgrounds',
+              onTap: () {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (context) => const DebugWeatherScreen(),
+                  ),
+                );
+              },
+            ),
+          ],
+        ),
+      ),
+    ];
   }
 }
 

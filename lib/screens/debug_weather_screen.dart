@@ -1,5 +1,6 @@
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:weatherman/widgets/backgrounds/dynamic_background.dart';
 import 'package:weatherman/widgets/glassmorphic/glass_card.dart';
 
@@ -47,176 +48,249 @@ class _DebugWeatherScreenState extends State<DebugWeatherScreen> {
             onPressed: () => Navigator.pop(context),
           ),
         ),
-        body: Column(
-          children: [
-            // Display area showing current weather code
-            Expanded(
-              flex: 2,
-              child: Center(
-                child: GlassCard(
-                  padding: const EdgeInsets.all(32),
-                  child: Column(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      Text(
-                        'Weather Code: $_currentWeatherCode',
-                        style: Theme.of(context).textTheme.titleLarge,
-                      ),
-                      const SizedBox(height: 8),
-                      Text(
-                        _presets.firstWhere(
-                          (p) => p.code == _currentWeatherCode,
-                          orElse: () => _WeatherPreset(
-                            code: _currentWeatherCode,
-                            name: 'Unknown',
-                            icon: Icons.help,
-                          ),
-                        ).name,
-                        style: Theme.of(context).textTheme.headlineMedium,
-                      ),
-                      const SizedBox(height: 16),
-                      Row(
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          Icon(
-                            _isDay ? Icons.wb_sunny : Icons.nightlight_round,
-                            size: 48,
-                          ),
-                          const SizedBox(width: 8),
-                          Text(
-                            _isDay ? 'Day' : 'Night',
-                            style: Theme.of(context).textTheme.titleMedium,
-                          ),
-                        ],
-                      ),
-                    ],
-                  ),
-                ),
-              ),
-            ),
+        body: OrientationBuilder(
+          builder: (context, orientation) {
+            if (orientation == Orientation.landscape) {
+              // Enable immersive fullscreen mode in landscape
+              SystemChrome.setEnabledSystemUIMode(
+                SystemUiMode.immersiveSticky,
+                overlays: [],
+              );
+              return _buildLandscapeLayout();
+            }
+            // Restore normal UI in portrait
+            SystemChrome.setEnabledSystemUIMode(
+              SystemUiMode.edgeToEdge,
+              overlays: SystemUiOverlay.values,
+            );
+            return _buildPortraitLayout();
+          },
+        ),
+      ),
+    );
+  }
 
-            // Day/Night toggle
-            Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 16),
-              child: GlassCard(
-                child: Row(
-                  children: [
-                    const Icon(Icons.wb_sunny),
-                    const SizedBox(width: 8),
-                    const Text('Day Mode'),
-                    const Spacer(),
-                    Switch(
-                      value: _isDay,
-                      onChanged: (value) => setState(() => _isDay = value),
-                      activeColor: Colors.white,
-                    ),
-                    const Spacer(),
-                    const Text('Night Mode'),
-                    const SizedBox(width: 8),
-                    const Icon(Icons.nightlight_round),
-                  ],
-                ),
-              ),
-            ),
+  Widget _buildPortraitLayout() {
+    return Column(
+      children: [
+        // Display area showing current weather code
+        Expanded(
+          flex: 2,
+          child: Center(child: _buildWeatherPreviewCard()),
+        ),
 
-            const SizedBox(height: 16),
+        // Day/Night toggle
+        _buildDayNightToggle(),
 
-            // Weather presets grid
-            Expanded(
-              flex: 3,
-              child: GridView.builder(
-                padding: const EdgeInsets.all(16),
-                gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-                  crossAxisCount: 3,
-                  childAspectRatio: 1,
-                  crossAxisSpacing: 12,
-                  mainAxisSpacing: 12,
-                ),
-                itemCount: _presets.length,
-                itemBuilder: (context, index) {
-                  final preset = _presets[index];
-                  final isSelected = preset.code == _currentWeatherCode;
+        const SizedBox(height: 16),
 
-                  return GestureDetector(
-                    onTap: () => setState(() => _currentWeatherCode = preset.code),
-                    child: AnimatedContainer(
-                      duration: const Duration(milliseconds: 200),
-                      decoration: BoxDecoration(
-                        color: isSelected
-                            ? Colors.white.withValues(alpha: 0.3)
-                            : Colors.white.withValues(alpha: 0.1),
-                        borderRadius: BorderRadius.circular(16),
-                        border: Border.all(
-                          color: isSelected
-                              ? Colors.white.withValues(alpha: 0.6)
-                              : Colors.white.withValues(alpha: 0.2),
-                          width: isSelected ? 2 : 1,
-                        ),
-                      ),
-                      child: Column(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        children: [
-                          Icon(
-                            preset.icon,
-                            size: 32,
-                            color: isSelected
-                                ? Colors.white
-                                : Colors.white.withValues(alpha: 0.7),
-                          ),
-                          const SizedBox(height: 8),
-                          Text(
-                            preset.name,
-                            style: TextStyle(
-                              fontSize: 11,
-                              color: isSelected
-                                  ? Colors.white
-                                  : Colors.white.withValues(alpha: 0.7),
-                              fontWeight: isSelected
-                                  ? FontWeight.w600
-                                  : FontWeight.normal,
-                            ),
-                            textAlign: TextAlign.center,
-                            maxLines: 2,
-                          ),
-                        ],
-                      ),
-                    ),
-                  );
-                },
-              ),
-            ),
+        // Weather presets grid
+        Expanded(
+          flex: 3,
+          child: _buildPresetsGrid(),
+        ),
 
-            // Custom code input
-            Padding(
+        // Custom code input
+        _buildSliderControl(),
+      ],
+    );
+  }
+
+  Widget _buildLandscapeLayout() {
+    return Row(
+      children: [
+        // Left panel - Weather preview (static)
+        SizedBox(
+          width: MediaQuery.of(context).size.width * 0.38,
+          child: Center(
+            child: SingleChildScrollView(
               padding: const EdgeInsets.all(16),
-              child: GlassCard(
-                child: Row(
-                  children: [
-                    const Text('Custom Code:'),
-                    const SizedBox(width: 16),
-                    Expanded(
-                      child: Slider(
-                        value: _currentWeatherCode.toDouble(),
-                        min: 0,
-                        max: 99,
-                        divisions: 99,
-                        activeColor: Colors.white,
-                        inactiveColor: Colors.white24,
-                        label: _currentWeatherCode.toString(),
-                        onChanged: (value) =>
-                            setState(() => _currentWeatherCode = value.round()),
-                      ),
-                    ),
-                    SizedBox(
-                      width: 40,
-                      child: Text(
-                        _currentWeatherCode.toString(),
-                        style: const TextStyle(fontWeight: FontWeight.bold),
-                        textAlign: TextAlign.center,
-                      ),
-                    ),
-                  ],
+              child: _buildWeatherPreviewCard(),
+            ),
+          ),
+        ),
+        // Divider
+        Container(
+          width: 1,
+          color: Colors.white.withValues(alpha: 0.1),
+        ),
+        // Right panel - Controls (scrollable)
+        Expanded(
+          child: ListView(
+            padding: const EdgeInsets.all(16),
+            children: [
+              _buildDayNightToggle(),
+              const SizedBox(height: 16),
+              SizedBox(
+                height: 280,
+                child: _buildPresetsGrid(),
+              ),
+              _buildSliderControl(),
+              const SizedBox(height: 16),
+            ],
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildWeatherPreviewCard() {
+    return GlassCard(
+      padding: const EdgeInsets.all(32),
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Text(
+            'Weather Code: $_currentWeatherCode',
+            style: Theme.of(context).textTheme.titleLarge,
+          ),
+          const SizedBox(height: 8),
+          Text(
+            _presets.firstWhere(
+              (p) => p.code == _currentWeatherCode,
+              orElse: () => _WeatherPreset(
+                code: _currentWeatherCode,
+                name: 'Unknown',
+                icon: Icons.help,
+              ),
+            ).name,
+            style: Theme.of(context).textTheme.headlineMedium,
+          ),
+          const SizedBox(height: 16),
+          Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Icon(
+                _isDay ? Icons.wb_sunny : Icons.nightlight_round,
+                size: 48,
+              ),
+              const SizedBox(width: 8),
+              Text(
+                _isDay ? 'Day' : 'Night',
+                style: Theme.of(context).textTheme.titleMedium,
+              ),
+            ],
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildDayNightToggle() {
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 16),
+      child: GlassCard(
+        child: Row(
+          children: [
+            const Icon(Icons.wb_sunny),
+            const SizedBox(width: 8),
+            const Text('Day Mode'),
+            const Spacer(),
+            Switch(
+              value: _isDay,
+              onChanged: (value) => setState(() => _isDay = value),
+              activeColor: Colors.white,
+            ),
+            const Spacer(),
+            const Text('Night Mode'),
+            const SizedBox(width: 8),
+            const Icon(Icons.nightlight_round),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildPresetsGrid() {
+    return GridView.builder(
+      padding: const EdgeInsets.all(16),
+      gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+        crossAxisCount: 3,
+        childAspectRatio: 1,
+        crossAxisSpacing: 12,
+        mainAxisSpacing: 12,
+      ),
+      itemCount: _presets.length,
+      itemBuilder: (context, index) {
+        final preset = _presets[index];
+        final isSelected = preset.code == _currentWeatherCode;
+
+        return GestureDetector(
+          onTap: () => setState(() => _currentWeatherCode = preset.code),
+          child: AnimatedContainer(
+            duration: const Duration(milliseconds: 200),
+            decoration: BoxDecoration(
+              color: isSelected
+                  ? Colors.white.withValues(alpha: 0.3)
+                  : Colors.white.withValues(alpha: 0.1),
+              borderRadius: BorderRadius.circular(16),
+              border: Border.all(
+                color: isSelected
+                    ? Colors.white.withValues(alpha: 0.6)
+                    : Colors.white.withValues(alpha: 0.2),
+                width: isSelected ? 2 : 1,
+              ),
+            ),
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Icon(
+                  preset.icon,
+                  size: 32,
+                  color: isSelected
+                      ? Colors.white
+                      : Colors.white.withValues(alpha: 0.7),
                 ),
+                const SizedBox(height: 8),
+                Text(
+                  preset.name,
+                  style: TextStyle(
+                    fontSize: 11,
+                    color: isSelected
+                        ? Colors.white
+                        : Colors.white.withValues(alpha: 0.7),
+                    fontWeight: isSelected
+                        ? FontWeight.w600
+                        : FontWeight.normal,
+                  ),
+                  textAlign: TextAlign.center,
+                  maxLines: 2,
+                ),
+              ],
+            ),
+          ),
+        );
+      },
+    );
+  }
+
+  Widget _buildSliderControl() {
+    return Padding(
+      padding: const EdgeInsets.all(16),
+      child: GlassCard(
+        child: Row(
+          children: [
+            const Text('Custom Code:'),
+            const SizedBox(width: 16),
+            Expanded(
+              child: Slider(
+                value: _currentWeatherCode.toDouble(),
+                min: 0,
+                max: 99,
+                divisions: 99,
+                activeColor: Colors.white,
+                inactiveColor: Colors.white24,
+                label: _currentWeatherCode.toString(),
+                onChanged: (value) =>
+                    setState(() => _currentWeatherCode = value.round()),
+              ),
+            ),
+            SizedBox(
+              width: 40,
+              child: Text(
+                _currentWeatherCode.toString(),
+                style: const TextStyle(fontWeight: FontWeight.bold),
+                textAlign: TextAlign.center,
               ),
             ),
           ],

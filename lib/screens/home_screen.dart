@@ -139,6 +139,27 @@ class _HomeScreenState extends State<HomeScreen> {
   Widget _buildWeatherContent(WeatherData weather, bool isRefreshing) {
     final today = weather.daily.isNotEmpty ? weather.daily.first : null;
 
+    return OrientationBuilder(
+      builder: (context, orientation) {
+        if (orientation == Orientation.landscape) {
+          // Enable immersive fullscreen mode in landscape
+          SystemChrome.setEnabledSystemUIMode(
+            SystemUiMode.immersiveSticky,
+            overlays: [],
+          );
+          return _buildLandscapeContent(weather, today, isRefreshing);
+        }
+        // Restore normal UI in portrait
+        SystemChrome.setEnabledSystemUIMode(
+          SystemUiMode.edgeToEdge,
+          overlays: SystemUiOverlay.values,
+        );
+        return _buildPortraitContent(weather, today, isRefreshing);
+      },
+    );
+  }
+
+  Widget _buildPortraitContent(WeatherData weather, DailyForecast? today, bool isRefreshing) {
     return RefreshIndicator(
       onRefresh: _refreshWeather,
       color: AppTheme.textPrimary,
@@ -149,25 +170,7 @@ class _HomeScreenState extends State<HomeScreen> {
         ),
         slivers: [
           // App bar with actions
-          SliverAppBar(
-            backgroundColor: Colors.transparent,
-            elevation: 0,
-            floating: true,
-            leading: IconButton(
-              icon: const Icon(Icons.menu_rounded),
-              onPressed: () => _openCityList(),
-            ),
-            actions: [
-              IconButton(
-                icon: const Icon(Icons.add_rounded),
-                onPressed: () => _openSearch(),
-              ),
-              IconButton(
-                icon: const Icon(Icons.settings_outlined),
-                onPressed: () => _openSettings(),
-              ),
-            ],
-          ),
+          _buildAppBar(),
 
           // Current weather display
           SliverToBoxAdapter(
@@ -183,96 +186,228 @@ class _HomeScreenState extends State<HomeScreen> {
           ),
 
           // Refresh indicator
-          if (isRefreshing)
-            SliverToBoxAdapter(
-              child: Center(
-                child: Padding(
-                  padding: const EdgeInsets.only(top: 16),
-                  child: SizedBox(
-                    width: 20,
-                    height: 20,
-                    child: CircularProgressIndicator(
-                      strokeWidth: 2,
-                      valueColor: AlwaysStoppedAnimation<Color>(
-                        Colors.white.withValues(alpha: 0.7),
-                      ),
-                    ),
-                  ),
-                ),
-              ),
-            ),
+          if (isRefreshing) _buildRefreshingIndicator(),
 
-          // Last updated indicator
-          SliverToBoxAdapter(
-            child: Center(
-              child: Padding(
-                padding: const EdgeInsets.only(top: 16, bottom: 8),
-                child: Text(
-                  'Updated ${DateTimeUtils.formatRelativeTime(weather.fetchedAt)}',
-                  style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                    color: AppTheme.textTertiary,
-                  ),
-                ),
-              ),
-            ).animate().fadeIn(duration: 400.ms, delay: 100.ms),
-          ),
+          // Last updated
+          _buildLastUpdated(weather),
 
           const SliverToBoxAdapter(child: SizedBox(height: 24)),
 
-          // Hourly forecast
-          SliverToBoxAdapter(
-            child: HourlyForecastCard(hourly: weather.hourly)
-                .animate().fadeIn(duration: 600.ms, delay: 200.ms).slideY(begin: 0.03, end: 0, duration: 500.ms, curve: Curves.easeOut),
-          ),
-
-          const SliverToBoxAdapter(child: SizedBox(height: 16)),
-
-          // Daily forecast
-          SliverToBoxAdapter(
-            child: DailyForecastCard(daily: weather.daily)
-                .animate().fadeIn(duration: 600.ms, delay: 350.ms).slideY(begin: 0.03, end: 0, duration: 500.ms, curve: Curves.easeOut),
-          ),
-
-          const SliverToBoxAdapter(child: SizedBox(height: 16)),
-
-          // Weather details
-          if (today != null)
-            SliverToBoxAdapter(
-              child: WeatherDetailsGrid(
-                current: weather.current,
-                today: today,
-                airQuality: weather.airQuality,
-              ).animate().fadeIn(duration: 600.ms, delay: 500.ms).slideY(begin: 0.03, end: 0, duration: 500.ms, curve: Curves.easeOut),
-            ),
-
-          // Advanced details (if enabled in settings)
-          Consumer<SettingsProvider>(
-            builder: (context, settings, _) {
-              if (!settings.advancedViewEnabled) {
-                return const SliverToBoxAdapter(child: SizedBox.shrink());
-              }
-              return SliverToBoxAdapter(
-                child: Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 16),
-                  child: Column(
-                    children: [
-                      const SizedBox(height: 24),
-                      AdvancedDetailsCard(
-                        weather: weather,
-                        formatTemp: settings.formatTemp,
-                      ),
-                    ],
-                  ),
-                ).animate().fadeIn(duration: 600.ms, delay: 650.ms).slideY(begin: 0.03, end: 0, duration: 500.ms, curve: Curves.easeOut),
-              );
-            },
-          ),
+          // Forecasts and details
+          ..._buildForecastSlivers(weather, today),
 
           // Bottom padding
           const SliverToBoxAdapter(child: SizedBox(height: 32)),
         ],
       ),
     );
+  }
+
+  Widget _buildLandscapeContent(WeatherData weather, DailyForecast? today, bool isRefreshing) {
+    return Row(
+      children: [
+        // Left panel - Static weather display
+        SizedBox(
+          width: MediaQuery.of(context).size.width * 0.38,
+          child: Column(
+            children: [
+              // App bar actions
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                child: Row(
+                  children: [
+                    IconButton(
+                      icon: const Icon(Icons.menu_rounded),
+                      onPressed: () => _openCityList(),
+                    ),
+                    const Spacer(),
+                    IconButton(
+                      icon: const Icon(Icons.add_rounded),
+                      onPressed: () => _openSearch(),
+                    ),
+                    IconButton(
+                      icon: const Icon(Icons.settings_outlined),
+                      onPressed: () => _openSettings(),
+                    ),
+                  ],
+                ),
+              ),
+              // Current weather display
+              Expanded(
+                child: Center(
+                  child: SingleChildScrollView(
+                    padding: const EdgeInsets.symmetric(horizontal: 16),
+                    child: Column(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        CurrentWeatherDisplay(
+                          weather: weather.current,
+                          locationName: weather.location.name,
+                          temperatureMax: today?.temperatureMax ?? weather.current.temperature,
+                          temperatureMin: today?.temperatureMin ?? weather.current.temperature,
+                        ),
+                        const SizedBox(height: 16),
+                        if (isRefreshing)
+                          SizedBox(
+                            width: 20,
+                            height: 20,
+                            child: CircularProgressIndicator(
+                              strokeWidth: 2,
+                              valueColor: AlwaysStoppedAnimation<Color>(
+                                Colors.white.withValues(alpha: 0.7),
+                              ),
+                            ),
+                          ),
+                        Text(
+                          'Updated ${DateTimeUtils.formatRelativeTime(weather.fetchedAt)}',
+                          style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                            color: AppTheme.textTertiary,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ),
+        // Divider
+        Container(
+          width: 1,
+          color: Colors.white.withValues(alpha: 0.1),
+        ),
+        // Right panel - Scrollable forecasts
+        Expanded(
+          child: RefreshIndicator(
+            onRefresh: _refreshWeather,
+            color: AppTheme.textPrimary,
+            backgroundColor: Colors.white.withValues(alpha: 0.2),
+            child: CustomScrollView(
+              physics: const BouncingScrollPhysics(
+                parent: AlwaysScrollableScrollPhysics(),
+              ),
+              slivers: [
+                const SliverToBoxAdapter(child: SizedBox(height: 16)),
+                ..._buildForecastSlivers(weather, today),
+                const SliverToBoxAdapter(child: SizedBox(height: 32)),
+              ],
+            ),
+          ),
+        ),
+      ],
+    );
+  }
+
+  SliverAppBar _buildAppBar() {
+    return SliverAppBar(
+      backgroundColor: Colors.transparent,
+      elevation: 0,
+      floating: true,
+      leading: IconButton(
+        icon: const Icon(Icons.menu_rounded),
+        onPressed: () => _openCityList(),
+      ),
+      actions: [
+        IconButton(
+          icon: const Icon(Icons.add_rounded),
+          onPressed: () => _openSearch(),
+        ),
+        IconButton(
+          icon: const Icon(Icons.settings_outlined),
+          onPressed: () => _openSettings(),
+        ),
+      ],
+    );
+  }
+
+  SliverToBoxAdapter _buildRefreshingIndicator() {
+    return SliverToBoxAdapter(
+      child: Center(
+        child: Padding(
+          padding: const EdgeInsets.only(top: 16),
+          child: SizedBox(
+            width: 20,
+            height: 20,
+            child: CircularProgressIndicator(
+              strokeWidth: 2,
+              valueColor: AlwaysStoppedAnimation<Color>(
+                Colors.white.withValues(alpha: 0.7),
+              ),
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+
+  SliverToBoxAdapter _buildLastUpdated(WeatherData weather) {
+    return SliverToBoxAdapter(
+      child: Center(
+        child: Padding(
+          padding: const EdgeInsets.only(top: 16, bottom: 8),
+          child: Text(
+            'Updated ${DateTimeUtils.formatRelativeTime(weather.fetchedAt)}',
+            style: Theme.of(context).textTheme.bodySmall?.copyWith(
+              color: AppTheme.textTertiary,
+            ),
+          ),
+        ),
+      ).animate().fadeIn(duration: 400.ms, delay: 100.ms),
+    );
+  }
+
+  List<Widget> _buildForecastSlivers(WeatherData weather, DailyForecast? today) {
+    return [
+      // Hourly forecast
+      SliverToBoxAdapter(
+        child: HourlyForecastCard(hourly: weather.hourly)
+            .animate().fadeIn(duration: 600.ms, delay: 200.ms).slideY(begin: 0.03, end: 0, duration: 500.ms, curve: Curves.easeOut),
+      ),
+
+      const SliverToBoxAdapter(child: SizedBox(height: 16)),
+
+      // Daily forecast
+      SliverToBoxAdapter(
+        child: DailyForecastCard(daily: weather.daily)
+            .animate().fadeIn(duration: 600.ms, delay: 350.ms).slideY(begin: 0.03, end: 0, duration: 500.ms, curve: Curves.easeOut),
+      ),
+
+      const SliverToBoxAdapter(child: SizedBox(height: 16)),
+
+      // Weather details
+      if (today != null)
+        SliverToBoxAdapter(
+          child: WeatherDetailsGrid(
+            current: weather.current,
+            today: today,
+            airQuality: weather.airQuality,
+          ).animate().fadeIn(duration: 600.ms, delay: 500.ms).slideY(begin: 0.03, end: 0, duration: 500.ms, curve: Curves.easeOut),
+        ),
+
+      // Advanced details (if enabled in settings)
+      Consumer<SettingsProvider>(
+        builder: (context, settings, _) {
+          if (!settings.advancedViewEnabled) {
+            return const SliverToBoxAdapter(child: SizedBox.shrink());
+          }
+          return SliverToBoxAdapter(
+            child: Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 16),
+              child: Column(
+                children: [
+                  const SizedBox(height: 24),
+                  AdvancedDetailsCard(
+                    weather: weather,
+                    formatTemp: settings.formatTemp,
+                  ),
+                ],
+              ),
+            ).animate().fadeIn(duration: 600.ms, delay: 650.ms).slideY(begin: 0.03, end: 0, duration: 500.ms, curve: Curves.easeOut),
+          );
+        },
+      ),
+    ];
   }
 
   Widget _buildErrorState(String error) {

@@ -15,6 +15,15 @@ A beautiful, glassmorphic weather application for Android inspired by iOS Weathe
   - Current conditions with detailed metrics (feels like, humidity, wind, pressure, visibility)
   - 24-hour hourly forecast
   - 10-day daily forecast with temperature bars
+- **🌬️ Air Quality Index**: Real-time AQI with color-coded categories and pollutant breakdown (PM2.5, PM10, ozone, NO₂)
+- **👁️ Visibility**: Current visibility conditions with quality descriptions
+- **📱 Simple & Advanced Views**: Toggle between compact and detailed weather data
+  - **Simple View**: Essential weather info with visibility and AQI
+  - **Advanced View**: Categorized detailed data (Atmosphere, Wind, Precipitation, Sun & Daylight, UV, Air Quality)
+- **📐 Responsive Layouts**: Optimized for both portrait and landscape orientations
+  - **Portrait**: Single-column scrollable layout
+  - **Landscape**: Two-column split view (static info left, scrollable cards right)
+  - **Immersive Fullscreen**: Landscape mode hides status/nav bars for distraction-free viewing
 - **🌅 Dynamic Backgrounds**: Beautiful gradient backgrounds that change based on weather and time of day
 - **🎭 Weather Animations**: 
   - Falling rain drops for rainy conditions
@@ -23,7 +32,8 @@ A beautiful, glassmorphic weather application for Android inspired by iOS Weathe
   - Ambient lightning glow for thunderstorms
   - Drifting fog layers
   - Floating clouds
-- **⚙️ Settings**: Toggle between Celsius and Fahrenheit
+- **⚙️ Settings**: Toggle between Celsius and Fahrenheit, enable advanced view
+- **🥚 Easter Egg**: Tap the cloud icon 7 times in settings to unlock developer options
 - **🔒 Permission Handling**: Graceful location permission management
 - **✨ Smooth Animations**: Entrance animations with staggered fade and slide effects
 
@@ -124,6 +134,7 @@ lib/
 │   ├── search_screen.dart        # City search
 │   └── settings_screen.dart      # Settings & About
 ├── services/
+│   ├── air_quality_service.dart  # Open-Meteo Air Quality API
 │   ├── location_service.dart     # GPS & geocoding logic
 │   ├── storage_service.dart      # SharedPreferences wrapper
 │   └── weather_service.dart      # Open-Meteo API integration

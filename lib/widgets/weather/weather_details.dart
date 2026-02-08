@@ -21,126 +21,118 @@ class WeatherDetailsGrid extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 16),
-      child: Column(
-        children: [
-          // Row 1: UV Index, Sunrise
-          Row(
-            children: [
-              Expanded(
-                child: _DetailCard(
-                  icon: Icons.wb_sunny_outlined,
-                  title: 'UV INDEX',
-                  value: current.uvIndex.toStringAsFixed(0),
-                  subtitle: WeatherUtils.getUvDescription(current.uvIndex),
-                  valueColor: WeatherUtils.getUvColor(current.uvIndex),
-                ),
-              ),
-              const SizedBox(width: 12),
-              Expanded(
-                child: _DetailCard(
-                  icon: Icons.wb_twilight,
-                  title: 'SUNSET',
-                  value: DateTimeUtils.formatTime(today.sunset),
-                  subtitle: 'Sunrise: ${DateTimeUtils.formatTime(today.sunrise)}',
-                ),
-              ),
-            ],
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        // Use 3 columns in landscape (wider), 2 in portrait
+        final isWide = constraints.maxWidth > 600;
+        final columns = isWide ? 3 : 2;
+        final spacing = 12.0;
+        final cardWidth = (constraints.maxWidth - 32 - (spacing * (columns - 1))) / columns;
+
+        final cards = <Widget>[
+          // UV Index
+          SizedBox(
+            width: cardWidth,
+            child: _DetailCard(
+              icon: Icons.wb_sunny_outlined,
+              title: 'UV INDEX',
+              value: current.uvIndex.toStringAsFixed(0),
+              subtitle: WeatherUtils.getUvDescription(current.uvIndex),
+              valueColor: WeatherUtils.getUvColor(current.uvIndex),
+            ),
           ),
-
-          const SizedBox(height: 12),
-
-          // Row 2: Wind, Feels Like
-          Row(
-            children: [
-              Expanded(
-                child: _WindCard(
-                  speed: current.windSpeed,
-                  direction: current.windDirection,
-                  gusts: current.windGusts,
-                ),
-              ),
-              const SizedBox(width: 12),
-              Expanded(
-                child: _DetailCard(
-                  icon: Icons.thermostat_outlined,
-                  title: 'FEELS LIKE',
-                  value: '${current.apparentTemperature.round()}°',
-                  subtitle: _getFeelsLikeDescription(current),
-                ),
-              ),
-            ],
+          // Sunset
+          SizedBox(
+            width: cardWidth,
+            child: _DetailCard(
+              icon: Icons.wb_twilight,
+              title: 'SUNSET',
+              value: DateTimeUtils.formatTime(today.sunset),
+              subtitle: 'Sunrise: ${DateTimeUtils.formatTime(today.sunrise)}',
+            ),
           ),
-
-          const SizedBox(height: 12),
-
-          // Row 3: Humidity, Rainfall
-          Row(
-            children: [
-              Expanded(
-                child: _DetailCard(
-                  icon: Icons.water_drop_outlined,
-                  title: 'HUMIDITY',
-                  value: '${current.relativeHumidity}%',
-                  subtitle: _getHumidityDescription(current.relativeHumidity),
-                ),
-              ),
-              const SizedBox(width: 12),
-              Expanded(
-                child: _DetailCard(
-                  icon: Icons.umbrella_outlined,
-                  title: 'RAINFALL',
-                  value: UnitConverter.formatPrecipitation(today.precipitationSum),
-                  subtitle: 'Expected today',
-                ),
-              ),
-            ],
+          // Wind
+          SizedBox(
+            width: cardWidth,
+            child: _WindCard(
+              speed: current.windSpeed,
+              direction: current.windDirection,
+              gusts: current.windGusts,
+            ),
           ),
-
-          const SizedBox(height: 12),
-
-          // Row 4: Pressure, Cloud Cover
-          Row(
-            children: [
-              Expanded(
-                child: _PressureCard(pressure: current.pressure),
-              ),
-              const SizedBox(width: 12),
-              Expanded(
-                child: _DetailCard(
-                  icon: Icons.cloud_outlined,
-                  title: 'CLOUD COVER',
-                  value: '${current.cloudCover}%',
-                  subtitle: _getCloudDescription(current.cloudCover),
-                ),
-              ),
-            ],
+          // Feels Like
+          SizedBox(
+            width: cardWidth,
+            child: _DetailCard(
+              icon: Icons.thermostat_outlined,
+              title: 'FEELS LIKE',
+              value: '${current.apparentTemperature.round()}°',
+              subtitle: _getFeelsLikeDescription(current),
+            ),
           ),
-
-          const SizedBox(height: 12),
-
-          // Row 5: Visibility, AQI (if available)
-          Row(
-            children: [
-              Expanded(
-                child: _VisibilityCard(visibility: current.visibility),
-              ),
-              const SizedBox(width: 12),
-              Expanded(
-                child: airQuality != null
-                    ? _AqiCard(airQuality: airQuality!)
-                    : _DetailCard(
-                        icon: Icons.air_rounded,
-                        title: 'AIR QUALITY',
-                        value: '--',
-                        subtitle: 'Data unavailable',
-                      ),
-              ),
-            ],
+          // Humidity
+          SizedBox(
+            width: cardWidth,
+            child: _DetailCard(
+              icon: Icons.water_drop_outlined,
+              title: 'HUMIDITY',
+              value: '${current.relativeHumidity}%',
+              subtitle: _getHumidityDescription(current.relativeHumidity),
+            ),
           ),
-        ],
-      ),
+          // Rainfall
+          SizedBox(
+            width: cardWidth,
+            child: _DetailCard(
+              icon: Icons.umbrella_outlined,
+              title: 'RAINFALL',
+              value: UnitConverter.formatPrecipitation(today.precipitationSum),
+              subtitle: 'Expected today',
+            ),
+          ),
+          // Pressure
+          SizedBox(
+            width: cardWidth,
+            child: _PressureCard(pressure: current.pressure),
+          ),
+          // Cloud Cover
+          SizedBox(
+            width: cardWidth,
+            child: _DetailCard(
+              icon: Icons.cloud_outlined,
+              title: 'CLOUD COVER',
+              value: '${current.cloudCover}%',
+              subtitle: _getCloudDescription(current.cloudCover),
+            ),
+          ),
+          // Visibility
+          SizedBox(
+            width: cardWidth,
+            child: _VisibilityCard(visibility: current.visibility),
+          ),
+          // AQI
+          SizedBox(
+            width: cardWidth,
+            child: airQuality != null
+                ? _AqiCard(airQuality: airQuality!)
+                : _DetailCard(
+                    icon: Icons.air_rounded,
+                    title: 'AIR QUALITY',
+                    value: '--',
+                    subtitle: 'Data unavailable',
+                  ),
+          ),
+        ];
+
+        return Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 16),
+          child: Wrap(
+            spacing: spacing,
+            runSpacing: spacing,
+            children: cards,
+          ),
+        );
+      },
     );
   }
 
