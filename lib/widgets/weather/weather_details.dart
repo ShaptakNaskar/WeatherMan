@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_animate/flutter_animate.dart';
 import 'package:weatherman/config/theme.dart';
 import 'package:weatherman/models/weather.dart';
 import 'package:weatherman/utils/date_utils.dart';
@@ -46,10 +45,7 @@ class WeatherDetailsGrid extends StatelessWidget {
                 ),
               ),
             ],
-          )
-              .animate()
-              .fadeIn(duration: 500.ms, delay: 1000.ms)
-              .slideY(begin: 0.2, end: 0),
+          ),
 
           const SizedBox(height: 12),
 
@@ -73,10 +69,7 @@ class WeatherDetailsGrid extends StatelessWidget {
                 ),
               ),
             ],
-          )
-              .animate()
-              .fadeIn(duration: 500.ms, delay: 1100.ms)
-              .slideY(begin: 0.2, end: 0),
+          ),
 
           const SizedBox(height: 12),
 
@@ -101,10 +94,7 @@ class WeatherDetailsGrid extends StatelessWidget {
                 ),
               ),
             ],
-          )
-              .animate()
-              .fadeIn(duration: 500.ms, delay: 1200.ms)
-              .slideY(begin: 0.2, end: 0),
+          ),
 
           const SizedBox(height: 12),
 
@@ -124,10 +114,7 @@ class WeatherDetailsGrid extends StatelessWidget {
                 ),
               ),
             ],
-          )
-              .animate()
-              .fadeIn(duration: 500.ms, delay: 1300.ms)
-              .slideY(begin: 0.2, end: 0),
+          ),
         ],
       ),
     );
@@ -175,44 +162,47 @@ class _DetailCard extends StatelessWidget {
   Widget build(BuildContext context) {
     return GlassCard(
       padding: const EdgeInsets.all(16),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          // Icon and title
-          Row(
-            children: [
-              Icon(icon, size: 16, color: AppTheme.textSecondary),
-              const SizedBox(width: 6),
+      child: SizedBox(
+        height: 100,
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            // Icon and title
+            Row(
+              children: [
+                Icon(icon, size: 16, color: AppTheme.textSecondary),
+                const SizedBox(width: 6),
+                Text(
+                  title,
+                  style: Theme.of(context).textTheme.labelSmall?.copyWith(
+                    color: AppTheme.textSecondary,
+                    letterSpacing: 0.5,
+                  ),
+                ),
+              ],
+            ),
+
+            const SizedBox(height: 12),
+
+            // Value
+            Text(
+              value,
+              style: Theme.of(context).textTheme.headlineMedium?.copyWith(
+                color: valueColor ?? AppTheme.textPrimary,
+              ),
+            ),
+
+            if (subtitle != null) ...[
+              const Spacer(),
               Text(
-                title,
-                style: Theme.of(context).textTheme.labelSmall?.copyWith(
+                subtitle!,
+                style: Theme.of(context).textTheme.bodySmall?.copyWith(
                   color: AppTheme.textSecondary,
-                  letterSpacing: 0.5,
                 ),
               ),
             ],
-          ),
-
-          const SizedBox(height: 12),
-
-          // Value
-          Text(
-            value,
-            style: Theme.of(context).textTheme.headlineMedium?.copyWith(
-              color: valueColor ?? AppTheme.textPrimary,
-            ),
-          ),
-
-          if (subtitle != null) ...[
-            const Spacer(),
-            Text(
-              subtitle!,
-              style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                color: AppTheme.textSecondary,
-              ),
-            ),
           ],
-        ],
+        ),
       ),
     );
   }
@@ -234,66 +224,69 @@ class _WindCard extends StatelessWidget {
   Widget build(BuildContext context) {
     return GlassCard(
       padding: const EdgeInsets.all(16),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          // Icon and title
-          Row(
-            children: [
-              Icon(Icons.air, size: 16, color: AppTheme.textSecondary),
-              const SizedBox(width: 6),
-              Text(
-                'WIND',
-                style: Theme.of(context).textTheme.labelSmall?.copyWith(
-                  color: AppTheme.textSecondary,
-                  letterSpacing: 0.5,
-                ),
-              ),
-            ],
-          ),
-
-          const SizedBox(height: 12),
-
-          // Wind speed and direction
-          Row(
-            crossAxisAlignment: CrossAxisAlignment.end,
-            children: [
-              Text(
-                '${speed.round()}',
-                style: Theme.of(context).textTheme.headlineMedium,
-              ),
-              const SizedBox(width: 4),
-              Padding(
-                padding: const EdgeInsets.only(bottom: 4),
-                child: Text(
-                  'km/h',
-                  style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+      child: SizedBox(
+        height: 100,
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            // Icon and title
+            Row(
+              children: [
+                Icon(Icons.air, size: 16, color: AppTheme.textSecondary),
+                const SizedBox(width: 6),
+                Text(
+                  'WIND',
+                  style: Theme.of(context).textTheme.labelSmall?.copyWith(
                     color: AppTheme.textSecondary,
+                    letterSpacing: 0.5,
                   ),
                 ),
-              ),
-              const Spacer(),
-              // Compass arrow
-              Transform.rotate(
-                angle: direction * 3.14159 / 180,
-                child: Icon(
-                  Icons.navigation_rounded,
-                  color: AppTheme.textSecondary,
-                  size: 24,
-                ),
-              ),
-            ],
-          ),
-
-          const Spacer(),
-
-          Text(
-            '${WeatherUtils.getWindDirection(direction)} · Gusts ${gusts.round()} km/h',
-            style: Theme.of(context).textTheme.bodySmall?.copyWith(
-              color: AppTheme.textSecondary,
+              ],
             ),
-          ),
-        ],
+
+            const SizedBox(height: 12),
+
+            // Wind speed and direction
+            Row(
+              crossAxisAlignment: CrossAxisAlignment.end,
+              children: [
+                Text(
+                  '${speed.round()}',
+                  style: Theme.of(context).textTheme.headlineMedium,
+                ),
+                const SizedBox(width: 4),
+                Padding(
+                  padding: const EdgeInsets.only(bottom: 4),
+                  child: Text(
+                    'km/h',
+                    style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                      color: AppTheme.textSecondary,
+                    ),
+                  ),
+                ),
+                const Spacer(),
+                // Compass arrow
+                Transform.rotate(
+                  angle: direction * 3.14159 / 180,
+                  child: Icon(
+                    Icons.navigation_rounded,
+                    color: AppTheme.textSecondary,
+                    size: 24,
+                  ),
+                ),
+              ],
+            ),
+
+            const Spacer(),
+
+            Text(
+              '${WeatherUtils.getWindDirection(direction)} · Gusts ${gusts.round()} km/h',
+              style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                color: AppTheme.textSecondary,
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }
@@ -319,56 +312,59 @@ class _PressureCard extends StatelessWidget {
 
     return GlassCard(
       padding: const EdgeInsets.all(16),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          // Icon and title
-          Row(
-            children: [
-              Icon(Icons.speed_outlined, size: 16, color: AppTheme.textSecondary),
-              const SizedBox(width: 6),
-              Text(
-                'PRESSURE',
-                style: Theme.of(context).textTheme.labelSmall?.copyWith(
-                  color: AppTheme.textSecondary,
-                  letterSpacing: 0.5,
-                ),
-              ),
-            ],
-          ),
-
-          const SizedBox(height: 12),
-
-          // Pressure value
-          Row(
-            crossAxisAlignment: CrossAxisAlignment.end,
-            children: [
-              Text(
-                pressure.round().toString(),
-                style: Theme.of(context).textTheme.headlineMedium,
-              ),
-              const SizedBox(width: 4),
-              Padding(
-                padding: const EdgeInsets.only(bottom: 4),
-                child: Text(
-                  'hPa',
-                  style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+      child: SizedBox(
+        height: 100,
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            // Icon and title
+            Row(
+              children: [
+                Icon(Icons.speed_outlined, size: 16, color: AppTheme.textSecondary),
+                const SizedBox(width: 6),
+                Text(
+                  'PRESSURE',
+                  style: Theme.of(context).textTheme.labelSmall?.copyWith(
                     color: AppTheme.textSecondary,
+                    letterSpacing: 0.5,
                   ),
                 ),
-              ),
-            ],
-          ),
-
-          const Spacer(),
-
-          Text(
-            description,
-            style: Theme.of(context).textTheme.bodySmall?.copyWith(
-              color: AppTheme.textSecondary,
+              ],
             ),
-          ),
-        ],
+
+            const SizedBox(height: 12),
+
+            // Pressure value
+            Row(
+              crossAxisAlignment: CrossAxisAlignment.end,
+              children: [
+                Text(
+                  pressure.round().toString(),
+                  style: Theme.of(context).textTheme.headlineMedium,
+                ),
+                const SizedBox(width: 4),
+                Padding(
+                  padding: const EdgeInsets.only(bottom: 4),
+                  child: Text(
+                    'hPa',
+                    style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                      color: AppTheme.textSecondary,
+                    ),
+                  ),
+                ),
+              ],
+            ),
+
+            const Spacer(),
+
+            Text(
+              description,
+              style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                color: AppTheme.textSecondary,
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }

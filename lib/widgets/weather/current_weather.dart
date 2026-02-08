@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_animate/flutter_animate.dart';
 import 'package:provider/provider.dart';
 import 'package:weatherman/config/theme.dart';
 import 'package:weatherman/models/weather.dart';
@@ -36,10 +35,7 @@ class CurrentWeatherDisplay extends StatelessWidget {
             letterSpacing: 1,
           ),
           textAlign: TextAlign.center,
-        )
-            .animate()
-            .fadeIn(duration: 600.ms)
-            .slideY(begin: -0.2, end: 0),
+        ),
 
         const SizedBox(height: 8),
 
@@ -51,10 +47,7 @@ class CurrentWeatherDisplay extends StatelessWidget {
             fontWeight: FontWeight.w100,
             height: 1,
           ),
-        )
-            .animate()
-            .fadeIn(duration: 800.ms, delay: 200.ms)
-            .scale(begin: const Offset(0.8, 0.8), end: const Offset(1, 1)),
+        ),
 
         const SizedBox(height: 4),
 
@@ -65,9 +58,7 @@ class CurrentWeatherDisplay extends StatelessWidget {
             color: AppTheme.textSecondary,
             fontWeight: FontWeight.w400,
           ),
-        )
-            .animate()
-            .fadeIn(duration: 600.ms, delay: 400.ms),
+        ),
 
         const SizedBox(height: 8),
 
@@ -89,9 +80,7 @@ class CurrentWeatherDisplay extends StatelessWidget {
               ),
             ),
           ],
-        )
-            .animate()
-            .fadeIn(duration: 600.ms, delay: 500.ms),
+        ),
       ],
     );
   }

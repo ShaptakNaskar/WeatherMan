@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_animate/flutter_animate.dart';
 import 'package:provider/provider.dart';
 import 'package:weatherman/config/theme.dart';
 import 'package:weatherman/models/weather.dart';
@@ -73,22 +72,13 @@ class HourlyForecastCard extends StatelessWidget {
                 return _HourlyItem(
                   forecast: filteredHourly[index],
                   isFirst: index == 0,
-                )
-                    .animate()
-                    .fadeIn(
-                      duration: 400.ms,
-                      delay: Duration(milliseconds: index * 50),
-                    )
-                    .slideX(begin: 0.2, end: 0);
+                );
               },
             ),
           ),
         ],
       ),
-    )
-        .animate()
-        .fadeIn(duration: 600.ms, delay: 600.ms)
-        .slideY(begin: 0.2, end: 0);
+    );
   }
 }
 

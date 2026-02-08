@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_animate/flutter_animate.dart';
 import 'package:provider/provider.dart';
 import 'package:weatherman/config/theme.dart';
 import 'package:weatherman/models/weather.dart';
@@ -75,20 +74,11 @@ class DailyForecastCard extends StatelessWidget {
               tempRange: tempRange,
               settings: settings,
               showDivider: !isLast,
-            )
-                .animate()
-                .fadeIn(
-                  duration: 400.ms,
-                  delay: Duration(milliseconds: 700 + index * 50),
-                )
-                .slideX(begin: 0.1, end: 0);
+            );
           }),
         ],
       ),
-    )
-        .animate()
-        .fadeIn(duration: 600.ms, delay: 800.ms)
-        .slideY(begin: 0.2, end: 0);
+    );
   }
 }
 
@@ -110,8 +100,8 @@ class _DailyItem extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     // Calculate positions for the temperature bar
-    final lowPercent = (forecast.temperatureMin - globalMin) / tempRange;
-    final highPercent = (forecast.temperatureMax - globalMin) / tempRange;
+    final lowPercent = tempRange > 0 ? (forecast.temperatureMin - globalMin) / tempRange : 0.0;
+    final highPercent = tempRange > 0 ? (forecast.temperatureMax - globalMin) / tempRange : 1.0;
 
     return Column(
       children: [
@@ -180,7 +170,7 @@ class _DailyItem extends StatelessWidget {
                     return Container(
                       height: 6,
                       decoration: BoxDecoration(
-                        color: Colors.white.withOpacity(0.1),
+                        color: Colors.white.withValues(alpha: 0.1),
                         borderRadius: BorderRadius.circular(3),
                       ),
                       child: Stack(

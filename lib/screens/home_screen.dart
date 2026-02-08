@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:flutter_animate/flutter_animate.dart';
 import 'package:provider/provider.dart';
 import 'package:weatherman/config/theme.dart';
 import 'package:weatherman/models/weather.dart';
@@ -141,7 +140,7 @@ class _HomeScreenState extends State<HomeScreen> {
     return RefreshIndicator(
       onRefresh: _refreshWeather,
       color: AppTheme.textPrimary,
-      backgroundColor: Colors.white.withOpacity(0.2),
+      backgroundColor: Colors.white.withValues(alpha: 0.2),
       child: CustomScrollView(
         physics: const BouncingScrollPhysics(
           parent: AlwaysScrollableScrollPhysics(),
@@ -211,9 +210,7 @@ class _HomeScreenState extends State<HomeScreen> {
                   style: Theme.of(context).textTheme.bodySmall?.copyWith(
                     color: AppTheme.textTertiary,
                   ),
-                )
-                    .animate()
-                    .fadeIn(duration: 400.ms, delay: 600.ms),
+                ),
               ),
             ),
           ),
