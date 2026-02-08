@@ -1,5 +1,6 @@
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
+import 'package:fluttertoast/fluttertoast.dart';
 import 'package:provider/provider.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'package:weatherman/config/theme.dart';
@@ -12,9 +13,14 @@ import 'package:weatherman/widgets/backgrounds/dynamic_background.dart';
 import 'package:weatherman/widgets/glassmorphic/glass_card.dart';
 
 /// Settings screen
-class SettingsScreen extends StatelessWidget {
+class SettingsScreen extends StatefulWidget {
   const SettingsScreen({super.key});
 
+  @override
+  State<SettingsScreen> createState() => _SettingsScreenState();
+}
+
+class _SettingsScreenState extends State<SettingsScreen> {
   // Text shadows for legibility on light backgrounds
   static const List<Shadow> _textShadows = [
     Shadow(
@@ -23,6 +29,37 @@ class SettingsScreen extends StatelessWidget {
       offset: Offset(0, 1),
     ),
   ];
+
+  // Easter egg: tap cloud icon 7 times to unlock developer options
+  int _tapCount = 0;
+  bool _developerOptionsUnlocked = false;
+  static const int _requiredTaps = 7;
+
+  void _onCloudTap() {
+    setState(() {
+      _tapCount++;
+      // Cancel any existing toast first (override, don't queue)
+      Fluttertoast.cancel();
+      
+      if (_tapCount >= _requiredTaps && !_developerOptionsUnlocked) {
+        _developerOptionsUnlocked = true;
+        Fluttertoast.showToast(
+          msg: '🎉 Developer options unlocked!',
+          toastLength: Toast.LENGTH_LONG,
+          gravity: ToastGravity.BOTTOM,
+        );
+      } else if (!_developerOptionsUnlocked) {
+        final remaining = _requiredTaps - _tapCount;
+        if (remaining <= 3 && remaining > 0) {
+          Fluttertoast.showToast(
+            msg: '$remaining more taps to unlock developer options...',
+            toastLength: Toast.LENGTH_SHORT,
+            gravity: ToastGravity.BOTTOM,
+          );
+        }
+      }
+    });
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -88,12 +125,15 @@ class SettingsScreen extends StatelessWidget {
                           crossAxisAlignment: CrossAxisAlignment.center,
                           children: [
                             const SizedBox(height: 8),
-                            // App icon/name
-                            Icon(
-                              Icons.cloud_rounded,
-                              size: 48,
-                              color: Colors.white.withValues(alpha: 0.9),
-                              shadows: _textShadows,
+                            // App icon/name - tap 7 times to unlock developer options
+                            GestureDetector(
+                              onTap: _onCloudTap,
+                              child: Icon(
+                                Icons.cloud_rounded,
+                                size: 48,
+                                color: Colors.white.withValues(alpha: 0.9),
+                                shadows: _textShadows,
+                              ),
                             ),
                             const SizedBox(height: 12),
                             Text(
@@ -106,7 +146,7 @@ class SettingsScreen extends StatelessWidget {
                             ),
                             const SizedBox(height: 4),
                             Text(
-                              'v1.0.0',
+                              'v1.0.2',
                               style: Theme.of(context).textTheme.bodySmall?.copyWith(
                                 color: AppTheme.textTertiary,
                                 shadows: _textShadows,
@@ -163,8 +203,8 @@ class SettingsScreen extends StatelessWidget {
                       ),
                     ),
 
-                    // Debug section (only in debug mode)
-                    if (kDebugMode) ...[
+                    // Debug section (visible in debug mode OR when unlocked via easter egg)
+                    if (kDebugMode || _developerOptionsUnlocked) ...[
                       const SizedBox(height: 16),
                       GlassCard(
                         child: Column(

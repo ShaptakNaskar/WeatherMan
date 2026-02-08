@@ -52,8 +52,12 @@ jobs:
       - name: Get version from pubspec
         id: version
         run: |
-          VERSION=$(grep 'version:' pubspec.yaml | head -1 | awk '{print $2}' | tr -d '\r')
-          echo "version=$VERSION" >> $GITHUB_OUTPUT
+          # Extract full version string (e.g., 1.0.2+2)
+          FULL_VERSION=$(grep 'version:' pubspec.yaml | head -1 | awk '{print $2}' | tr -d '\r')
+          # Get only semantic version (before the +)
+          SEMVER=$(echo "$FULL_VERSION" | cut -d'+' -f1)
+          echo "full=$FULL_VERSION" >> $GITHUB_OUTPUT
+          echo "semver=$SEMVER" >> $GITHUB_OUTPUT
 
       - name: Get commit info
         id: commit
@@ -66,13 +70,17 @@ jobs:
       - name: Rename APK
         run: |
           mv build/app/outputs/flutter-apk/app-release.apk \
-             build/app/outputs/flutter-apk/WeatherMan-v${{ steps.version.outputs.version }}.apk
+             build/app/outputs/flutter-apk/WeatherMan-v${{ steps.version.outputs.semver }}.apk
 
       - name: Create Release
         uses: softprops/action-gh-release@v2
         with:
-          tag_name: v${{ steps.version.outputs.version }}-${{ steps.commit.outputs.sha_short }}
-          name: WeatherMan v${{ steps.version.outputs.version }} (${{ steps.commit.outputs.sha_short }})
-          body: ${{ steps.commit.outputs.message }}
-          files: build/app/outputs/flutter-apk/WeatherMan-v${{ steps.version.outputs.version }}.apk
+          tag_name: v${{ steps.version.outputs.semver }}
+          name: WeatherMan v${{ steps.version.outputs.semver }}
+          body: |
+            ${{ steps.commit.outputs.message }}
+            
+            ---
+            Commit: ${{ steps.commit.outputs.sha_short }}
+          files: build/app/outputs/flutter-apk/WeatherMan-v${{ steps.version.outputs.semver }}.apk
           make_latest: true

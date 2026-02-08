@@ -5,6 +5,7 @@ import 'package:weatherman/config/theme.dart';
 import 'package:weatherman/models/location.dart';
 import 'package:weatherman/providers/location_provider.dart';
 import 'package:weatherman/providers/weather_provider.dart';
+import 'package:weatherman/widgets/backgrounds/dynamic_background.dart';
 
 /// City search screen
 class SearchScreen extends StatefulWidget {
@@ -21,6 +22,15 @@ class _SearchScreenState extends State<SearchScreen> {
   List<LocationModel> _searchResults = [];
   bool _isSearching = false;
   Timer? _debounceTimer;
+
+  // Text shadows for legibility on light backgrounds
+  static const List<Shadow> _textShadows = [
+    Shadow(
+      color: Color(0x80000000),
+      blurRadius: 4,
+      offset: Offset(0, 1),
+    ),
+  ];
 
   @override
   void initState() {
@@ -96,77 +106,104 @@ class _SearchScreenState extends State<SearchScreen> {
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      decoration: BoxDecoration(
-        gradient: AppTheme.clearDayGradient,
-      ),
-      child: Scaffold(
-        backgroundColor: Colors.transparent,
-        appBar: AppBar(
-          backgroundColor: Colors.transparent,
-          elevation: 0,
-          title: const Text('Search City'),
-          leading: IconButton(
-            icon: const Icon(Icons.arrow_back_rounded),
-            onPressed: () => Navigator.pop(context),
-          ),
-        ),
-        body: Column(
-          children: [
-            // Search input
-            Padding(
-              padding: const EdgeInsets.all(16),
-              child: Container(
-                decoration: BoxDecoration(
-                  color: Colors.white.withValues(alpha: 0.15),
-                  borderRadius: BorderRadius.circular(12),
-                  border: Border.all(
-                    color: Colors.white.withValues(alpha: 0.2),
-                  ),
-                ),
-                child: TextField(
-                  controller: _searchController,
-                  focusNode: _focusNode,
-                  onChanged: _onSearchChanged,
-                  style: const TextStyle(color: Colors.white),
-                  decoration: InputDecoration(
-                    hintText: 'Search for a city...',
-                    hintStyle: TextStyle(
-                      color: Colors.white.withValues(alpha: 0.5),
-                    ),
-                    prefixIcon: Icon(
-                      Icons.search_rounded,
-                      color: Colors.white.withValues(alpha: 0.7),
-                    ),
-                    suffixIcon: _searchController.text.isNotEmpty
-                        ? IconButton(
-                            icon: Icon(
-                              Icons.clear_rounded,
-                              color: Colors.white.withValues(alpha: 0.7),
-                            ),
-                            onPressed: () {
-                              _searchController.clear();
-                              _onSearchChanged('');
-                            },
-                          )
-                        : null,
-                    border: InputBorder.none,
-                    contentPadding: const EdgeInsets.symmetric(
-                      horizontal: 16,
-                      vertical: 14,
-                    ),
-                  ),
-                ),
+    return Consumer2<LocationProvider, WeatherProvider>(
+      builder: (context, locationProvider, weatherProvider, _) {
+        // Get current weather to mimic the background
+        final currentLocation = locationProvider.selectedLocation;
+        final weather = currentLocation != null
+            ? weatherProvider.getWeather(currentLocation)
+            : null;
+        final weatherCode = weather?.current.weatherCode ?? 0;
+        final isDay = weather?.current.isDay ?? true;
+
+        return DynamicBackground(
+          weatherCode: weatherCode,
+          isDay: isDay,
+          child: Scaffold(
+            backgroundColor: Colors.transparent,
+            appBar: AppBar(
+              backgroundColor: Colors.transparent,
+              elevation: 0,
+              title: Text(
+                'Search City',
+                style: TextStyle(shadows: _textShadows),
+              ),
+              leading: IconButton(
+                icon: const Icon(Icons.arrow_back_rounded),
+                onPressed: () => Navigator.pop(context),
               ),
             ),
+            body: Column(
+              children: [
+                // Search input
+                Padding(
+                  padding: const EdgeInsets.all(16),
+                  child: Container(
+                    decoration: BoxDecoration(
+                      color: Colors.white.withValues(alpha: 0.15),
+                      borderRadius: BorderRadius.circular(12),
+                      border: Border.all(
+                        color: Colors.white.withValues(alpha: 0.2),
+                      ),
+                      boxShadow: [
+                        BoxShadow(
+                          color: Colors.black.withValues(alpha: 0.1),
+                          blurRadius: 8,
+                          offset: const Offset(0, 2),
+                        ),
+                      ],
+                    ),
+                    child: TextField(
+                      controller: _searchController,
+                      focusNode: _focusNode,
+                      onChanged: _onSearchChanged,
+                      style: TextStyle(
+                        color: Colors.white,
+                        shadows: _textShadows,
+                      ),
+                      decoration: InputDecoration(
+                        hintText: 'Search for a city...',
+                        hintStyle: TextStyle(
+                          color: Colors.white.withValues(alpha: 0.6),
+                          shadows: _textShadows,
+                        ),
+                        prefixIcon: Icon(
+                          Icons.search_rounded,
+                          color: Colors.white.withValues(alpha: 0.8),
+                          shadows: _textShadows,
+                        ),
+                        suffixIcon: _searchController.text.isNotEmpty
+                            ? IconButton(
+                                icon: Icon(
+                                  Icons.clear_rounded,
+                                  color: Colors.white.withValues(alpha: 0.8),
+                                  shadows: _textShadows,
+                                ),
+                                onPressed: () {
+                                  _searchController.clear();
+                                  _onSearchChanged('');
+                                },
+                              )
+                            : null,
+                        border: InputBorder.none,
+                        contentPadding: const EdgeInsets.symmetric(
+                          horizontal: 16,
+                          vertical: 14,
+                        ),
+                      ),
+                    ),
+                  ),
+                ),
 
-            // Results
-            Expanded(
-              child: _buildResults(),
+                // Results
+                Expanded(
+                  child: _buildResults(),
+                ),
+              ],
             ),
-          ],
-        ),
-      ),
+          ),
+        );
+      },
     );
   }
 
@@ -189,13 +226,15 @@ class _SearchScreenState extends State<SearchScreen> {
             Icon(
               Icons.search_rounded,
               size: 64,
-              color: Colors.white.withValues(alpha: 0.3),
+              color: Colors.white.withValues(alpha: 0.4),
+              shadows: _textShadows,
             ),
             const SizedBox(height: 16),
             Text(
               'Search for a city',
               style: Theme.of(context).textTheme.bodyLarge?.copyWith(
                 color: AppTheme.textSecondary,
+                shadows: _textShadows,
               ),
             ),
           ],
@@ -211,13 +250,15 @@ class _SearchScreenState extends State<SearchScreen> {
             Icon(
               Icons.location_off_rounded,
               size: 64,
-              color: Colors.white.withValues(alpha: 0.3),
+              color: Colors.white.withValues(alpha: 0.4),
+              shadows: _textShadows,
             ),
             const SizedBox(height: 16),
             Text(
               'No cities found',
               style: Theme.of(context).textTheme.bodyLarge?.copyWith(
                 color: AppTheme.textSecondary,
+                shadows: _textShadows,
               ),
             ),
           ],
@@ -243,6 +284,15 @@ class _SearchResultItem extends StatelessWidget {
   final LocationModel location;
   final VoidCallback onTap;
 
+  // Text shadows for legibility
+  static const List<Shadow> _textShadows = [
+    Shadow(
+      color: Color(0x80000000),
+      blurRadius: 4,
+      offset: Offset(0, 1),
+    ),
+  ];
+
   const _SearchResultItem({
     required this.location,
     required this.onTap,
@@ -253,36 +303,47 @@ class _SearchResultItem extends StatelessWidget {
     return Container(
       margin: const EdgeInsets.only(bottom: 8),
       decoration: BoxDecoration(
-        color: Colors.white.withValues(alpha: 0.1),
+        color: Colors.white.withValues(alpha: 0.12),
         borderRadius: BorderRadius.circular(12),
         border: Border.all(
-          color: Colors.white.withValues(alpha: 0.15),
+          color: Colors.white.withValues(alpha: 0.2),
         ),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withValues(alpha: 0.1),
+            blurRadius: 4,
+            offset: const Offset(0, 2),
+          ),
+        ],
       ),
       child: ListTile(
         onTap: onTap,
         leading: Icon(
           Icons.location_city_rounded,
-          color: Colors.white.withValues(alpha: 0.7),
+          color: Colors.white.withValues(alpha: 0.8),
+          shadows: _textShadows,
         ),
         title: Text(
           location.name,
-          style: const TextStyle(
+          style: TextStyle(
             color: Colors.white,
             fontWeight: FontWeight.w500,
+            shadows: _textShadows,
           ),
         ),
         subtitle: Text(
           location.displayName,
           style: TextStyle(
-            color: Colors.white.withValues(alpha: 0.7),
+            color: Colors.white.withValues(alpha: 0.8),
+            shadows: _textShadows,
           ),
           maxLines: 1,
           overflow: TextOverflow.ellipsis,
         ),
         trailing: Icon(
           Icons.add_circle_outline_rounded,
-          color: Colors.white.withValues(alpha: 0.7),
+          color: Colors.white.withValues(alpha: 0.8),
+          shadows: _textShadows,
         ),
       ),
     );
