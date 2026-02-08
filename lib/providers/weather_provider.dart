@@ -3,6 +3,7 @@ import 'package:weatherman/config/constants.dart';
 import 'package:weatherman/models/location.dart';
 import 'package:weatherman/models/weather.dart';
 import 'package:weatherman/services/weather_service.dart';
+import 'package:weatherman/services/air_quality_service.dart';
 import 'package:weatherman/services/storage_service.dart';
 
 /// Weather data state
@@ -11,6 +12,7 @@ enum WeatherState { initial, loading, loaded, error }
 /// Weather provider for fetching and caching weather data
 class WeatherProvider extends ChangeNotifier {
   final WeatherService _weatherService;
+  final AirQualityService _airQualityService;
   final StorageService _storageService;
 
   final Map<String, WeatherData> _weatherCache = {};
@@ -21,8 +23,10 @@ class WeatherProvider extends ChangeNotifier {
   WeatherProvider({
     required WeatherService weatherService,
     required StorageService storageService,
+    AirQualityService? airQualityService,
   })  : _weatherService = weatherService,
-        _storageService = storageService;
+        _storageService = storageService,
+        _airQualityService = airQualityService ?? AirQualityService();
 
   WeatherState get state => _state;
   String? get error => _error;
@@ -78,7 +82,17 @@ class WeatherProvider extends ChangeNotifier {
     notifyListeners();
 
     try {
-      final weather = await _weatherService.fetchWeather(location);
+      // Fetch weather data
+      var weather = await _weatherService.fetchWeather(location);
+      
+      // Fetch air quality data in parallel (don't fail if AQI fails)
+      try {
+        final airQuality = await _airQualityService.fetchAirQuality(location);
+        weather = weather.copyWith(airQuality: airQuality);
+      } catch (_) {
+        // Air quality fetch failed, continue with weather data only
+      }
+      
       _weatherCache[key] = weather;
       await _storageService.cacheWeather(weather);
       _state = WeatherState.loaded;
@@ -139,6 +153,7 @@ class WeatherProvider extends ChangeNotifier {
   @override
   void dispose() {
     _weatherService.dispose();
+    _airQualityService.dispose();
     super.dispose();
   }
 }

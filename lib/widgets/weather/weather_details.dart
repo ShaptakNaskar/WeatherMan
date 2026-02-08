@@ -10,11 +10,13 @@ import 'package:weatherman/widgets/glassmorphic/glass_card.dart';
 class WeatherDetailsGrid extends StatelessWidget {
   final CurrentWeather current;
   final DailyForecast today;
+  final AirQuality? airQuality;
 
   const WeatherDetailsGrid({
     super.key,
     required this.current,
     required this.today,
+    this.airQuality,
   });
 
   @override
@@ -112,6 +114,28 @@ class WeatherDetailsGrid extends StatelessWidget {
                   value: '${current.cloudCover}%',
                   subtitle: _getCloudDescription(current.cloudCover),
                 ),
+              ),
+            ],
+          ),
+
+          const SizedBox(height: 12),
+
+          // Row 5: Visibility, AQI (if available)
+          Row(
+            children: [
+              Expanded(
+                child: _VisibilityCard(visibility: current.visibility),
+              ),
+              const SizedBox(width: 12),
+              Expanded(
+                child: airQuality != null
+                    ? _AqiCard(airQuality: airQuality!)
+                    : _DetailCard(
+                        icon: Icons.air_rounded,
+                        title: 'AIR QUALITY',
+                        value: '--',
+                        subtitle: 'Data unavailable',
+                      ),
               ),
             ],
           ),
@@ -362,6 +386,152 @@ class _PressureCard extends StatelessWidget {
               style: Theme.of(context).textTheme.bodySmall?.copyWith(
                 color: AppTheme.textSecondary,
               ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+/// Visibility card
+class _VisibilityCard extends StatelessWidget {
+  final double visibility;
+
+  const _VisibilityCard({required this.visibility});
+
+  @override
+  Widget build(BuildContext context) {
+    String description;
+    if (visibility >= 10000) {
+      description = 'Excellent';
+    } else if (visibility >= 5000) {
+      description = 'Good';
+    } else if (visibility >= 1000) {
+      description = 'Moderate';
+    } else {
+      description = 'Poor';
+    }
+
+    String value;
+    if (visibility >= 10000) {
+      value = '${(visibility / 1000).round()} km';
+    } else if (visibility >= 1000) {
+      value = '${(visibility / 1000).toStringAsFixed(1)} km';
+    } else {
+      value = '${visibility.round()} m';
+    }
+
+    return LightGlassCard(
+      padding: const EdgeInsets.all(16),
+      child: SizedBox(
+        height: 100,
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            // Icon and title
+            Row(
+              children: [
+                Icon(Icons.visibility_outlined, size: 16, color: AppTheme.textSecondary),
+                const SizedBox(width: 6),
+                Text(
+                  'VISIBILITY',
+                  style: Theme.of(context).textTheme.labelSmall?.copyWith(
+                    color: AppTheme.textSecondary,
+                    letterSpacing: 0.5,
+                  ),
+                ),
+              ],
+            ),
+
+            const SizedBox(height: 12),
+
+            // Visibility value
+            Text(
+              value,
+              style: Theme.of(context).textTheme.headlineMedium,
+            ),
+
+            const Spacer(),
+
+            Text(
+              description,
+              style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                color: AppTheme.textSecondary,
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+/// Air Quality Index card
+class _AqiCard extends StatelessWidget {
+  final AirQuality airQuality;
+
+  const _AqiCard({required this.airQuality});
+
+  @override
+  Widget build(BuildContext context) {
+    final category = airQuality.category;
+
+    return LightGlassCard(
+      padding: const EdgeInsets.all(16),
+      child: SizedBox(
+        height: 100,
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            // Icon and title
+            Row(
+              children: [
+                Icon(Icons.air_rounded, size: 16, color: AppTheme.textSecondary),
+                const SizedBox(width: 6),
+                Text(
+                  'AIR QUALITY',
+                  style: Theme.of(context).textTheme.labelSmall?.copyWith(
+                    color: AppTheme.textSecondary,
+                    letterSpacing: 0.5,
+                  ),
+                ),
+              ],
+            ),
+
+            const SizedBox(height: 12),
+
+            // AQI value with color indicator
+            Row(
+              children: [
+                Text(
+                  '${airQuality.usAqi}',
+                  style: Theme.of(context).textTheme.headlineMedium?.copyWith(
+                    color: Color(category.color),
+                  ),
+                ),
+                const SizedBox(width: 8),
+                Container(
+                  width: 12,
+                  height: 12,
+                  decoration: BoxDecoration(
+                    color: Color(category.color),
+                    shape: BoxShape.circle,
+                  ),
+                ),
+              ],
+            ),
+
+            const Spacer(),
+
+            Text(
+              category.label.length > 15 
+                  ? category.label.split(' ').first 
+                  : category.label,
+              style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                color: Color(category.color),
+              ),
+              overflow: TextOverflow.ellipsis,
             ),
           ],
         ),

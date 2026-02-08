@@ -16,6 +16,7 @@ import 'package:weatherman/widgets/weather/current_weather.dart';
 import 'package:weatherman/widgets/weather/daily_forecast.dart';
 import 'package:weatherman/widgets/weather/hourly_forecast.dart';
 import 'package:weatherman/widgets/weather/weather_details.dart';
+import 'package:weatherman/widgets/weather/advanced_details.dart';
 
 /// Main home screen displaying weather for selected location
 class HomeScreen extends StatefulWidget {
@@ -240,8 +241,32 @@ class _HomeScreenState extends State<HomeScreen> {
               child: WeatherDetailsGrid(
                 current: weather.current,
                 today: today,
+                airQuality: weather.airQuality,
               ).animate().fadeIn(duration: 600.ms, delay: 500.ms).slideY(begin: 0.03, end: 0, duration: 500.ms, curve: Curves.easeOut),
             ),
+
+          // Advanced details (if enabled in settings)
+          Consumer<SettingsProvider>(
+            builder: (context, settings, _) {
+              if (!settings.advancedViewEnabled) {
+                return const SliverToBoxAdapter(child: SizedBox.shrink());
+              }
+              return SliverToBoxAdapter(
+                child: Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 16),
+                  child: Column(
+                    children: [
+                      const SizedBox(height: 24),
+                      AdvancedDetailsCard(
+                        weather: weather,
+                        formatTemp: settings.formatTemp,
+                      ),
+                    ],
+                  ),
+                ).animate().fadeIn(duration: 600.ms, delay: 650.ms).slideY(begin: 0.03, end: 0, duration: 500.ms, curve: Curves.easeOut),
+              );
+            },
+          ),
 
           // Bottom padding
           const SliverToBoxAdapter(child: SizedBox(height: 32)),

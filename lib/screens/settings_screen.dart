@@ -117,6 +117,45 @@ class _SettingsScreenState extends State<SettingsScreen> {
 
                     const SizedBox(height: 16),
 
+                    // Advanced View toggle
+                    GlassCard(
+                      child: Row(
+                        children: [
+                          Expanded(
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Text(
+                                  'Advanced View',
+                                  style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                                    shadows: _textShadows,
+                                  ),
+                                ),
+                                const SizedBox(height: 4),
+                                Text(
+                                  'Show detailed weather data with extra metrics',
+                                  style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                                    color: Colors.white.withValues(alpha: 0.7),
+                                    shadows: _textShadows,
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                          Switch(
+                            value: settings.advancedViewEnabled,
+                            onChanged: (value) => settings.setAdvancedViewEnabled(value),
+                            activeColor: Colors.white,
+                            activeTrackColor: Colors.white.withValues(alpha: 0.5),
+                            inactiveThumbColor: Colors.white.withValues(alpha: 0.7),
+                            inactiveTrackColor: Colors.white.withValues(alpha: 0.2),
+                          ),
+                        ],
+                      ),
+                    ),
+
+                    const SizedBox(height: 16),
+
                     // About
                     GlassCard(
                       child: SizedBox(
@@ -146,7 +185,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                             ),
                             const SizedBox(height: 4),
                             Text(
-                              'v1.0.2',
+                              'v1.0.3',
                               style: Theme.of(context).textTheme.bodySmall?.copyWith(
                                 color: AppTheme.textTertiary,
                                 shadows: _textShadows,

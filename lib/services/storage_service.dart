@@ -10,6 +10,7 @@ class StorageService {
   static const String _weatherCachePrefix = 'weather_cache_';
   static const String _temperatureUnitKey = 'temperature_unit';
   static const String _lastLocationKey = 'last_location';
+  static const String _advancedViewKey = 'advanced_view_enabled';
 
   SharedPreferences? _prefs;
 
@@ -127,6 +128,18 @@ class StorageService {
     );
   }
 
+  /// Get advanced view enabled setting
+  Future<bool> getAdvancedViewEnabled() async {
+    final p = await prefs;
+    return p.getBool(_advancedViewKey) ?? false;
+  }
+
+  /// Save advanced view enabled setting
+  Future<void> setAdvancedViewEnabled(bool enabled) async {
+    final p = await prefs;
+    await p.setBool(_advancedViewKey, enabled);
+  }
+
   /// Get last viewed location
   Future<LocationModel?> getLastLocation() async {
     final p = await prefs;
@@ -146,3 +159,4 @@ class StorageService {
     await p.setString(_lastLocationKey, jsonEncode(location.toJson()));
   }
 }
+

@@ -7,18 +7,21 @@ class SettingsProvider extends ChangeNotifier {
   final StorageService _storageService;
   
   TemperatureUnit _temperatureUnit = TemperatureUnit.celsius;
+  bool _advancedViewEnabled = false;
   bool _isLoading = true;
 
   SettingsProvider({required StorageService storageService})
       : _storageService = storageService;
 
   TemperatureUnit get temperatureUnit => _temperatureUnit;
+  bool get advancedViewEnabled => _advancedViewEnabled;
   bool get isLoading => _isLoading;
   bool get useCelsius => _temperatureUnit == TemperatureUnit.celsius;
 
   /// Initialize settings from storage
   Future<void> init() async {
     _temperatureUnit = await _storageService.getTemperatureUnit();
+    _advancedViewEnabled = await _storageService.getAdvancedViewEnabled();
     _isLoading = false;
     notifyListeners();
   }
@@ -37,6 +40,19 @@ class SettingsProvider extends ChangeNotifier {
         ? TemperatureUnit.fahrenheit
         : TemperatureUnit.celsius;
     await setTemperatureUnit(newUnit);
+  }
+
+  /// Set advanced view enabled
+  Future<void> setAdvancedViewEnabled(bool enabled) async {
+    if (_advancedViewEnabled == enabled) return;
+    _advancedViewEnabled = enabled;
+    notifyListeners();
+    await _storageService.setAdvancedViewEnabled(enabled);
+  }
+
+  /// Toggle advanced view
+  Future<void> toggleAdvancedView() async {
+    await setAdvancedViewEnabled(!_advancedViewEnabled);
   }
 
   /// Format temperature using current unit
