@@ -193,8 +193,10 @@ class _HudWarningOverlayState extends State<HudWarningOverlay>
     with TickerProviderStateMixin {
   late AnimationController _pulseController;
   late AnimationController _slideController;
+  late AnimationController _collapseController;
   late Animation<double> _pulseAnimation;
   late Animation<Offset> _slideAnimation;
+  bool _collapsed = false;
 
   @override
   void initState() {
@@ -209,6 +211,11 @@ class _HudWarningOverlayState extends State<HudWarningOverlay>
       duration: const Duration(milliseconds: 400),
     )..forward();
 
+    _collapseController = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 300),
+    );
+
     _pulseAnimation = Tween<double>(begin: 0.6, end: 1.0).animate(
       CurvedAnimation(parent: _pulseController, curve: Curves.easeInOut),
     );
@@ -217,12 +224,37 @@ class _HudWarningOverlayState extends State<HudWarningOverlay>
       begin: const Offset(1, 0),
       end: Offset.zero,
     ).animate(CurvedAnimation(parent: _slideController, curve: Curves.easeOutCubic));
+
+    // Auto-collapse after 4 seconds
+    _scheduleCollapse();
+  }
+
+  void _scheduleCollapse() {
+    Future.delayed(const Duration(seconds: 4), () {
+      if (mounted && !_collapsed) {
+        setState(() => _collapsed = true);
+        _collapseController.forward();
+      }
+    });
+  }
+
+  @override
+  void didUpdateWidget(HudWarningOverlay oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    // If alerts change, briefly expand again
+    if (widget.alerts.length != oldWidget.alerts.length) {
+      setState(() => _collapsed = false);
+      _collapseController.reverse();
+      _slideController.forward(from: 0);
+      _scheduleCollapse();
+    }
   }
 
   @override
   void dispose() {
     _pulseController.dispose();
     _slideController.dispose();
+    _collapseController.dispose();
     super.dispose();
   }
 
@@ -236,80 +268,119 @@ class _HudWarningOverlayState extends State<HudWarningOverlay>
     return Positioned(
       top: MediaQuery.of(context).padding.top + 48,
       right: 12,
-      width: 230,
       child: IgnorePointer(
         child: SlideTransition(
           position: _slideAnimation,
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.end,
-            children: [
-              ...dangers.map((a) => _buildAlertBadge(a, true)),
-              ...warnings.map((a) => _buildAlertBadge(a, false)),
-            ],
+          child: AnimatedCrossFade(
+            duration: const Duration(milliseconds: 300),
+            crossFadeState: _collapsed
+                ? CrossFadeState.showSecond
+                : CrossFadeState.showFirst,
+            firstChild: _buildExpandedBadges(dangers, warnings),
+            secondChild: _buildCollapsedPill(dangers.length, warnings.length),
           ),
         ),
       ),
     );
   }
 
+  /// Full detail view — shown briefly on appear
+  Widget _buildExpandedBadges(List<EnvironmentAlert> dangers, List<EnvironmentAlert> warnings) {
+    return ConstrainedBox(
+      constraints: const BoxConstraints(maxWidth: 240),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.end,
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          ...dangers.map((a) => _buildAlertBadge(a, true)),
+          ...warnings.map((a) => _buildAlertBadge(a, false)),
+        ],
+      ),
+    );
+  }
+
+  /// Compact pill — replaces badges after auto-collapse
+  Widget _buildCollapsedPill(int dangerCount, int warningCount) {
+    final hasDanger = dangerCount > 0;
+    final color = hasDanger ? CyberpunkTheme.neonRed : CyberpunkTheme.neonYellow;
+
+    return AnimatedBuilder(
+      animation: _pulseAnimation,
+      builder: (context, child) {
+        final alpha = hasDanger ? _pulseAnimation.value : 1.0;
+        return Opacity(
+          opacity: alpha,
+          child: Container(
+            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+            decoration: BoxDecoration(
+              color: color.withValues(alpha: 0.12),
+              borderRadius: BorderRadius.circular(2),
+              border: Border.all(color: color.withValues(alpha: 0.6)),
+              boxShadow: [
+                BoxShadow(color: color.withValues(alpha: 0.15), blurRadius: 6),
+              ],
+            ),
+            child: Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Icon(
+                  hasDanger ? Icons.dangerous_rounded : Icons.warning_amber_rounded,
+                  color: color,
+                  size: 12,
+                ),
+                const SizedBox(width: 4),
+                Text(
+                  hasDanger
+                      ? '▲ $dangerCount${warningCount > 0 ? ' + $warningCount' : ''}'
+                      : '⚠ $warningCount',
+                  style: TextStyle(
+                    fontFamily: 'monospace',
+                    fontSize: 9,
+                    fontWeight: FontWeight.bold,
+                    color: color,
+                    letterSpacing: 1,
+                    shadows: [Shadow(color: color.withValues(alpha: 0.5), blurRadius: 4)],
+                  ),
+                ),
+              ],
+            ),
+          ),
+        );
+      },
+    );
+  }
+
   Widget _buildAlertBadge(EnvironmentAlert alert, bool isDanger) {
     final color = isDanger ? CyberpunkTheme.neonRed : CyberpunkTheme.neonYellow;
-    final label = isDanger ? '▲ DANGER' : '⚠ WARNING';
 
     return AnimatedBuilder(
       animation: _pulseAnimation,
       builder: (context, child) {
         final alpha = isDanger ? _pulseAnimation.value : 1.0;
         return Padding(
-          padding: const EdgeInsets.only(bottom: 6),
+          padding: const EdgeInsets.only(bottom: 4),
           child: Opacity(
             opacity: alpha,
             child: Container(
-              padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
               decoration: BoxDecoration(
                 color: color.withValues(alpha: 0.12),
                 borderRadius: BorderRadius.circular(2),
                 border: Border.all(color: color.withValues(alpha: 0.7), width: 1),
                 boxShadow: [
-                  BoxShadow(
-                    color: color.withValues(alpha: 0.2),
-                    blurRadius: 8,
-                  ),
+                  BoxShadow(color: color.withValues(alpha: 0.2), blurRadius: 6),
                 ],
               ),
-              child: Row(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  Icon(alert.icon, color: color, size: 14),
-                  const SizedBox(width: 6),
-                  Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        '$label // ${alert.label}: ${alert.value}',
-                        style: TextStyle(
-                          fontFamily: 'monospace',
-                          fontSize: 10,
-                          fontWeight: FontWeight.bold,
-                          color: color,
-                          letterSpacing: 1,
-                          shadows: [
-                            Shadow(color: color.withValues(alpha: 0.5), blurRadius: 4),
-                          ],
-                        ),
-                      ),
-                      Text(
-                        alert.description,
-                        style: TextStyle(
-                          fontFamily: 'monospace',
-                          fontSize: 8,
-                          color: color.withValues(alpha: 0.7),
-                          letterSpacing: 0.5,
-                        ),
-                      ),
-                    ],
-                  ),
-                ],
+              child: Text(
+                '${isDanger ? '▲' : '⚠'} ${alert.label}: ${alert.value}',
+                style: TextStyle(
+                  fontFamily: 'monospace',
+                  fontSize: 9,
+                  fontWeight: FontWeight.bold,
+                  color: color,
+                  letterSpacing: 0.5,
+                  shadows: [Shadow(color: color.withValues(alpha: 0.5), blurRadius: 4)],
+                ),
               ),
             ),
           ),
@@ -371,17 +442,19 @@ class _DangerFlashOverlayState extends State<DangerFlashOverlay>
       children: [
         widget.child,
         // Red flash overlay
-        AnimatedBuilder(
-          animation: _flashController,
-          builder: (context, child) {
-            final opacity = (1.0 - _flashController.value) * 0.15;
-            if (opacity <= 0.001) return const SizedBox.shrink();
-            return Positioned.fill(
-              child: Container(
-                color: CyberpunkTheme.neonRed.withValues(alpha: opacity),
-              ),
-            );
-          },
+        IgnorePointer(
+          child: AnimatedBuilder(
+            animation: _flashController,
+            builder: (context, child) {
+              final opacity = (1.0 - _flashController.value) * 0.15;
+              if (opacity <= 0.001) return const SizedBox.shrink();
+              return Positioned.fill(
+                child: Container(
+                  color: CyberpunkTheme.neonRed.withValues(alpha: opacity),
+                ),
+              );
+            },
+          ),
         ),
       ],
     );
