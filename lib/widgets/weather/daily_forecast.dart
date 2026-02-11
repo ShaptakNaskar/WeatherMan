@@ -129,6 +129,13 @@ class _DailyItem extends StatelessWidget {
                   WeatherUtils.getWeatherIcon(forecast.weatherCode),
                   size: 24,
                   color: WeatherUtils.getWeatherIconColor(forecast.weatherCode),
+                  shadows: const [
+                    Shadow(
+                      color: Color(0x80000000),
+                      blurRadius: 4,
+                      offset: Offset(0, 2),
+                    ),
+                  ],
                 ),
               ),
 
@@ -139,7 +146,7 @@ class _DailyItem extends StatelessWidget {
                     ? Text(
                         '${forecast.precipitationProbabilityMax}%',
                         style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                          color: const Color(0xFF00E5FF),
+                          color: AppTheme.textSecondary, // Monochromatic (was blue)
                           fontWeight: FontWeight.w600,
                         ),
                       )

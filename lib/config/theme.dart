@@ -16,23 +16,23 @@ class AppTheme {
   static const Color textSecondary = Color(0xCCFFFFFF);
   static const Color textTertiary = Color(0x99FFFFFF);
   
-  // Text shadows for readability on light backgrounds
+  // Text shadows for readability on light/variable backgrounds
   static const List<Shadow> _textShadows = [
     Shadow(
-      color: Color(0x80000000),
-      blurRadius: 6,
+      color: Color(0xA0000000), // Increased opacity from 0x80
+      blurRadius: 8, // Increased blur from 6
       offset: Offset(0, 1),
     ),
     Shadow(
-      color: Color(0x40000000),
-      blurRadius: 12,
+      color: Color(0x60000000), // Increased opacity from 0x40
+      blurRadius: 16, // Increased blur from 12
       offset: Offset(0, 2),
     ),
   ];
   
   static const List<Shadow> _textShadowsSubtle = [
     Shadow(
-      color: Color(0x50000000),
+      color: Color(0x80000000), // Increased opacity from 0x50
       blurRadius: 4,
       offset: Offset(0, 1),
     ),

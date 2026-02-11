@@ -113,47 +113,9 @@ class WeatherUtils {
   }
 
   /// Get weather icon color
+  /// Overridden to always return white for monochromatic look
   static Color getWeatherIconColor(int code, {bool isDay = true}) {
-    switch (code) {
-      case 0:
-      case 1:
-        return isDay ? const Color(0xFFFFB74D) : const Color(0xFFE1BEE7);
-      case 2:
-        return isDay ? const Color(0xFF5C8DB8) : const Color(0xFFB39DDB);
-      case 3:
-        return const Color(0xFF78909C);
-      case 45:
-      case 48:
-        return const Color(0xFF90A4AE);
-      case 51:
-      case 53:
-      case 55:
-      case 56:
-      case 57:
-        return const Color(0xFF81D4FA);
-      case 61:
-      case 63:
-      case 65:
-      case 66:
-      case 67:
-      case 80:
-      case 81:
-      case 82:
-        return const Color(0xFF64B5F6);
-      case 71:
-      case 73:
-      case 75:
-      case 77:
-      case 85:
-      case 86:
-        return const Color(0xFFE3F2FD);
-      case 95:
-      case 96:
-      case 99:
-        return const Color(0xFFFFEB3B);
-      default:
-        return Colors.white;
-    }
+    return Colors.white;
   }
 
   /// Get UV index description
@@ -166,12 +128,10 @@ class WeatherUtils {
   }
 
   /// Get UV index color
+  /// Overridden to return white for monochromatic look, but can be used for indicators if needed
   static Color getUvColor(double uvIndex) {
-    if (uvIndex <= 2) return const Color(0xFF4CAF50);
-    if (uvIndex <= 5) return const Color(0xFFFFEB3B);
-    if (uvIndex <= 7) return const Color(0xFFFF9800);
-    if (uvIndex <= 10) return const Color(0xFFF44336);
-    return const Color(0xFF9C27B0);
+    // Return white for text/icon consistency
+    return Colors.white; 
   }
 
   /// Get wind direction text

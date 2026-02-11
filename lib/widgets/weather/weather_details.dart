@@ -498,9 +498,7 @@ class _AqiCard extends StatelessWidget {
               children: [
                 Text(
                   '${airQuality.usAqi}',
-                  style: Theme.of(context).textTheme.headlineMedium?.copyWith(
-                    color: Color(category.color),
-                  ),
+                  style: Theme.of(context).textTheme.headlineMedium, // Monochromatic (White)
                 ),
                 const SizedBox(width: 8),
                 Container(
@@ -521,7 +519,7 @@ class _AqiCard extends StatelessWidget {
                   ? category.label.split(' ').first 
                   : category.label,
               style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                color: Color(category.color),
+                color: AppTheme.textSecondary, // Monochromatic
               ),
               overflow: TextOverflow.ellipsis,
             ),

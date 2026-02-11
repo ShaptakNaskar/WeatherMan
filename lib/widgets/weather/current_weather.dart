@@ -3,6 +3,7 @@ import 'package:provider/provider.dart';
 import 'package:weatherman/config/theme.dart';
 import 'package:weatherman/models/weather.dart';
 import 'package:weatherman/providers/settings_provider.dart';
+import 'package:weatherman/utils/unit_converter.dart';
 import 'package:weatherman/utils/weather_utils.dart';
 
 /// Main current weather display widget
@@ -24,10 +25,12 @@ class CurrentWeatherDisplay extends StatelessWidget {
   Widget build(BuildContext context) {
     final settings = context.watch<SettingsProvider>();
     
-    return Column(
-      mainAxisSize: MainAxisSize.min,
-      crossAxisAlignment: CrossAxisAlignment.center,
-      children: [
+    return SizedBox(
+      width: double.infinity,
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        crossAxisAlignment: CrossAxisAlignment.center,
+        children: [
         // Location name
         Text(
           locationName,
@@ -41,14 +44,38 @@ class CurrentWeatherDisplay extends StatelessWidget {
         const SizedBox(height: 8),
 
         // Large temperature display
-        Text(
-          settings.formatTempShort(weather.temperature),
-          style: Theme.of(context).textTheme.displayLarge?.copyWith(
-            fontSize: 96,
-            fontWeight: FontWeight.w100,
-            height: 1,
-          ),
-          textAlign: TextAlign.center,
+        // Large temperature display
+        // Stack used to center the number while hanging the degree symbol
+        Stack(
+          clipBehavior: Clip.none,
+          children: [
+            Text(
+              (){
+                final temp = settings.temperatureUnit == TemperatureUnit.celsius 
+                    ? weather.temperature 
+                    : UnitConverter.celsiusToFahrenheit(weather.temperature);
+                return '${temp.round()}';
+              }(),
+              style: Theme.of(context).textTheme.displayLarge?.copyWith(
+                fontSize: 96,
+                fontWeight: FontWeight.w100,
+                height: 1,
+              ),
+              textAlign: TextAlign.center,
+            ),
+            Positioned(
+              right: -30,
+              top: 0,
+              child: Text(
+                '°',
+                style: Theme.of(context).textTheme.displayLarge?.copyWith(
+                  fontSize: 96,
+                  fontWeight: FontWeight.w100,
+                  height: 1,
+                ),
+              ),
+            ),
+          ],
         ),
 
         const SizedBox(height: 4),
@@ -84,6 +111,7 @@ class CurrentWeatherDisplay extends StatelessWidget {
           ],
         ),
       ],
+      ),
     );
   }
 }
