@@ -324,7 +324,7 @@ class _HudWarningOverlayState extends State<HudWarningOverlay>
 
     // Tapped-expand: dimmed scrim + badges sliding out from top-right
     if (_expandedByTap) {
-      return Positioned.fill(
+      return SizedBox.expand(
         child: GestureDetector(
           onTap: _onDismiss,
           behavior: HitTestBehavior.opaque,
@@ -362,34 +362,38 @@ class _HudWarningOverlayState extends State<HudWarningOverlay>
 
     // Collapsed: cycling icon pill (tappable)
     if (_collapsed) {
-      return Positioned(
-        top: topPadding + 48,
-        right: 12,
-        child: GestureDetector(
-          onTap: _onPillTap,
-          child: _buildCyclingPill(),
+      return Align(
+        alignment: Alignment.topRight,
+        child: Padding(
+          padding: EdgeInsets.only(top: topPadding + 48, right: 12),
+          child: GestureDetector(
+            onTap: _onPillTap,
+            child: _buildCyclingPill(),
+          ),
         ),
       );
     }
 
     // Initial auto-expand (non-interactive, will collapse after 4s)
-    return Positioned(
-      top: topPadding + 48,
-      right: 12,
-      child: IgnorePointer(
-        child: SlideTransition(
-          position: _slideAnimation,
-          child: DefaultTextStyle(
-            style: const TextStyle(decoration: TextDecoration.none),
-            child: ConstrainedBox(
-              constraints: const BoxConstraints(maxWidth: 270),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.end,
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  ...dangers.map((a) => _buildAlertBadge(a, true)),
-                  ...warnings.map((a) => _buildAlertBadge(a, false)),
-                ],
+    return Align(
+      alignment: Alignment.topRight,
+      child: Padding(
+        padding: EdgeInsets.only(top: topPadding + 48, right: 12),
+        child: IgnorePointer(
+          child: SlideTransition(
+            position: _slideAnimation,
+            child: DefaultTextStyle(
+              style: const TextStyle(decoration: TextDecoration.none),
+              child: ConstrainedBox(
+                constraints: const BoxConstraints(maxWidth: 270),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.end,
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    ...dangers.map((a) => _buildAlertBadge(a, true)),
+                    ...warnings.map((a) => _buildAlertBadge(a, false)),
+                  ],
+                ),
               ),
             ),
           ),

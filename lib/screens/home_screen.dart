@@ -582,11 +582,7 @@ class _CityListBottomSheet extends StatelessWidget {
           decoration: BoxDecoration(
             color: CyberpunkTheme.bgDarkest.withValues(alpha: 0.95),
             borderRadius: const BorderRadius.vertical(top: Radius.circular(4)),
-            border: Border(
-              top: BorderSide(color: CyberpunkTheme.neonCyan.withValues(alpha: 0.4)),
-              left: BorderSide(color: CyberpunkTheme.neonCyan.withValues(alpha: 0.2)),
-              right: BorderSide(color: CyberpunkTheme.neonCyan.withValues(alpha: 0.2)),
-            ),
+            border: Border.all(color: CyberpunkTheme.neonCyan.withValues(alpha: 0.3)),
           ),
           child: Column(
             mainAxisSize: MainAxisSize.min,

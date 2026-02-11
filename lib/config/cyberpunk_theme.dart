@@ -78,43 +78,73 @@ class CyberpunkTheme {
     }
     // Partly cloudy
     if (code == 2 || code == 3) {
-      return const LinearGradient(
-        begin: Alignment.topCenter,
-        end: Alignment.bottomCenter,
-        colors: [Color(0xFF0D1321), Color(0xFF141E33), Color(0xFF1A2744), Color(0xFF0D1321)],
-      );
+      return isDay
+          ? const LinearGradient(
+              begin: Alignment.topCenter,
+              end: Alignment.bottomCenter,
+              colors: [Color(0xFF0D1321), Color(0xFF141E33), Color(0xFF1A2744), Color(0xFF0D1321)],
+            )
+          : const LinearGradient(
+              begin: Alignment.topCenter,
+              end: Alignment.bottomCenter,
+              colors: [Color(0xFF070A14), Color(0xFF0C1020), Color(0xFF10152B), Color(0xFF070A14)],
+            );
     }
     // Fog
     if (code == 45 || code == 48) {
-      return const LinearGradient(
-        begin: Alignment.topCenter,
-        end: Alignment.bottomCenter,
-        colors: [Color(0xFF101520), Color(0xFF181F2E), Color(0xFF202838), Color(0xFF101520)],
-      );
+      return isDay
+          ? const LinearGradient(
+              begin: Alignment.topCenter,
+              end: Alignment.bottomCenter,
+              colors: [Color(0xFF101520), Color(0xFF181F2E), Color(0xFF202838), Color(0xFF101520)],
+            )
+          : const LinearGradient(
+              begin: Alignment.topCenter,
+              end: Alignment.bottomCenter,
+              colors: [Color(0xFF090C15), Color(0xFF0F131E), Color(0xFF141A25), Color(0xFF090C15)],
+            );
     }
     // Rain/Drizzle
     if ((code >= 51 && code <= 67) || (code >= 80 && code <= 82)) {
-      return const LinearGradient(
-        begin: Alignment.topCenter,
-        end: Alignment.bottomCenter,
-        colors: [Color(0xFF080C18), Color(0xFF0C1225), Color(0xFF101832), Color(0xFF080C18)],
-      );
+      return isDay
+          ? const LinearGradient(
+              begin: Alignment.topCenter,
+              end: Alignment.bottomCenter,
+              colors: [Color(0xFF080C18), Color(0xFF0C1225), Color(0xFF101832), Color(0xFF080C18)],
+            )
+          : const LinearGradient(
+              begin: Alignment.topCenter,
+              end: Alignment.bottomCenter,
+              colors: [Color(0xFF04060E), Color(0xFF070A18), Color(0xFF0A0E22), Color(0xFF04060E)],
+            );
     }
     // Snow
     if ((code >= 71 && code <= 77) || (code >= 85 && code <= 86)) {
-      return const LinearGradient(
-        begin: Alignment.topCenter,
-        end: Alignment.bottomCenter,
-        colors: [Color(0xFF0E1220), Color(0xFF141A2C), Color(0xFF1A2238), Color(0xFF0E1220)],
-      );
+      return isDay
+          ? const LinearGradient(
+              begin: Alignment.topCenter,
+              end: Alignment.bottomCenter,
+              colors: [Color(0xFF0E1220), Color(0xFF141A2C), Color(0xFF1A2238), Color(0xFF0E1220)],
+            )
+          : const LinearGradient(
+              begin: Alignment.topCenter,
+              end: Alignment.bottomCenter,
+              colors: [Color(0xFF080A16), Color(0xFF0C1020), Color(0xFF10162A), Color(0xFF080A16)],
+            );
     }
     // Thunderstorm
     if (code >= 95 && code <= 99) {
-      return const LinearGradient(
-        begin: Alignment.topCenter,
-        end: Alignment.bottomCenter,
-        colors: [Color(0xFF06050F), Color(0xFF0D0A1A), Color(0xFF140F25), Color(0xFF06050F)],
-      );
+      return isDay
+          ? const LinearGradient(
+              begin: Alignment.topCenter,
+              end: Alignment.bottomCenter,
+              colors: [Color(0xFF0A0818), Color(0xFF120E24), Color(0xFF1A1430), Color(0xFF0A0818)],
+            )
+          : const LinearGradient(
+              begin: Alignment.topCenter,
+              end: Alignment.bottomCenter,
+              colors: [Color(0xFF06050F), Color(0xFF0D0A1A), Color(0xFF140F25), Color(0xFF06050F)],
+            );
     }
     // Default
     return const LinearGradient(
