@@ -234,17 +234,19 @@ class _HudWarningOverlayState extends State<HudWarningOverlay>
     final warnings = widget.alerts.where((a) => a.severity == AlertSeverity.warning).toList();
 
     return Positioned(
-      top: MediaQuery.of(context).padding.top + 100,
-      right: 8,
-      width: 220,
-      child: SlideTransition(
-        position: _slideAnimation,
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.end,
-          children: [
-            ...dangers.map((a) => _buildAlertBadge(a, true)),
-            ...warnings.map((a) => _buildAlertBadge(a, false)),
-          ],
+      top: MediaQuery.of(context).padding.top + 48,
+      right: 12,
+      width: 230,
+      child: IgnorePointer(
+        child: SlideTransition(
+          position: _slideAnimation,
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.end,
+            children: [
+              ...dangers.map((a) => _buildAlertBadge(a, true)),
+              ...warnings.map((a) => _buildAlertBadge(a, false)),
+            ],
+          ),
         ),
       ),
     );
