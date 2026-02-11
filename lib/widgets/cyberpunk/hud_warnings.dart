@@ -193,25 +193,32 @@ class _HudWarningOverlayState extends State<HudWarningOverlay>
     with TickerProviderStateMixin {
   late AnimationController _pulseController;
   late AnimationController _slideController;
+  late AnimationController _iconCycleController;
   late Animation<double> _pulseAnimation;
   late Animation<Offset> _slideAnimation;
   bool _collapsed = false;
   bool _expandedByTap = false;
+  int _currentIconIndex = 0; // 0 = warning sign, 1+ = alert icons
 
   @override
   void initState() {
     super.initState();
     _pulseController = AnimationController(
       vsync: this,
-      duration: const Duration(milliseconds: 1500),
+      duration: const Duration(milliseconds: 1200),
     )..repeat(reverse: true);
 
     _slideController = AnimationController(
       vsync: this,
-      duration: const Duration(milliseconds: 400),
+      duration: const Duration(milliseconds: 350),
     )..forward();
 
-    _pulseAnimation = Tween<double>(begin: 0.6, end: 1.0).animate(
+    _iconCycleController = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 800),
+    );
+
+    _pulseAnimation = Tween<double>(begin: 0.5, end: 1.0).animate(
       CurvedAnimation(parent: _pulseController, curve: Curves.easeInOut),
     );
 
@@ -221,6 +228,28 @@ class _HudWarningOverlayState extends State<HudWarningOverlay>
     ).animate(CurvedAnimation(parent: _slideController, curve: Curves.easeOutCubic));
 
     _scheduleCollapse();
+    _startIconCycling();
+  }
+
+  void _startIconCycling() {
+    Future.delayed(const Duration(milliseconds: 1800), () {
+      if (!mounted) return;
+      _cycleNextIcon();
+    });
+  }
+
+  void _cycleNextIcon() {
+    if (!mounted || widget.alerts.isEmpty) return;
+    // total icons = 1 (warning sign) + alert count
+    final totalIcons = 1 + widget.alerts.length;
+    setState(() {
+      _currentIconIndex = (_currentIconIndex + 1) % totalIcons;
+    });
+    // Animate the transition
+    _iconCycleController.forward(from: 0);
+    Future.delayed(const Duration(milliseconds: 1800), () {
+      if (mounted) _cycleNextIcon();
+    });
   }
 
   void _scheduleCollapse() {
@@ -235,6 +264,7 @@ class _HudWarningOverlayState extends State<HudWarningOverlay>
   void didUpdateWidget(HudWarningOverlay oldWidget) {
     super.didUpdateWidget(oldWidget);
     if (widget.alerts.length != oldWidget.alerts.length) {
+      _currentIconIndex = 0;
       setState(() {
         _collapsed = false;
         _expandedByTap = false;
@@ -259,10 +289,29 @@ class _HudWarningOverlayState extends State<HudWarningOverlay>
     });
   }
 
+  /// Red if ≥50% are danger, yellow otherwise
+  Color get _pillColor {
+    if (widget.alerts.isEmpty) return CyberpunkTheme.neonYellow;
+    final dangerCount = widget.alerts.where((a) => a.severity == AlertSeverity.danger).length;
+    final ratio = dangerCount / widget.alerts.length;
+    return ratio >= 0.5 ? CyberpunkTheme.neonRed : CyberpunkTheme.neonYellow;
+  }
+
+  /// Get the icon for the current cycle index
+  IconData get _currentCycleIcon {
+    if (_currentIconIndex == 0) return Icons.warning_amber_rounded;
+    final alertIndex = _currentIconIndex - 1;
+    if (alertIndex < widget.alerts.length) {
+      return widget.alerts[alertIndex].icon;
+    }
+    return Icons.warning_amber_rounded;
+  }
+
   @override
   void dispose() {
     _pulseController.dispose();
     _slideController.dispose();
+    _iconCycleController.dispose();
     super.dispose();
   }
 
@@ -274,64 +323,57 @@ class _HudWarningOverlayState extends State<HudWarningOverlay>
     final warnings = widget.alerts.where((a) => a.severity == AlertSeverity.warning).toList();
     final topPadding = MediaQuery.of(context).padding.top;
 
-    // Tapped-expand mode: full-screen dimmed backdrop + centered badges
+    // Tapped-expand: dimmed scrim + badges sliding out from top-right
     if (_expandedByTap) {
       return Positioned.fill(
         child: GestureDetector(
           onTap: _onDismiss,
           behavior: HitTestBehavior.opaque,
-          child: AnimatedContainer(
-            duration: const Duration(milliseconds: 200),
-            color: CyberpunkTheme.bgDarkest.withValues(alpha: 0.75),
-            child: SafeArea(
-              child: Center(
-                child: SlideTransition(
-                  position: _slideAnimation,
-                  child: DefaultTextStyle(
-                    style: const TextStyle(decoration: TextDecoration.none),
-                    child: Padding(
-                      padding: const EdgeInsets.symmetric(horizontal: 24),
-                      child: Column(
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          ...dangers.map((a) => _buildAlertBadge(a, true)),
-                          ...warnings.map((a) => _buildAlertBadge(a, false)),
-                          const SizedBox(height: 16),
-                          Text(
-                            'TAP ANYWHERE TO DISMISS',
-                            style: TextStyle(
-                              fontFamily: 'monospace',
-                              fontSize: 9,
-                              color: CyberpunkTheme.textTertiary,
-                              letterSpacing: 2,
-                              decoration: TextDecoration.none,
-                            ),
-                          ),
-                        ],
+          child: Container(
+            color: CyberpunkTheme.bgDarkest.withValues(alpha: 0.6),
+            child: Stack(
+              children: [
+                Positioned(
+                  top: topPadding + 48,
+                  right: 12,
+                  child: SlideTransition(
+                    position: _slideAnimation,
+                    child: DefaultTextStyle(
+                      style: const TextStyle(decoration: TextDecoration.none),
+                      child: ConstrainedBox(
+                        constraints: const BoxConstraints(maxWidth: 270),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.end,
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            ...dangers.map((a) => _buildAlertBadge(a, true)),
+                            ...warnings.map((a) => _buildAlertBadge(a, false)),
+                          ],
+                        ),
                       ),
                     ),
                   ),
                 ),
-              ),
+              ],
             ),
           ),
         ),
       );
     }
 
-    // Collapsed pill mode (tappable)
+    // Collapsed: cycling icon pill (tappable)
     if (_collapsed) {
       return Positioned(
         top: topPadding + 48,
         right: 12,
         child: GestureDetector(
           onTap: _onPillTap,
-          child: _buildCollapsedPill(dangers.length, warnings.length),
+          child: _buildCyclingPill(),
         ),
       );
     }
 
-    // Initial expanded mode (auto, non-interactive, will collapse)
+    // Initial auto-expand (non-interactive, will collapse after 4s)
     return Positioned(
       top: topPadding + 48,
       right: 12,
@@ -341,7 +383,7 @@ class _HudWarningOverlayState extends State<HudWarningOverlay>
           child: DefaultTextStyle(
             style: const TextStyle(decoration: TextDecoration.none),
             child: ConstrainedBox(
-              constraints: const BoxConstraints(maxWidth: 260),
+              constraints: const BoxConstraints(maxWidth: 270),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.end,
                 mainAxisSize: MainAxisSize.min,
@@ -357,52 +399,43 @@ class _HudWarningOverlayState extends State<HudWarningOverlay>
     );
   }
 
-  Widget _buildCollapsedPill(int dangerCount, int warningCount) {
-    final hasDanger = dangerCount > 0;
-    final color = hasDanger ? CyberpunkTheme.neonRed : CyberpunkTheme.neonYellow;
+  /// Pulsing icon that cycles: ⚠ → temp → humidity → ... → repeat
+  Widget _buildCyclingPill() {
+    final color = _pillColor;
 
     return AnimatedBuilder(
       animation: _pulseAnimation,
       builder: (context, child) {
-        final alpha = hasDanger ? _pulseAnimation.value : 1.0;
         return Opacity(
-          opacity: alpha,
+          opacity: _pulseAnimation.value,
           child: Container(
-            padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+            width: 36,
+            height: 36,
             decoration: BoxDecoration(
               color: color.withValues(alpha: 0.12),
-              borderRadius: BorderRadius.circular(2),
+              borderRadius: BorderRadius.circular(4),
               border: Border.all(color: color.withValues(alpha: 0.6)),
               boxShadow: [
-                BoxShadow(color: color.withValues(alpha: 0.15), blurRadius: 6),
+                BoxShadow(
+                  color: color.withValues(alpha: 0.25 * _pulseAnimation.value),
+                  blurRadius: 10,
+                  spreadRadius: 1,
+                ),
               ],
             ),
-            child: DefaultTextStyle(
-              style: const TextStyle(decoration: TextDecoration.none),
-              child: Row(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  Icon(
-                    hasDanger ? Icons.dangerous_rounded : Icons.warning_amber_rounded,
-                    color: color,
-                    size: 13,
-                  ),
-                  const SizedBox(width: 5),
-                  Text(
-                    hasDanger
-                        ? '▲ $dangerCount${warningCount > 0 ? ' + ⚠ $warningCount' : ''}'
-                        : '⚠ $warningCount',
-                    style: TextStyle(
-                      fontFamily: 'monospace',
-                      fontSize: 10,
-                      fontWeight: FontWeight.bold,
-                      color: color,
-                      letterSpacing: 1,
-                      decoration: TextDecoration.none,
-                      shadows: [Shadow(color: color.withValues(alpha: 0.5), blurRadius: 4)],
-                    ),
-                  ),
-                ],
+            child: Center(
+              child: AnimatedSwitcher(
+                duration: const Duration(milliseconds: 300),
+                transitionBuilder: (child, anim) => ScaleTransition(
+                  scale: anim,
+                  child: child,
+                ),
+                child: Icon(
+                  _currentCycleIcon,
+                  key: ValueKey<int>(_currentIconIndex),
+                  color: color,
+                  size: 20,
+                ),
               ),
             ),
           ),
