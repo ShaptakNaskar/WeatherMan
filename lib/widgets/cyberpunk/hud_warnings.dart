@@ -193,10 +193,10 @@ class _HudWarningOverlayState extends State<HudWarningOverlay>
     with TickerProviderStateMixin {
   late AnimationController _pulseController;
   late AnimationController _slideController;
-  late AnimationController _collapseController;
   late Animation<double> _pulseAnimation;
   late Animation<Offset> _slideAnimation;
   bool _collapsed = false;
+  bool _expandedByTap = false;
 
   @override
   void initState() {
@@ -211,11 +211,6 @@ class _HudWarningOverlayState extends State<HudWarningOverlay>
       duration: const Duration(milliseconds: 400),
     )..forward();
 
-    _collapseController = AnimationController(
-      vsync: this,
-      duration: const Duration(milliseconds: 300),
-    );
-
     _pulseAnimation = Tween<double>(begin: 0.6, end: 1.0).animate(
       CurvedAnimation(parent: _pulseController, curve: Curves.easeInOut),
     );
@@ -225,15 +220,13 @@ class _HudWarningOverlayState extends State<HudWarningOverlay>
       end: Offset.zero,
     ).animate(CurvedAnimation(parent: _slideController, curve: Curves.easeOutCubic));
 
-    // Auto-collapse after 4 seconds
     _scheduleCollapse();
   }
 
   void _scheduleCollapse() {
     Future.delayed(const Duration(seconds: 4), () {
-      if (mounted && !_collapsed) {
+      if (mounted && !_collapsed && !_expandedByTap) {
         setState(() => _collapsed = true);
-        _collapseController.forward();
       }
     });
   }
@@ -241,20 +234,35 @@ class _HudWarningOverlayState extends State<HudWarningOverlay>
   @override
   void didUpdateWidget(HudWarningOverlay oldWidget) {
     super.didUpdateWidget(oldWidget);
-    // If alerts change, briefly expand again
     if (widget.alerts.length != oldWidget.alerts.length) {
-      setState(() => _collapsed = false);
-      _collapseController.reverse();
+      setState(() {
+        _collapsed = false;
+        _expandedByTap = false;
+      });
       _slideController.forward(from: 0);
       _scheduleCollapse();
     }
+  }
+
+  void _onPillTap() {
+    setState(() {
+      _expandedByTap = true;
+      _collapsed = false;
+    });
+    _slideController.forward(from: 0);
+  }
+
+  void _onDismiss() {
+    setState(() {
+      _expandedByTap = false;
+      _collapsed = true;
+    });
   }
 
   @override
   void dispose() {
     _pulseController.dispose();
     _slideController.dispose();
-    _collapseController.dispose();
     super.dispose();
   }
 
@@ -264,42 +272,91 @@ class _HudWarningOverlayState extends State<HudWarningOverlay>
 
     final dangers = widget.alerts.where((a) => a.severity == AlertSeverity.danger).toList();
     final warnings = widget.alerts.where((a) => a.severity == AlertSeverity.warning).toList();
+    final topPadding = MediaQuery.of(context).padding.top;
 
+    // Tapped-expand mode: full-screen dimmed backdrop + centered badges
+    if (_expandedByTap) {
+      return Positioned.fill(
+        child: GestureDetector(
+          onTap: _onDismiss,
+          behavior: HitTestBehavior.opaque,
+          child: AnimatedContainer(
+            duration: const Duration(milliseconds: 200),
+            color: CyberpunkTheme.bgDarkest.withValues(alpha: 0.75),
+            child: SafeArea(
+              child: Center(
+                child: SlideTransition(
+                  position: _slideAnimation,
+                  child: DefaultTextStyle(
+                    style: const TextStyle(decoration: TextDecoration.none),
+                    child: Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: 24),
+                      child: Column(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          ...dangers.map((a) => _buildAlertBadge(a, true)),
+                          ...warnings.map((a) => _buildAlertBadge(a, false)),
+                          const SizedBox(height: 16),
+                          Text(
+                            'TAP ANYWHERE TO DISMISS',
+                            style: TextStyle(
+                              fontFamily: 'monospace',
+                              fontSize: 9,
+                              color: CyberpunkTheme.textTertiary,
+                              letterSpacing: 2,
+                              decoration: TextDecoration.none,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+                ),
+              ),
+            ),
+          ),
+        ),
+      );
+    }
+
+    // Collapsed pill mode (tappable)
+    if (_collapsed) {
+      return Positioned(
+        top: topPadding + 48,
+        right: 12,
+        child: GestureDetector(
+          onTap: _onPillTap,
+          child: _buildCollapsedPill(dangers.length, warnings.length),
+        ),
+      );
+    }
+
+    // Initial expanded mode (auto, non-interactive, will collapse)
     return Positioned(
-      top: MediaQuery.of(context).padding.top + 48,
+      top: topPadding + 48,
       right: 12,
       child: IgnorePointer(
         child: SlideTransition(
           position: _slideAnimation,
-          child: AnimatedCrossFade(
-            duration: const Duration(milliseconds: 300),
-            crossFadeState: _collapsed
-                ? CrossFadeState.showSecond
-                : CrossFadeState.showFirst,
-            firstChild: _buildExpandedBadges(dangers, warnings),
-            secondChild: _buildCollapsedPill(dangers.length, warnings.length),
+          child: DefaultTextStyle(
+            style: const TextStyle(decoration: TextDecoration.none),
+            child: ConstrainedBox(
+              constraints: const BoxConstraints(maxWidth: 260),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.end,
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  ...dangers.map((a) => _buildAlertBadge(a, true)),
+                  ...warnings.map((a) => _buildAlertBadge(a, false)),
+                ],
+              ),
+            ),
           ),
         ),
       ),
     );
   }
 
-  /// Full detail view — shown briefly on appear
-  Widget _buildExpandedBadges(List<EnvironmentAlert> dangers, List<EnvironmentAlert> warnings) {
-    return ConstrainedBox(
-      constraints: const BoxConstraints(maxWidth: 240),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.end,
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          ...dangers.map((a) => _buildAlertBadge(a, true)),
-          ...warnings.map((a) => _buildAlertBadge(a, false)),
-        ],
-      ),
-    );
-  }
-
-  /// Compact pill — replaces badges after auto-collapse
   Widget _buildCollapsedPill(int dangerCount, int warningCount) {
     final hasDanger = dangerCount > 0;
     final color = hasDanger ? CyberpunkTheme.neonRed : CyberpunkTheme.neonYellow;
@@ -311,7 +368,7 @@ class _HudWarningOverlayState extends State<HudWarningOverlay>
         return Opacity(
           opacity: alpha,
           child: Container(
-            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+            padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
             decoration: BoxDecoration(
               color: color.withValues(alpha: 0.12),
               borderRadius: BorderRadius.circular(2),
@@ -320,29 +377,33 @@ class _HudWarningOverlayState extends State<HudWarningOverlay>
                 BoxShadow(color: color.withValues(alpha: 0.15), blurRadius: 6),
               ],
             ),
-            child: Row(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                Icon(
-                  hasDanger ? Icons.dangerous_rounded : Icons.warning_amber_rounded,
-                  color: color,
-                  size: 12,
-                ),
-                const SizedBox(width: 4),
-                Text(
-                  hasDanger
-                      ? '▲ $dangerCount${warningCount > 0 ? ' + $warningCount' : ''}'
-                      : '⚠ $warningCount',
-                  style: TextStyle(
-                    fontFamily: 'monospace',
-                    fontSize: 9,
-                    fontWeight: FontWeight.bold,
+            child: DefaultTextStyle(
+              style: const TextStyle(decoration: TextDecoration.none),
+              child: Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Icon(
+                    hasDanger ? Icons.dangerous_rounded : Icons.warning_amber_rounded,
                     color: color,
-                    letterSpacing: 1,
-                    shadows: [Shadow(color: color.withValues(alpha: 0.5), blurRadius: 4)],
+                    size: 13,
                   ),
-                ),
-              ],
+                  const SizedBox(width: 5),
+                  Text(
+                    hasDanger
+                        ? '▲ $dangerCount${warningCount > 0 ? ' + ⚠ $warningCount' : ''}'
+                        : '⚠ $warningCount',
+                    style: TextStyle(
+                      fontFamily: 'monospace',
+                      fontSize: 10,
+                      fontWeight: FontWeight.bold,
+                      color: color,
+                      letterSpacing: 1,
+                      decoration: TextDecoration.none,
+                      shadows: [Shadow(color: color.withValues(alpha: 0.5), blurRadius: 4)],
+                    ),
+                  ),
+                ],
+              ),
             ),
           ),
         );
@@ -352,35 +413,66 @@ class _HudWarningOverlayState extends State<HudWarningOverlay>
 
   Widget _buildAlertBadge(EnvironmentAlert alert, bool isDanger) {
     final color = isDanger ? CyberpunkTheme.neonRed : CyberpunkTheme.neonYellow;
+    final label = isDanger ? '▲ DANGER' : '⚠ WARNING';
 
     return AnimatedBuilder(
       animation: _pulseAnimation,
       builder: (context, child) {
         final alpha = isDanger ? _pulseAnimation.value : 1.0;
         return Padding(
-          padding: const EdgeInsets.only(bottom: 4),
+          padding: const EdgeInsets.only(bottom: 6),
           child: Opacity(
             opacity: alpha,
             child: Container(
-              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+              padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
               decoration: BoxDecoration(
                 color: color.withValues(alpha: 0.12),
                 borderRadius: BorderRadius.circular(2),
                 border: Border.all(color: color.withValues(alpha: 0.7), width: 1),
                 boxShadow: [
-                  BoxShadow(color: color.withValues(alpha: 0.2), blurRadius: 6),
+                  BoxShadow(
+                    color: color.withValues(alpha: 0.2),
+                    blurRadius: 8,
+                  ),
                 ],
               ),
-              child: Text(
-                '${isDanger ? '▲' : '⚠'} ${alert.label}: ${alert.value}',
-                style: TextStyle(
-                  fontFamily: 'monospace',
-                  fontSize: 9,
-                  fontWeight: FontWeight.bold,
-                  color: color,
-                  letterSpacing: 0.5,
-                  shadows: [Shadow(color: color.withValues(alpha: 0.5), blurRadius: 4)],
-                ),
+              child: Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Icon(alert.icon, color: color, size: 14),
+                  const SizedBox(width: 6),
+                  Flexible(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          '$label // ${alert.label}: ${alert.value}',
+                          style: TextStyle(
+                            fontFamily: 'monospace',
+                            fontSize: 10,
+                            fontWeight: FontWeight.bold,
+                            color: color,
+                            letterSpacing: 1,
+                            decoration: TextDecoration.none,
+                            shadows: [
+                              Shadow(color: color.withValues(alpha: 0.5), blurRadius: 4),
+                            ],
+                          ),
+                        ),
+                        Text(
+                          alert.description,
+                          style: TextStyle(
+                            fontFamily: 'monospace',
+                            fontSize: 8,
+                            color: color.withValues(alpha: 0.7),
+                            letterSpacing: 0.5,
+                            decoration: TextDecoration.none,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ],
               ),
             ),
           ),
