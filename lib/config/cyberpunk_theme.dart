@@ -160,9 +160,16 @@ class CyberpunkTheme {
     brightness: Brightness.dark,
     scaffoldBackgroundColor: Colors.transparent,
     fontFamily: 'Roboto',
-    colorScheme: ColorScheme.fromSeed(
-      seedColor: neonCyan,
-      brightness: Brightness.dark,
+    colorScheme: const ColorScheme.dark(
+      primary: neonCyan,
+      onPrimary: bgDarkest,
+      secondary: neonMagenta,
+      onSecondary: bgDarkest,
+      error: neonRed,
+      onError: textPrimary,
+      surface: bgDark,
+      onSurface: textPrimary,
+      surfaceContainerHighest: bgMid,
     ),
     appBarTheme: AppBarTheme(
       backgroundColor: Colors.transparent,

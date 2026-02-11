@@ -6,6 +6,7 @@ import 'package:weatherman/providers/location_provider.dart';
 import 'package:weatherman/providers/settings_provider.dart';
 import 'package:weatherman/providers/weather_provider.dart';
 import 'package:weatherman/screens/home_screen.dart';
+import 'package:weatherman/screens/splash_screen.dart';
 import 'package:weatherman/services/location_service.dart';
 import 'package:weatherman/services/storage_service.dart';
 import 'package:weatherman/services/weather_service.dart';
@@ -72,7 +73,32 @@ class WeatherManApp extends StatelessWidget {
       title: 'W3ATHER.exe',
       debugShowCheckedModeBanner: false,
       theme: CyberpunkTheme.darkTheme,
-      home: const HomeScreen(),
+      home: const _AppEntry(),
+    );
+  }
+}
+
+/// Entry point: shows splash then transitions to home
+class _AppEntry extends StatefulWidget {
+  const _AppEntry();
+
+  @override
+  State<_AppEntry> createState() => _AppEntryState();
+}
+
+class _AppEntryState extends State<_AppEntry> {
+  bool _splashDone = false;
+
+  @override
+  Widget build(BuildContext context) {
+    if (_splashDone) {
+      return const HomeScreen();
+    }
+
+    return CyberpunkSplashScreen(
+      onComplete: () {
+        if (mounted) setState(() => _splashDone = true);
+      },
     );
   }
 }
