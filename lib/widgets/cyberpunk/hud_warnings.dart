@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:weatherman/config/cyberpunk_theme.dart';
 import 'package:weatherman/models/weather.dart';
@@ -196,6 +197,7 @@ class _HudWarningOverlayState extends State<HudWarningOverlay>
   late AnimationController _iconCycleController;
   late Animation<double> _pulseAnimation;
   late Animation<Offset> _slideAnimation;
+  Timer? _cycleTimer;
   bool _collapsed = false;
   bool _expandedByTap = false;
   int _currentIconIndex = 0; // 0 = warning sign, 1+ = alert icons
@@ -232,10 +234,16 @@ class _HudWarningOverlayState extends State<HudWarningOverlay>
   }
 
   void _startIconCycling() {
-    Future.delayed(const Duration(milliseconds: 1800), () {
-      if (!mounted) return;
-      _cycleNextIcon();
+    _stopIconCycling();
+    // Start delay before first cycle, then periodic
+    _cycleTimer = Timer.periodic(const Duration(seconds: 4), (timer) {
+      if (mounted) _cycleNextIcon();
     });
+  }
+
+  void _stopIconCycling() {
+    _cycleTimer?.cancel();
+    _cycleTimer = null;
   }
 
   void _cycleNextIcon() {
@@ -247,9 +255,6 @@ class _HudWarningOverlayState extends State<HudWarningOverlay>
     });
     // Animate the transition
     _iconCycleController.forward(from: 0);
-    Future.delayed(const Duration(milliseconds: 1800), () {
-      if (mounted) _cycleNextIcon();
-    });
   }
 
   void _scheduleCollapse() {
@@ -272,10 +277,8 @@ class _HudWarningOverlayState extends State<HudWarningOverlay>
       _slideController.forward(from: 0);
       _scheduleCollapse();
       
-      // If we went from empty to having alerts, the cycle loop likely died. Restart it.
-      if (oldWidget.alerts.isEmpty && widget.alerts.isNotEmpty) {
-        _startIconCycling();
-      }
+      // Restart cycling with new interval
+      _startIconCycling();
     }
   }
 
@@ -313,6 +316,7 @@ class _HudWarningOverlayState extends State<HudWarningOverlay>
 
   @override
   void dispose() {
+    _stopIconCycling();
     _pulseController.dispose();
     _slideController.dispose();
     _iconCycleController.dispose();
