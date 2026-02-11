@@ -257,7 +257,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
             ),
             const SizedBox(height: 4),
             Text(
-              'v1.0.4',
+              'v1.0.5',
               style: Theme.of(context).textTheme.bodySmall?.copyWith(
                 color: AppTheme.textTertiary,
                 shadows: _textShadows,
