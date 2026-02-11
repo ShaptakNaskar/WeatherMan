@@ -289,21 +289,11 @@ class _HudWarningOverlayState extends State<HudWarningOverlay>
     });
   }
 
-  /// Red if ≥50% are danger, yellow otherwise
+  /// Red if ANY alert is danger, yellow if all warnings
   Color get _pillColor {
     if (widget.alerts.isEmpty) return CyberpunkTheme.neonYellow;
-    final dangerCount = widget.alerts.where((a) => a.severity == AlertSeverity.danger).length;
-    final ratio = dangerCount / widget.alerts.length;
-    return ratio >= 0.5 ? CyberpunkTheme.neonRed : CyberpunkTheme.neonYellow;
-  }
-
-  /// Exclamation icon is red if ANY danger exists; others follow _pillColor
-  Color get _currentIconColor {
-    if (_currentIconIndex == 0) {
-      final hasDanger = widget.alerts.any((a) => a.severity == AlertSeverity.danger);
-      return hasDanger ? CyberpunkTheme.neonRed : CyberpunkTheme.neonYellow;
-    }
-    return _pillColor;
+    final hasDanger = widget.alerts.any((a) => a.severity == AlertSeverity.danger);
+    return hasDanger ? CyberpunkTheme.neonRed : CyberpunkTheme.neonYellow;
   }
 
   /// Get the icon for the current cycle index
@@ -339,7 +329,7 @@ class _HudWarningOverlayState extends State<HudWarningOverlay>
           onTap: _onDismiss,
           behavior: HitTestBehavior.opaque,
           child: Container(
-            color: CyberpunkTheme.bgDarkest.withValues(alpha: 0.6),
+            color: CyberpunkTheme.bgDarkest.withValues(alpha: 0.85),
             child: Stack(
               children: [
                 Positioned(
@@ -410,7 +400,7 @@ class _HudWarningOverlayState extends State<HudWarningOverlay>
 
   /// Pulsing icon that cycles: ⚠ → temp → humidity → ... → repeat
   Widget _buildCyclingPill() {
-    final color = _currentIconColor;
+    final color = _pillColor;
 
     return AnimatedBuilder(
       animation: _pulseAnimation,
