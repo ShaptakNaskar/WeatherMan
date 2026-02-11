@@ -570,6 +570,7 @@ class _DangerFlashOverlayState extends State<DangerFlashOverlay>
       children: [
         widget.child,
         // Red flash overlay
+        /*
         Positioned.fill(
           child: IgnorePointer(
             child: AnimatedBuilder(
@@ -578,12 +579,14 @@ class _DangerFlashOverlayState extends State<DangerFlashOverlay>
                 final opacity = (1.0 - _flashController.value) * 0.15;
                 if (opacity <= 0.001) return const SizedBox.shrink();
                 return Container(
+                  // User requested removal of this overlay
                   color: CyberpunkTheme.neonBlue.withValues(alpha: opacity),
                 );
               },
             ),
           ),
         ),
+        */
       ],
     );
   }
