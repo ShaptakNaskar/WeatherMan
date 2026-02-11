@@ -2,19 +2,49 @@ name: Build & Release APK
 
 on:
   push:
-    branches: [main, master]
+    branches: [main, master, cyberpunk]
 
 jobs:
   build:
-    name: Build APK & Create Release
+    name: Build APKs & Create Release
     runs-on: ubuntu-latest
 
     permissions:
       contents: write
 
     steps:
-      - name: Checkout code
+      - name: Checkout pushed branch
         uses: actions/checkout@v4
+        with:
+          path: pushed
+
+      - name: Determine branches
+        id: branches
+        run: |
+          PUSHED_BRANCH="${GITHUB_REF_NAME}"
+          if [ "$PUSHED_BRANCH" = "main" ] || [ "$PUSHED_BRANCH" = "master" ]; then
+            OTHER_BRANCH="cyberpunk"
+          else
+            OTHER_BRANCH="master"
+          fi
+          echo "pushed=$PUSHED_BRANCH" >> $GITHUB_OUTPUT
+          echo "other=$OTHER_BRANCH" >> $GITHUB_OUTPUT
+
+      - name: Checkout other branch
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ steps.branches.outputs.other }}
+          path: other
+        continue-on-error: true
+
+      - name: Check other branch exists
+        id: other_exists
+        run: |
+          if [ -d "other/.git" ]; then
+            echo "exists=true" >> $GITHUB_OUTPUT
+          else
+            echo "exists=false" >> $GITHUB_OUTPUT
+          fi
 
       - name: Setup Java 17
         uses: actions/setup-java@v4
@@ -29,32 +59,59 @@ jobs:
           channel: stable
           cache: true
 
-      - name: Get dependencies
+      # === Build pushed branch APK ===
+      - name: Get pushed branch dependencies
         run: flutter pub get
+        working-directory: pushed
 
       - name: Decode keystore
         run: |
-          mkdir -p keystore
-          echo "${{ secrets.KEYSTORE_BASE64 }}" | base64 -d > keystore/weatherman.jks
+          mkdir -p pushed/keystore
+          echo "${{ secrets.KEYSTORE_BASE64 }}" | base64 -d > pushed/keystore/weatherman.jks
+          if [ "${{ steps.other_exists.outputs.exists }}" = "true" ]; then
+            mkdir -p other/keystore
+            cp pushed/keystore/weatherman.jks other/keystore/weatherman.jks
+          fi
 
-      - name: Create key.properties
+      - name: Create key.properties (pushed)
         run: |
-          cat > android/key.properties << EOF
+          cat > pushed/android/key.properties << EOF
           storePassword=${{ secrets.KEYSTORE_PASSWORD }}
           keyPassword=${{ secrets.KEY_PASSWORD }}
           keyAlias=${{ secrets.KEY_ALIAS }}
           storeFile=../../keystore/weatherman.jks
           EOF
 
-      - name: Build release APK
+      - name: Build pushed branch APK
         run: flutter build apk --release
+        working-directory: pushed
 
+      # === Build other branch APK ===
+      - name: Get other branch dependencies
+        if: steps.other_exists.outputs.exists == 'true'
+        run: flutter pub get
+        working-directory: other
+
+      - name: Create key.properties (other)
+        if: steps.other_exists.outputs.exists == 'true'
+        run: |
+          cat > other/android/key.properties << EOF
+          storePassword=${{ secrets.KEYSTORE_PASSWORD }}
+          keyPassword=${{ secrets.KEY_PASSWORD }}
+          keyAlias=${{ secrets.KEY_ALIAS }}
+          storeFile=../../keystore/weatherman.jks
+          EOF
+
+      - name: Build other branch APK
+        if: steps.other_exists.outputs.exists == 'true'
+        run: flutter build apk --release
+        working-directory: other
+
+      # === Gather info & create release ===
       - name: Get version from pubspec
         id: version
         run: |
-          # Extract full version string (e.g., 1.0.2+2)
-          FULL_VERSION=$(grep 'version:' pubspec.yaml | head -1 | awk '{print $2}' | tr -d '\r')
-          # Get only semantic version (before the +)
+          FULL_VERSION=$(grep 'version:' pushed/pubspec.yaml | head -1 | awk '{print $2}' | tr -d '\r')
           SEMVER=$(echo "$FULL_VERSION" | cut -d'+' -f1)
           echo "full=$FULL_VERSION" >> $GITHUB_OUTPUT
           echo "semver=$SEMVER" >> $GITHUB_OUTPUT
@@ -62,25 +119,93 @@ jobs:
       - name: Get commit info
         id: commit
         run: |
+          cd pushed
           echo "sha_short=$(git rev-parse --short HEAD)" >> $GITHUB_OUTPUT
           echo "message<<EOF" >> $GITHUB_OUTPUT
           git log -1 --pretty=%B >> $GITHUB_OUTPUT
           echo "EOF" >> $GITHUB_OUTPUT
 
-      - name: Rename APK
+      - name: Determine APK names and labels
+        id: apks
         run: |
-          mv build/app/outputs/flutter-apk/app-release.apk \
-             build/app/outputs/flutter-apk/WeatherMan-v${{ steps.version.outputs.semver }}.apk
+          PUSHED="${{ steps.branches.outputs.pushed }}"
+          OTHER="${{ steps.branches.outputs.other }}"
+
+          if [ "$PUSHED" = "main" ] || [ "$PUSHED" = "master" ]; then
+            PUSHED_LABEL="WeatherMan"
+            OTHER_LABEL="W3ATHER-Cyberpunk"
+          else
+            PUSHED_LABEL="W3ATHER-Cyberpunk"
+            OTHER_LABEL="WeatherMan"
+          fi
+
+          echo "pushed_label=$PUSHED_LABEL" >> $GITHUB_OUTPUT
+          echo "other_label=$OTHER_LABEL" >> $GITHUB_OUTPUT
+
+      - name: Rename APKs
+        run: |
+          mv pushed/build/app/outputs/flutter-apk/app-release.apk \
+             "${{ steps.apks.outputs.pushed_label }}-v${{ steps.version.outputs.semver }}.apk"
+          if [ "${{ steps.other_exists.outputs.exists }}" = "true" ]; then
+            mv other/build/app/outputs/flutter-apk/app-release.apk \
+               "${{ steps.apks.outputs.other_label }}-v${{ steps.version.outputs.semver }}.apk"
+          fi
+
+      - name: Build release body
+        id: body
+        run: |
+          PUSHED="${{ steps.branches.outputs.pushed }}"
+          PUSHED_LABEL="${{ steps.apks.outputs.pushed_label }}"
+          OTHER_LABEL="${{ steps.apks.outputs.other_label }}"
+          COMMIT_MSG=$(cat <<'MSGEOF'
+          ${{ steps.commit.outputs.message }}
+          MSGEOF
+          )
+
+          cat > release_body.md << BODYEOF
+          ## ${PUSHED_LABEL} (${PUSHED} branch)
+          ${COMMIT_MSG}
+
+          ## ${OTHER_LABEL}
+          No change, posted here for completeness.
+
+          ---
+          Commit: ${{ steps.commit.outputs.sha_short }} (${PUSHED})
+          BODYEOF
+
+          echo "path=release_body.md" >> $GITHUB_OUTPUT
+
+      - name: Generate tag name
+        id: tag
+        run: |
+          PUSHED="${{ steps.branches.outputs.pushed }}"
+          SEMVER="${{ steps.version.outputs.semver }}"
+          SHA="${{ steps.commit.outputs.sha_short }}"
+          if [ "$PUSHED" = "main" ] || [ "$PUSHED" = "master" ]; then
+            echo "name=v${SEMVER}" >> $GITHUB_OUTPUT
+          else
+            echo "name=v${SEMVER}-cyber-${SHA}" >> $GITHUB_OUTPUT
+          fi
+
+      - name: Collect APK files
+        id: files
+        run: |
+          FILES="${{ steps.apks.outputs.pushed_label }}-v${{ steps.version.outputs.semver }}.apk"
+          if [ "${{ steps.other_exists.outputs.exists }}" = "true" ]; then
+            FILES="${FILES}\n${{ steps.apks.outputs.other_label }}-v${{ steps.version.outputs.semver }}.apk"
+          fi
+          echo "list<<EOF" >> $GITHUB_OUTPUT
+          echo -e "$FILES" >> $GITHUB_OUTPUT
+          echo "EOF" >> $GITHUB_OUTPUT
 
       - name: Create Release
         uses: softprops/action-gh-release@v2
         with:
-          tag_name: v${{ steps.version.outputs.semver }}
-          name: WeatherMan v${{ steps.version.outputs.semver }}
-          body: |
-            ${{ steps.commit.outputs.message }}
-            
-            ---
-            Commit: ${{ steps.commit.outputs.sha_short }}
-          files: build/app/outputs/flutter-apk/WeatherMan-v${{ steps.version.outputs.semver }}.apk
+          tag_name: ${{ steps.tag.outputs.name }}
+          name: "v${{ steps.version.outputs.semver }} — ${{ steps.branches.outputs.pushed }}"
+          body_path: ${{ steps.body.outputs.path }}
+          files: |
+            ${{ steps.apks.outputs.pushed_label }}-v${{ steps.version.outputs.semver }}.apk
+            ${{ steps.apks.outputs.other_label }}-v${{ steps.version.outputs.semver }}.apk
           make_latest: true
+          fail_on_unmatched_files: false

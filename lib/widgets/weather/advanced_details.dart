@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:weatherman/models/weather.dart';
-import 'package:weatherman/widgets/glassmorphic/glass_card.dart';
+import 'package:weatherman/widgets/cyberpunk/cyber_glass_card.dart';
 
 /// Advanced weather details widget with categorized data
 class AdvancedDetailsCard extends StatelessWidget {
@@ -150,7 +150,7 @@ class AdvancedDetailsCard extends StatelessWidget {
       return const SizedBox.shrink();
     }
 
-    return GlassCard(
+    return CyberGlassCard(
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
@@ -208,7 +208,7 @@ class AdvancedDetailsCard extends StatelessWidget {
   Widget _buildAirQualitySection(BuildContext context, AirQuality aq) {
     final category = aq.category;
     
-    return GlassCard(
+    return CyberGlassCard(
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [

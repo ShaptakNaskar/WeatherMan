@@ -1,11 +1,11 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import 'package:weatherman/config/theme.dart';
+import 'package:weatherman/config/cyberpunk_theme.dart';
 import 'package:weatherman/models/location.dart';
 import 'package:weatherman/providers/location_provider.dart';
 import 'package:weatherman/providers/weather_provider.dart';
-import 'package:weatherman/widgets/backgrounds/dynamic_background.dart';
+import 'package:weatherman/widgets/cyberpunk/cyber_background.dart';
 
 /// City search screen
 class SearchScreen extends StatefulWidget {
@@ -22,15 +22,6 @@ class _SearchScreenState extends State<SearchScreen> {
   List<LocationModel> _searchResults = [];
   bool _isSearching = false;
   Timer? _debounceTimer;
-
-  // Text shadows for legibility on light backgrounds
-  static const List<Shadow> _textShadows = [
-    Shadow(
-      color: Color(0x80000000),
-      blurRadius: 4,
-      offset: Offset(0, 1),
-    ),
-  ];
 
   @override
   void initState() {
@@ -116,7 +107,7 @@ class _SearchScreenState extends State<SearchScreen> {
         final weatherCode = weather?.current.weatherCode ?? 0;
         final isDay = weather?.current.isDay ?? true;
 
-        return DynamicBackground(
+        return CyberpunkBackground(
           weatherCode: weatherCode,
           isDay: isDay,
           child: Scaffold(
@@ -125,11 +116,17 @@ class _SearchScreenState extends State<SearchScreen> {
               backgroundColor: Colors.transparent,
               elevation: 0,
               title: Text(
-                'Search City',
-                style: TextStyle(shadows: _textShadows),
+                '// SEARCH_NODE //',
+                style: TextStyle(
+                  fontFamily: 'monospace',
+                  fontSize: 16,
+                  color: CyberpunkTheme.neonCyan,
+                  letterSpacing: 2,
+                  shadows: CyberpunkTheme.subtleCyanGlow,
+                ),
               ),
               leading: IconButton(
-                icon: const Icon(Icons.arrow_back_rounded),
+                icon: Icon(Icons.arrow_back_rounded, color: CyberpunkTheme.neonCyan),
                 onPressed: () => Navigator.pop(context),
               ),
             ),
@@ -140,14 +137,14 @@ class _SearchScreenState extends State<SearchScreen> {
                   padding: const EdgeInsets.all(16),
                   child: Container(
                     decoration: BoxDecoration(
-                      color: Colors.white.withValues(alpha: 0.15),
-                      borderRadius: BorderRadius.circular(12),
+                      color: CyberpunkTheme.bgPanel.withValues(alpha: 0.6),
+                      borderRadius: BorderRadius.circular(4),
                       border: Border.all(
-                        color: Colors.white.withValues(alpha: 0.2),
+                        color: CyberpunkTheme.neonCyan.withValues(alpha: 0.3),
                       ),
                       boxShadow: [
                         BoxShadow(
-                          color: Colors.black.withValues(alpha: 0.1),
+                          color: CyberpunkTheme.neonCyan.withValues(alpha: 0.1),
                           blurRadius: 8,
                           offset: const Offset(0, 2),
                         ),
@@ -158,26 +155,25 @@ class _SearchScreenState extends State<SearchScreen> {
                       focusNode: _focusNode,
                       onChanged: _onSearchChanged,
                       style: TextStyle(
-                        color: Colors.white,
-                        shadows: _textShadows,
+                        fontFamily: 'monospace',
+                        color: CyberpunkTheme.textPrimary,
                       ),
                       decoration: InputDecoration(
-                        hintText: 'Search for a city...',
+                        hintText: 'ENTER_NODE_NAME...',
                         hintStyle: TextStyle(
-                          color: Colors.white.withValues(alpha: 0.6),
-                          shadows: _textShadows,
+                          fontFamily: 'monospace',
+                          color: CyberpunkTheme.textTertiary,
+                          letterSpacing: 1,
                         ),
                         prefixIcon: Icon(
                           Icons.search_rounded,
-                          color: Colors.white.withValues(alpha: 0.8),
-                          shadows: _textShadows,
+                          color: CyberpunkTheme.neonCyan,
                         ),
                         suffixIcon: _searchController.text.isNotEmpty
                             ? IconButton(
                                 icon: Icon(
                                   Icons.clear_rounded,
-                                  color: Colors.white.withValues(alpha: 0.8),
-                                  shadows: _textShadows,
+                                  color: CyberpunkTheme.neonCyan,
                                 ),
                                 onPressed: () {
                                   _searchController.clear();
@@ -212,7 +208,7 @@ class _SearchScreenState extends State<SearchScreen> {
       return Center(
         child: CircularProgressIndicator(
           valueColor: AlwaysStoppedAnimation<Color>(
-            Colors.white.withValues(alpha: 0.7),
+            CyberpunkTheme.neonCyan,
           ),
         ),
       );
@@ -226,15 +222,16 @@ class _SearchScreenState extends State<SearchScreen> {
             Icon(
               Icons.search_rounded,
               size: 64,
-              color: Colors.white.withValues(alpha: 0.4),
-              shadows: _textShadows,
+              color: CyberpunkTheme.neonCyan.withValues(alpha: 0.3),
             ),
             const SizedBox(height: 16),
             Text(
-              'Search for a city',
-              style: Theme.of(context).textTheme.bodyLarge?.copyWith(
-                color: AppTheme.textSecondary,
-                shadows: _textShadows,
+              '// AWAITING_INPUT //',
+              style: TextStyle(
+                fontFamily: 'monospace',
+                fontSize: 14,
+                color: CyberpunkTheme.textTertiary,
+                letterSpacing: 2,
               ),
             ),
           ],
@@ -250,15 +247,16 @@ class _SearchScreenState extends State<SearchScreen> {
             Icon(
               Icons.location_off_rounded,
               size: 64,
-              color: Colors.white.withValues(alpha: 0.4),
-              shadows: _textShadows,
+              color: CyberpunkTheme.neonMagenta.withValues(alpha: 0.3),
             ),
             const SizedBox(height: 16),
             Text(
-              'No cities found',
-              style: Theme.of(context).textTheme.bodyLarge?.copyWith(
-                color: AppTheme.textSecondary,
-                shadows: _textShadows,
+              '// NODE_NOT_FOUND //',
+              style: TextStyle(
+                fontFamily: 'monospace',
+                fontSize: 14,
+                color: CyberpunkTheme.textTertiary,
+                letterSpacing: 2,
               ),
             ),
           ],
@@ -284,15 +282,6 @@ class _SearchResultItem extends StatelessWidget {
   final LocationModel location;
   final VoidCallback onTap;
 
-  // Text shadows for legibility
-  static const List<Shadow> _textShadows = [
-    Shadow(
-      color: Color(0x80000000),
-      blurRadius: 4,
-      offset: Offset(0, 1),
-    ),
-  ];
-
   const _SearchResultItem({
     required this.location,
     required this.onTap,
@@ -303,14 +292,14 @@ class _SearchResultItem extends StatelessWidget {
     return Container(
       margin: const EdgeInsets.only(bottom: 8),
       decoration: BoxDecoration(
-        color: Colors.white.withValues(alpha: 0.12),
-        borderRadius: BorderRadius.circular(12),
+        color: CyberpunkTheme.bgPanel.withValues(alpha: 0.6),
+        borderRadius: BorderRadius.circular(4),
         border: Border.all(
-          color: Colors.white.withValues(alpha: 0.2),
+          color: CyberpunkTheme.neonCyan.withValues(alpha: 0.2),
         ),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withValues(alpha: 0.1),
+            color: CyberpunkTheme.neonCyan.withValues(alpha: 0.05),
             blurRadius: 4,
             offset: const Offset(0, 2),
           ),
@@ -320,30 +309,30 @@ class _SearchResultItem extends StatelessWidget {
         onTap: onTap,
         leading: Icon(
           Icons.location_city_rounded,
-          color: Colors.white.withValues(alpha: 0.8),
-          shadows: _textShadows,
+          color: CyberpunkTheme.neonCyan,
         ),
         title: Text(
-          location.name,
+          location.name.toUpperCase(),
           style: TextStyle(
-            color: Colors.white,
+            fontFamily: 'monospace',
+            color: CyberpunkTheme.textPrimary,
             fontWeight: FontWeight.w500,
-            shadows: _textShadows,
+            letterSpacing: 1,
           ),
         ),
         subtitle: Text(
           location.displayName,
           style: TextStyle(
-            color: Colors.white.withValues(alpha: 0.8),
-            shadows: _textShadows,
+            fontFamily: 'monospace',
+            fontSize: 12,
+            color: CyberpunkTheme.textSecondary,
           ),
           maxLines: 1,
           overflow: TextOverflow.ellipsis,
         ),
         trailing: Icon(
           Icons.add_circle_outline_rounded,
-          color: Colors.white.withValues(alpha: 0.8),
-          shadows: _textShadows,
+          color: CyberpunkTheme.neonCyan,
         ),
       ),
     );

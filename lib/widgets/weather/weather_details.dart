@@ -1,10 +1,10 @@
 import 'package:flutter/material.dart';
-import 'package:weatherman/config/theme.dart';
+import 'package:weatherman/config/cyberpunk_theme.dart';
 import 'package:weatherman/models/weather.dart';
 import 'package:weatherman/utils/date_utils.dart';
 import 'package:weatherman/utils/unit_converter.dart';
 import 'package:weatherman/utils/weather_utils.dart';
-import 'package:weatherman/widgets/glassmorphic/glass_card.dart';
+import 'package:weatherman/widgets/cyberpunk/cyber_glass_card.dart';
 
 /// Weather details grid showing UV index, humidity, wind, etc.
 class WeatherDetailsGrid extends StatelessWidget {
@@ -176,7 +176,7 @@ class _DetailCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return LightGlassCard(
+    return CyberLightCard(
       padding: const EdgeInsets.all(16),
       child: SizedBox(
         height: 100,
@@ -186,12 +186,12 @@ class _DetailCard extends StatelessWidget {
             // Icon and title
             Row(
               children: [
-                Icon(icon, size: 16, color: AppTheme.textSecondary),
+                Icon(icon, size: 16, color: CyberpunkTheme.textSecondary),
                 const SizedBox(width: 6),
                 Text(
                   title,
                   style: Theme.of(context).textTheme.labelSmall?.copyWith(
-                    color: AppTheme.textSecondary,
+                    color: CyberpunkTheme.textSecondary,
                     letterSpacing: 0.5,
                   ),
                 ),
@@ -204,7 +204,7 @@ class _DetailCard extends StatelessWidget {
             Text(
               value,
               style: Theme.of(context).textTheme.headlineMedium?.copyWith(
-                color: valueColor ?? AppTheme.textPrimary,
+                color: valueColor ?? CyberpunkTheme.textPrimary,
               ),
             ),
 
@@ -213,7 +213,7 @@ class _DetailCard extends StatelessWidget {
               Text(
                 subtitle!,
                 style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                  color: AppTheme.textSecondary,
+                  color: CyberpunkTheme.textSecondary,
                 ),
               ),
             ],
@@ -238,7 +238,7 @@ class _WindCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return LightGlassCard(
+    return CyberLightCard(
       padding: const EdgeInsets.all(16),
       child: SizedBox(
         height: 100,
@@ -248,12 +248,12 @@ class _WindCard extends StatelessWidget {
             // Icon and title
             Row(
               children: [
-                Icon(Icons.air, size: 16, color: AppTheme.textSecondary),
+                Icon(Icons.air, size: 16, color: CyberpunkTheme.textSecondary),
                 const SizedBox(width: 6),
                 Text(
                   'WIND',
                   style: Theme.of(context).textTheme.labelSmall?.copyWith(
-                    color: AppTheme.textSecondary,
+                    color: CyberpunkTheme.textSecondary,
                     letterSpacing: 0.5,
                   ),
                 ),
@@ -276,7 +276,7 @@ class _WindCard extends StatelessWidget {
                   child: Text(
                     'km/h',
                     style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                      color: AppTheme.textSecondary,
+                      color: CyberpunkTheme.textSecondary,
                     ),
                   ),
                 ),
@@ -286,7 +286,7 @@ class _WindCard extends StatelessWidget {
                   angle: direction * 3.14159 / 180,
                   child: Icon(
                     Icons.navigation_rounded,
-                    color: AppTheme.textSecondary,
+                    color: CyberpunkTheme.textSecondary,
                     size: 24,
                   ),
                 ),
@@ -298,7 +298,7 @@ class _WindCard extends StatelessWidget {
             Text(
               '${WeatherUtils.getWindDirection(direction)} · Gusts ${gusts.round()} km/h',
               style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                color: AppTheme.textSecondary,
+                color: CyberpunkTheme.textSecondary,
               ),
             ),
           ],
@@ -326,7 +326,7 @@ class _PressureCard extends StatelessWidget {
       description = 'High pressure';
     }
 
-    return LightGlassCard(
+    return CyberLightCard(
       padding: const EdgeInsets.all(16),
       child: SizedBox(
         height: 100,
@@ -336,12 +336,12 @@ class _PressureCard extends StatelessWidget {
             // Icon and title
             Row(
               children: [
-                Icon(Icons.speed_outlined, size: 16, color: AppTheme.textSecondary),
+                Icon(Icons.speed_outlined, size: 16, color: CyberpunkTheme.textSecondary),
                 const SizedBox(width: 6),
                 Text(
                   'PRESSURE',
                   style: Theme.of(context).textTheme.labelSmall?.copyWith(
-                    color: AppTheme.textSecondary,
+                    color: CyberpunkTheme.textSecondary,
                     letterSpacing: 0.5,
                   ),
                 ),
@@ -364,7 +364,7 @@ class _PressureCard extends StatelessWidget {
                   child: Text(
                     'hPa',
                     style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                      color: AppTheme.textSecondary,
+                      color: CyberpunkTheme.textSecondary,
                     ),
                   ),
                 ),
@@ -376,7 +376,7 @@ class _PressureCard extends StatelessWidget {
             Text(
               description,
               style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                color: AppTheme.textSecondary,
+                color: CyberpunkTheme.textSecondary,
               ),
             ),
           ],
@@ -414,7 +414,7 @@ class _VisibilityCard extends StatelessWidget {
       value = '${visibility.round()} m';
     }
 
-    return LightGlassCard(
+    return CyberLightCard(
       padding: const EdgeInsets.all(16),
       child: SizedBox(
         height: 100,
@@ -424,12 +424,12 @@ class _VisibilityCard extends StatelessWidget {
             // Icon and title
             Row(
               children: [
-                Icon(Icons.visibility_outlined, size: 16, color: AppTheme.textSecondary),
+                Icon(Icons.visibility_outlined, size: 16, color: CyberpunkTheme.textSecondary),
                 const SizedBox(width: 6),
                 Text(
                   'VISIBILITY',
                   style: Theme.of(context).textTheme.labelSmall?.copyWith(
-                    color: AppTheme.textSecondary,
+                    color: CyberpunkTheme.textSecondary,
                     letterSpacing: 0.5,
                   ),
                 ),
@@ -449,7 +449,7 @@ class _VisibilityCard extends StatelessWidget {
             Text(
               description,
               style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                color: AppTheme.textSecondary,
+                color: CyberpunkTheme.textSecondary,
               ),
             ),
           ],
@@ -469,7 +469,7 @@ class _AqiCard extends StatelessWidget {
   Widget build(BuildContext context) {
     final category = airQuality.category;
 
-    return LightGlassCard(
+    return CyberLightCard(
       padding: const EdgeInsets.all(16),
       child: SizedBox(
         height: 100,
@@ -479,12 +479,12 @@ class _AqiCard extends StatelessWidget {
             // Icon and title
             Row(
               children: [
-                Icon(Icons.air_rounded, size: 16, color: AppTheme.textSecondary),
+                Icon(Icons.air_rounded, size: 16, color: CyberpunkTheme.textSecondary),
                 const SizedBox(width: 6),
                 Text(
                   'AIR QUALITY',
                   style: Theme.of(context).textTheme.labelSmall?.copyWith(
-                    color: AppTheme.textSecondary,
+                    color: CyberpunkTheme.textSecondary,
                     letterSpacing: 0.5,
                   ),
                 ),
@@ -519,7 +519,7 @@ class _AqiCard extends StatelessWidget {
                   ? category.label.split(' ').first 
                   : category.label,
               style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                color: AppTheme.textSecondary, // Monochromatic
+                color: CyberpunkTheme.textSecondary, // Monochromatic
               ),
               overflow: TextOverflow.ellipsis,
             ),

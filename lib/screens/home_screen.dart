@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:provider/provider.dart';
-import 'package:weatherman/config/theme.dart';
+import 'package:weatherman/config/cyberpunk_theme.dart';
 import 'package:weatherman/models/weather.dart';
 import 'package:weatherman/providers/location_provider.dart';
 import 'package:weatherman/providers/settings_provider.dart';
@@ -10,7 +10,9 @@ import 'package:weatherman/providers/weather_provider.dart';
 import 'package:weatherman/screens/search_screen.dart';
 import 'package:weatherman/screens/settings_screen.dart';
 import 'package:weatherman/utils/date_utils.dart';
-import 'package:weatherman/widgets/backgrounds/dynamic_background.dart';
+import 'package:weatherman/widgets/cyberpunk/cyber_background.dart';
+import 'package:weatherman/widgets/cyberpunk/glitch_effects.dart';
+import 'package:weatherman/widgets/cyberpunk/hud_warnings.dart';
 import 'package:weatherman/widgets/common/shimmer_loading.dart';
 import 'package:weatherman/widgets/weather/current_weather.dart';
 import 'package:weatherman/widgets/weather/daily_forecast.dart';
@@ -81,17 +83,43 @@ class _HomeScreenState extends State<HomeScreen> {
         final weatherCode = weather?.current.weatherCode ?? 0;
         final isDay = weather?.current.isDay ?? true;
 
-        return DynamicBackground(
-          weatherCode: weatherCode,
-          isDay: isDay,
-          child: Scaffold(
-            backgroundColor: Colors.transparent,
-            body: SafeArea(
-              child: _buildBody(
-                locationProvider,
-                weatherProvider,
-                weather,
-              ),
+        // Evaluate alerts for HUD overlay
+        final alerts = weather != null
+            ? AlertEvaluator.evaluate(
+                current: weather.current,
+                airQuality: weather.airQuality,
+              )
+            : <EnvironmentAlert>[];
+        final hasDanger = alerts.any((a) => a.severity == AlertSeverity.danger);
+        final hasWarning = alerts.any((a) => a.severity == AlertSeverity.warning);
+
+        return DangerFlashOverlay(
+          hasDanger: hasDanger,
+          child: CyberpunkBackground(
+            weatherCode: weatherCode,
+            isDay: isDay,
+            child: Stack(
+              children: [
+                // Vignette
+                Positioned.fill(
+                  child: CyberpunkVignette(
+                    hasDanger: hasDanger,
+                    hasWarning: hasWarning,
+                  ),
+                ),
+                Scaffold(
+                  backgroundColor: Colors.transparent,
+                  body: SafeArea(
+                    child: _buildBody(
+                      locationProvider,
+                      weatherProvider,
+                      weather,
+                    ),
+                  ),
+                ),
+                // HUD Warning badges
+                HudWarningOverlay(alerts: alerts),
+              ],
             ),
           ),
         );
@@ -162,8 +190,8 @@ class _HomeScreenState extends State<HomeScreen> {
   Widget _buildPortraitContent(WeatherData weather, DailyForecast? today, bool isRefreshing) {
     return RefreshIndicator(
       onRefresh: _refreshWeather,
-      color: AppTheme.textPrimary,
-      backgroundColor: Colors.white.withValues(alpha: 0.2),
+      color: CyberpunkTheme.neonCyan,
+      backgroundColor: CyberpunkTheme.bgPanel.withValues(alpha: 0.8),
       child: CustomScrollView(
         physics: const BouncingScrollPhysics(
           parent: AlwaysScrollableScrollPhysics(),
@@ -188,8 +216,8 @@ class _HomeScreenState extends State<HomeScreen> {
           // Refresh indicator
           if (isRefreshing) _buildRefreshingIndicator(),
 
-          // Last updated
-          _buildLastUpdated(weather),
+          // HUD status line
+          _buildCyberStatusLine(weather),
 
           const SliverToBoxAdapter(child: SizedBox(height: 24)),
 
@@ -261,7 +289,9 @@ class _HomeScreenState extends State<HomeScreen> {
                         Text(
                           'Updated ${DateTimeUtils.formatRelativeTime(weather.fetchedAt)}',
                           style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                            color: AppTheme.textTertiary,
+                            color: CyberpunkTheme.textTertiary,
+                            fontFamily: 'monospace',
+                            letterSpacing: 1,
                           ),
                         ),
                       ],
@@ -275,14 +305,14 @@ class _HomeScreenState extends State<HomeScreen> {
         // Divider
         Container(
           width: 1,
-          color: Colors.white.withValues(alpha: 0.1),
+          color: CyberpunkTheme.neonCyan.withValues(alpha: 0.15),
         ),
         // Right panel - Scrollable forecasts
         Expanded(
           child: RefreshIndicator(
             onRefresh: _refreshWeather,
-            color: AppTheme.textPrimary,
-            backgroundColor: Colors.white.withValues(alpha: 0.2),
+            color: CyberpunkTheme.neonCyan,
+            backgroundColor: CyberpunkTheme.bgPanel.withValues(alpha: 0.8),
             child: CustomScrollView(
               physics: const BouncingScrollPhysics(
                 parent: AlwaysScrollableScrollPhysics(),
@@ -332,7 +362,7 @@ class _HomeScreenState extends State<HomeScreen> {
             child: CircularProgressIndicator(
               strokeWidth: 2,
               valueColor: AlwaysStoppedAnimation<Color>(
-                Colors.white.withValues(alpha: 0.7),
+                CyberpunkTheme.neonCyan.withValues(alpha: 0.7),
               ),
             ),
           ),
@@ -341,16 +371,20 @@ class _HomeScreenState extends State<HomeScreen> {
     );
   }
 
-  SliverToBoxAdapter _buildLastUpdated(WeatherData weather) {
+  SliverToBoxAdapter _buildCyberStatusLine(WeatherData weather) {
     return SliverToBoxAdapter(
       child: Center(
         child: Padding(
           padding: const EdgeInsets.only(top: 16, bottom: 8),
-          child: Text(
-            'Updated ${DateTimeUtils.formatRelativeTime(weather.fetchedAt)}',
-            style: Theme.of(context).textTheme.bodySmall?.copyWith(
-              color: AppTheme.textTertiary,
+          child: GlitchText(
+            text: '// UPDATED ${DateTimeUtils.formatRelativeTime(weather.fetchedAt).toUpperCase()} //',
+            style: TextStyle(
+              fontFamily: 'monospace',
+              fontSize: 10,
+              color: CyberpunkTheme.textTertiary,
+              letterSpacing: 2,
             ),
+            glitchIntensity: 0.3,
           ),
         ),
       ).animate().fadeIn(duration: 400.ms, delay: 100.ms),
@@ -418,20 +452,25 @@ class _HomeScreenState extends State<HomeScreen> {
           mainAxisSize: MainAxisSize.min,
           children: [
             Icon(
-              Icons.cloud_off_rounded,
+              Icons.warning_amber_rounded,
               size: 64,
-              color: Colors.white.withValues(alpha: 0.5),
+              color: CyberpunkTheme.neonRed.withValues(alpha: 0.7),
             ),
             const SizedBox(height: 16),
-            Text(
-              'Unable to load weather',
-              style: Theme.of(context).textTheme.titleLarge,
+            GlitchText(
+              text: '// SYSTEM ERROR //',
+              style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                color: CyberpunkTheme.neonRed,
+                fontFamily: 'monospace',
+                letterSpacing: 2,
+              ),
             ),
             const SizedBox(height: 8),
             Text(
               error,
               style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                color: AppTheme.textSecondary,
+                color: CyberpunkTheme.textSecondary,
+                fontFamily: 'monospace',
               ),
               textAlign: TextAlign.center,
             ),
@@ -439,10 +478,12 @@ class _HomeScreenState extends State<HomeScreen> {
             ElevatedButton.icon(
               onPressed: _refreshWeather,
               icon: const Icon(Icons.refresh_rounded),
-              label: const Text('Retry'),
+              label: const Text('RETRY'),
               style: ElevatedButton.styleFrom(
-                backgroundColor: Colors.white.withValues(alpha: 0.2),
-                foregroundColor: Colors.white,
+                backgroundColor: CyberpunkTheme.neonCyan.withValues(alpha: 0.15),
+                foregroundColor: CyberpunkTheme.neonCyan,
+                side: BorderSide(color: CyberpunkTheme.neonCyan.withValues(alpha: 0.5)),
+                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(4)),
               ),
             ),
           ],
@@ -459,20 +500,25 @@ class _HomeScreenState extends State<HomeScreen> {
           mainAxisSize: MainAxisSize.min,
           children: [
             Icon(
-              Icons.location_off_rounded,
+              Icons.gps_off_rounded,
               size: 64,
-              color: Colors.white.withValues(alpha: 0.5),
+              color: CyberpunkTheme.neonYellow.withValues(alpha: 0.7),
             ),
             const SizedBox(height: 16),
-            Text(
-              'No location selected',
-              style: Theme.of(context).textTheme.titleLarge,
+            GlitchText(
+              text: '// NO SIGNAL //',
+              style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                color: CyberpunkTheme.neonYellow,
+                fontFamily: 'monospace',
+                letterSpacing: 2,
+              ),
             ),
             const SizedBox(height: 8),
             Text(
-              'Add a city or enable location services to get started',
+              'Initialize location module to begin data acquisition',
               style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                color: AppTheme.textSecondary,
+                color: CyberpunkTheme.textSecondary,
+                fontFamily: 'monospace',
               ),
               textAlign: TextAlign.center,
             ),
@@ -480,10 +526,12 @@ class _HomeScreenState extends State<HomeScreen> {
             ElevatedButton.icon(
               onPressed: () => _openSearch(),
               icon: const Icon(Icons.add_rounded),
-              label: const Text('Add City'),
+              label: const Text('ADD NODE'),
               style: ElevatedButton.styleFrom(
-                backgroundColor: Colors.white.withValues(alpha: 0.2),
-                foregroundColor: Colors.white,
+                backgroundColor: CyberpunkTheme.neonCyan.withValues(alpha: 0.15),
+                foregroundColor: CyberpunkTheme.neonCyan,
+                side: BorderSide(color: CyberpunkTheme.neonCyan.withValues(alpha: 0.5)),
+                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(4)),
               ),
             ),
           ],
@@ -532,8 +580,13 @@ class _CityListBottomSheet extends StatelessWidget {
             maxHeight: MediaQuery.of(context).size.height * 0.7,
           ),
           decoration: BoxDecoration(
-            color: Colors.black.withValues(alpha: 0.5),
-            borderRadius: const BorderRadius.vertical(top: Radius.circular(20)),
+            color: CyberpunkTheme.bgDarkest.withValues(alpha: 0.95),
+            borderRadius: const BorderRadius.vertical(top: Radius.circular(4)),
+            border: Border(
+              top: BorderSide(color: CyberpunkTheme.neonCyan.withValues(alpha: 0.4)),
+              left: BorderSide(color: CyberpunkTheme.neonCyan.withValues(alpha: 0.2)),
+              right: BorderSide(color: CyberpunkTheme.neonCyan.withValues(alpha: 0.2)),
+            ),
           ),
           child: Column(
             mainAxisSize: MainAxisSize.min,
@@ -542,10 +595,10 @@ class _CityListBottomSheet extends StatelessWidget {
               Container(
                 margin: const EdgeInsets.only(top: 12),
                 width: 40,
-                height: 4,
+                height: 2,
                 decoration: BoxDecoration(
-                  color: Colors.white.withValues(alpha: 0.3),
-                  borderRadius: BorderRadius.circular(2),
+                  color: CyberpunkTheme.neonCyan.withValues(alpha: 0.5),
+                  borderRadius: BorderRadius.circular(1),
                 ),
               ),
 
@@ -555,8 +608,12 @@ class _CityListBottomSheet extends StatelessWidget {
                 child: Row(
                   children: [
                     Text(
-                      'Saved Locations',
-                      style: Theme.of(context).textTheme.titleLarge,
+                      '// SAVED NODES //',
+                      style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                        fontFamily: 'monospace',
+                        letterSpacing: 2,
+                        color: CyberpunkTheme.neonCyan,
+                      ),
                     ),
                     const Spacer(),
                     IconButton(
@@ -583,7 +640,8 @@ class _CityListBottomSheet extends StatelessWidget {
                           child: Text(
                             'No saved locations',
                             style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                              color: AppTheme.textSecondary,
+                              color: CyberpunkTheme.textSecondary,
+                              fontFamily: 'monospace',
                             ),
                           ),
                         ),

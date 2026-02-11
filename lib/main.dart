@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
-import 'package:weatherman/config/theme.dart';
+import 'package:weatherman/config/cyberpunk_theme.dart';
 import 'package:weatherman/providers/location_provider.dart';
 import 'package:weatherman/providers/settings_provider.dart';
 import 'package:weatherman/providers/weather_provider.dart';
@@ -69,9 +69,9 @@ class WeatherManApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
-      title: 'WeatherMan',
+      title: 'W3ATHER.exe',
       debugShowCheckedModeBanner: false,
-      theme: AppTheme.darkTheme,
+      theme: CyberpunkTheme.darkTheme,
       home: const HomeScreen(),
     );
   }

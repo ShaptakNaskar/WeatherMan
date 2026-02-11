@@ -1,10 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import 'package:weatherman/config/theme.dart';
+import 'package:weatherman/config/cyberpunk_theme.dart';
 import 'package:weatherman/models/weather.dart';
 import 'package:weatherman/providers/settings_provider.dart';
 import 'package:weatherman/utils/unit_converter.dart';
 import 'package:weatherman/utils/weather_utils.dart';
+import 'package:weatherman/widgets/cyberpunk/glitch_effects.dart';
 
 /// Main current weather display widget
 class CurrentWeatherDisplay extends StatelessWidget {
@@ -31,14 +32,16 @@ class CurrentWeatherDisplay extends StatelessWidget {
         mainAxisSize: MainAxisSize.min,
         crossAxisAlignment: CrossAxisAlignment.center,
         children: [
-        // Location name
-        Text(
-          locationName,
+        // Location name with glitch
+        GlitchText(
+          text: locationName.toUpperCase(),
           style: Theme.of(context).textTheme.headlineLarge?.copyWith(
             fontWeight: FontWeight.w300,
-            letterSpacing: 1,
+            letterSpacing: 3,
+            color: CyberpunkTheme.neonCyan,
           ),
           textAlign: TextAlign.center,
+          glitchIntensity: 0.3,
         ),
 
         const SizedBox(height: 8),
@@ -82,10 +85,12 @@ class CurrentWeatherDisplay extends StatelessWidget {
 
         // Weather description
         Text(
-          WeatherUtils.getWeatherDescription(weather.weatherCode),
+          WeatherUtils.getWeatherDescription(weather.weatherCode).toUpperCase(),
           style: Theme.of(context).textTheme.titleLarge?.copyWith(
-            color: AppTheme.textSecondary,
+            color: CyberpunkTheme.textSecondary,
             fontWeight: FontWeight.w400,
+            fontFamily: 'monospace',
+            letterSpacing: 2,
           ),
         ),
 
@@ -98,14 +103,16 @@ class CurrentWeatherDisplay extends StatelessWidget {
             Text(
               'H:${settings.formatTempShort(temperatureMax)}',
               style: Theme.of(context).textTheme.bodyLarge?.copyWith(
-                color: AppTheme.textSecondary,
+                color: CyberpunkTheme.textSecondary,
+                fontFamily: 'monospace',
               ),
             ),
             const SizedBox(width: 16),
             Text(
               'L:${settings.formatTempShort(temperatureMin)}',
               style: Theme.of(context).textTheme.bodyLarge?.copyWith(
-                color: AppTheme.textSecondary,
+                color: CyberpunkTheme.textSecondary,
+                fontFamily: 'monospace',
               ),
             ),
           ],
@@ -145,7 +152,7 @@ class CompactWeatherDisplay extends StatelessWidget {
                     const Icon(
                       Icons.location_on,
                       size: 16,
-                      color: AppTheme.textSecondary,
+                      color: CyberpunkTheme.textSecondary,
                     ),
                     const SizedBox(width: 4),
                   ],
@@ -162,7 +169,7 @@ class CompactWeatherDisplay extends StatelessWidget {
               Text(
                 WeatherUtils.getWeatherDescription(weather.weatherCode),
                 style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                  color: AppTheme.textSecondary,
+                  color: CyberpunkTheme.textSecondary,
                 ),
               ),
             ],

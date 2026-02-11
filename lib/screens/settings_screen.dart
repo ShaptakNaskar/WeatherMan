@@ -4,14 +4,14 @@ import 'package:flutter/services.dart';
 import 'package:fluttertoast/fluttertoast.dart';
 import 'package:provider/provider.dart';
 import 'package:url_launcher/url_launcher.dart';
-import 'package:weatherman/config/theme.dart';
+import 'package:weatherman/config/cyberpunk_theme.dart';
 import 'package:weatherman/providers/location_provider.dart';
 import 'package:weatherman/providers/settings_provider.dart';
 import 'package:weatherman/providers/weather_provider.dart';
 import 'package:weatherman/screens/debug_weather_screen.dart';
 import 'package:weatherman/utils/unit_converter.dart';
-import 'package:weatherman/widgets/backgrounds/dynamic_background.dart';
-import 'package:weatherman/widgets/glassmorphic/glass_card.dart';
+import 'package:weatherman/widgets/cyberpunk/cyber_background.dart';
+import 'package:weatherman/widgets/cyberpunk/cyber_glass_card.dart';
 
 /// Settings screen
 class SettingsScreen extends StatefulWidget {
@@ -74,7 +74,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
         final weatherCode = weather?.current.weatherCode ?? 0;
         final isDay = weather?.current.isDay ?? true;
 
-        return DynamicBackground(
+        return CyberpunkBackground(
           weatherCode: weatherCode,
           isDay: isDay,
           child: Scaffold(
@@ -168,7 +168,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
   List<Widget> _buildControlsSection(SettingsProvider settings) {
     return [
       // Temperature unit
-      GlassCard(
+      CyberGlassCard(
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
@@ -190,7 +190,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
       const SizedBox(height: 16),
 
       // Advanced View toggle
-      GlassCard(
+      CyberGlassCard(
         child: Row(
           children: [
             Expanded(
@@ -217,7 +217,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
             Switch(
               value: settings.advancedViewEnabled,
               onChanged: (value) => settings.setAdvancedViewEnabled(value),
-              activeColor: Colors.white,
+              activeThumbColor: Colors.white,
               activeTrackColor: Colors.white.withValues(alpha: 0.5),
               inactiveThumbColor: Colors.white.withValues(alpha: 0.7),
               inactiveTrackColor: Colors.white.withValues(alpha: 0.2),
@@ -229,7 +229,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
   }
 
   Widget _buildAboutSection() {
-    return GlassCard(
+    return CyberGlassCard(
       child: SizedBox(
         width: double.infinity,
         child: Column(
@@ -242,35 +242,40 @@ class _SettingsScreenState extends State<SettingsScreen> {
               child: Icon(
                 Icons.cloud_rounded,
                 size: 48,
-                color: Colors.white.withValues(alpha: 0.9),
-                shadows: _textShadows,
+                color: CyberpunkTheme.neonCyan,
+                shadows: CyberpunkTheme.neonCyanGlow,
               ),
             ),
             const SizedBox(height: 12),
             Text(
-              'WeatherMan',
-              style: Theme.of(context).textTheme.headlineMedium?.copyWith(
-                fontWeight: FontWeight.w300,
-                letterSpacing: 0.5,
-                shadows: _textShadows,
+              'W3ATHER.exe',
+              style: TextStyle(
+                fontFamily: 'monospace',
+                fontSize: 24,
+                fontWeight: FontWeight.bold,
+                color: CyberpunkTheme.neonCyan,
+                letterSpacing: 3,
+                shadows: CyberpunkTheme.subtleCyanGlow,
               ),
             ),
             const SizedBox(height: 4),
             Text(
-              'v1.0.5',
-              style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                color: AppTheme.textTertiary,
-                shadows: _textShadows,
+              'v1.0.5_CYBER',
+              style: TextStyle(
+                fontFamily: 'monospace',
+                fontSize: 12,
+                color: CyberpunkTheme.textTertiary,
+                letterSpacing: 2,
               ),
             ),
             const SizedBox(height: 20),
-            // Made with love
             Text(
-              'Made with ❤️ by Sappy',
-              style: Theme.of(context).textTheme.bodyLarge?.copyWith(
-                color: AppTheme.textPrimary,
-                fontWeight: FontWeight.w400,
-                shadows: _textShadows,
+              'Coded with ❤️ by Sappy',
+              style: TextStyle(
+                fontFamily: 'monospace',
+                fontSize: 14,
+                color: CyberpunkTheme.neonMagenta,
+                shadows: CyberpunkTheme.neonMagentaGlow,
               ),
             ),
             const SizedBox(height: 8),
@@ -280,32 +285,37 @@ class _SettingsScreenState extends State<SettingsScreen> {
                 mode: LaunchMode.externalApplication,
               ),
               child: Text(
-                'Visit my website →',
-                style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                  color: Colors.white.withValues(alpha: 0.8),
+                '> VISIT_NODE →',
+                style: TextStyle(
+                  fontFamily: 'monospace',
+                  fontSize: 13,
+                  color: CyberpunkTheme.neonCyan,
                   decoration: TextDecoration.underline,
-                  decorationColor: Colors.white.withValues(alpha: 0.5),
-                  shadows: _textShadows,
+                  decorationColor: CyberpunkTheme.neonCyan.withValues(alpha: 0.5),
+                  letterSpacing: 1,
                 ),
               ),
             ),
             const SizedBox(height: 20),
-            Divider(color: Colors.white.withValues(alpha: 0.12)),
+            Divider(color: CyberpunkTheme.neonCyan.withValues(alpha: 0.15)),
             const SizedBox(height: 12),
-            // Data source
             Text(
-              'Weather data by Open-Meteo',
-              style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                color: AppTheme.textTertiary,
-                shadows: _textShadows,
+              '// DATA_SRC: Open-Meteo //',
+              style: TextStyle(
+                fontFamily: 'monospace',
+                fontSize: 11,
+                color: CyberpunkTheme.textTertiary,
+                letterSpacing: 1,
               ),
             ),
             const SizedBox(height: 4),
             Text(
-              'Built with Flutter',
-              style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                color: AppTheme.textTertiary,
-                shadows: _textShadows,
+              '// FRAMEWORK: Flutter //',
+              style: TextStyle(
+                fontFamily: 'monospace',
+                fontSize: 11,
+                color: CyberpunkTheme.textTertiary,
+                letterSpacing: 1,
               ),
             ),
             const SizedBox(height: 8),
@@ -322,7 +332,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
 
     return [
       const SizedBox(height: 16),
-      GlassCard(
+      CyberGlassCard(
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
@@ -330,15 +340,19 @@ class _SettingsScreenState extends State<SettingsScreen> {
               children: [
                 Icon(
                   Icons.bug_report_rounded,
-                  color: Colors.orange,
+                  color: CyberpunkTheme.neonYellow,
                   size: 20,
-                  shadows: _textShadows,
+                  shadows: CyberpunkTheme.neonYellowGlow,
                 ),
                 const SizedBox(width: 8),
                 Text(
-                  'Developer Options',
-                  style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                    shadows: _textShadows,
+                  '// DEV_OPTIONS //',
+                  style: TextStyle(
+                    fontFamily: 'monospace',
+                    fontSize: 14,
+                    color: CyberpunkTheme.neonYellow,
+                    letterSpacing: 2,
+                    shadows: CyberpunkTheme.neonYellowGlow,
                   ),
                 ),
               ],
@@ -346,8 +360,8 @@ class _SettingsScreenState extends State<SettingsScreen> {
             const SizedBox(height: 16),
             _DebugButton(
               icon: Icons.palette_outlined,
-              title: 'Weather Styles Preview',
-              subtitle: 'Test different weather backgrounds',
+              title: 'DEBUG_CONSOLE',
+              subtitle: 'Weather FX + Alert simulator',
               onTap: () {
                 Navigator.push(
                   context,
@@ -393,15 +407,15 @@ class _DebugButton extends StatelessWidget {
       child: Container(
         padding: const EdgeInsets.all(12),
         decoration: BoxDecoration(
-          color: Colors.orange.withValues(alpha: 0.15),
-          borderRadius: BorderRadius.circular(12),
+          color: CyberpunkTheme.neonYellow.withValues(alpha: 0.08),
+          borderRadius: BorderRadius.circular(4),
           border: Border.all(
-            color: Colors.orange.withValues(alpha: 0.3),
+            color: CyberpunkTheme.neonYellow.withValues(alpha: 0.3),
           ),
         ),
         child: Row(
           children: [
-            Icon(icon, color: Colors.orange, shadows: _textShadows),
+            Icon(icon, color: CyberpunkTheme.neonYellow, shadows: CyberpunkTheme.neonYellowGlow),
             const SizedBox(width: 12),
             Expanded(
               child: Column(
@@ -417,14 +431,14 @@ class _DebugButton extends StatelessWidget {
                   Text(
                     subtitle,
                     style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                      color: AppTheme.textSecondary,
+                      color: CyberpunkTheme.textSecondary,
                       shadows: _textShadows,
                     ),
                   ),
                 ],
               ),
             ),
-            Icon(Icons.chevron_right_rounded, shadows: _textShadows),
+            Icon(Icons.chevron_right_rounded, color: CyberpunkTheme.neonYellow),
           ],
         ),
       ),
@@ -498,14 +512,14 @@ class _UnitButton extends StatelessWidget {
         padding: const EdgeInsets.symmetric(vertical: 16),
         decoration: BoxDecoration(
           color: isSelected
-              ? Colors.white.withValues(alpha: 0.25)
-              : Colors.white.withValues(alpha: 0.1),
-          borderRadius: BorderRadius.circular(12),
+              ? CyberpunkTheme.neonCyan.withValues(alpha: 0.1)
+              : CyberpunkTheme.bgPanel.withValues(alpha: 0.5),
+          borderRadius: BorderRadius.circular(4),
           border: Border.all(
             color: isSelected
-                ? Colors.white.withValues(alpha: 0.4)
-                : Colors.white.withValues(alpha: 0.15),
-            width: isSelected ? 2 : 1,
+                ? CyberpunkTheme.neonCyan.withValues(alpha: 0.5)
+                : CyberpunkTheme.neonCyan.withValues(alpha: 0.15),
+            width: isSelected ? 1.5 : 0.5,
           ),
         ),
         child: Column(
@@ -521,7 +535,7 @@ class _UnitButton extends StatelessWidget {
             Text(
               label,
               style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                color: isSelected ? AppTheme.textPrimary : AppTheme.textSecondary,
+                color: isSelected ? CyberpunkTheme.textPrimary : CyberpunkTheme.textSecondary,
                 shadows: _textShadows,
               ),
             ),

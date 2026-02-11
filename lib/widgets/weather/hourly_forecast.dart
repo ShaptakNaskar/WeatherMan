@@ -1,11 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import 'package:weatherman/config/theme.dart';
+import 'package:weatherman/config/cyberpunk_theme.dart';
 import 'package:weatherman/models/weather.dart';
 import 'package:weatherman/providers/settings_provider.dart';
 import 'package:weatherman/utils/date_utils.dart';
 import 'package:weatherman/utils/weather_utils.dart';
-import 'package:weatherman/widgets/glassmorphic/glass_card.dart';
+import 'package:weatherman/widgets/cyberpunk/cyber_glass_card.dart';
 
 /// Horizontal scrolling hourly forecast widget
 class HourlyForecastCard extends StatelessWidget {
@@ -22,7 +22,7 @@ class HourlyForecastCard extends StatelessWidget {
     final now = DateTime.now();
     final filteredHourly = hourly.where((h) => h.time.isAfter(now.subtract(const Duration(hours: 1)))).take(24).toList();
 
-    return GlassCard(
+    return CyberGlassCard(
       padding: const EdgeInsets.symmetric(vertical: 16),
       margin: const EdgeInsets.symmetric(horizontal: 16),
       child: Column(
@@ -36,13 +36,13 @@ class HourlyForecastCard extends StatelessWidget {
                 Icon(
                   Icons.access_time_rounded,
                   size: 16,
-                  color: AppTheme.textSecondary,
+                  color: CyberpunkTheme.textSecondary,
                 ),
                 const SizedBox(width: 8),
                 Text(
                   'HOURLY FORECAST',
                   style: Theme.of(context).textTheme.labelLarge?.copyWith(
-                    color: AppTheme.textSecondary,
+                    color: CyberpunkTheme.textSecondary,
                     letterSpacing: 1,
                   ),
                 ),
@@ -54,7 +54,7 @@ class HourlyForecastCard extends StatelessWidget {
           
           // Divider
           Divider(
-            color: AppTheme.glassBorder,
+            color: CyberpunkTheme.glassBorder,
             height: 1,
           ),
 
@@ -105,7 +105,7 @@ class _HourlyItem extends StatelessWidget {
           Text(
             DateTimeUtils.formatHourOrNow(forecast.time),
             style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-              color: isFirst ? AppTheme.textPrimary : AppTheme.textSecondary,
+              color: isFirst ? CyberpunkTheme.textPrimary : CyberpunkTheme.textSecondary,
               fontWeight: isFirst ? FontWeight.w600 : FontWeight.w400,
             ),
           ),
@@ -129,7 +129,7 @@ class _HourlyItem extends StatelessWidget {
             Text(
               '${forecast.precipitationProbability}%',
               style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                color: AppTheme.textSecondary, // Monochromatic (was blue)
+                color: CyberpunkTheme.textSecondary, // Monochromatic (was blue)
                 fontWeight: FontWeight.w600,
               ),
             )

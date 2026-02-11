@@ -1,11 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import 'package:weatherman/config/theme.dart';
+import 'package:weatherman/config/cyberpunk_theme.dart';
 import 'package:weatherman/models/weather.dart';
 import 'package:weatherman/providers/settings_provider.dart';
 import 'package:weatherman/utils/date_utils.dart';
 import 'package:weatherman/utils/weather_utils.dart';
-import 'package:weatherman/widgets/glassmorphic/glass_card.dart';
+import 'package:weatherman/widgets/cyberpunk/cyber_glass_card.dart';
 
 /// 10-day forecast list widget
 class DailyForecastCard extends StatelessWidget {
@@ -26,7 +26,7 @@ class DailyForecastCard extends StatelessWidget {
     final globalMax = allTemps.reduce((a, b) => a > b ? a : b);
     final tempRange = globalMax - globalMin;
 
-    return GlassCard(
+    return CyberGlassCard(
       padding: const EdgeInsets.symmetric(vertical: 16),
       margin: const EdgeInsets.symmetric(horizontal: 16),
       child: Column(
@@ -40,13 +40,13 @@ class DailyForecastCard extends StatelessWidget {
                 Icon(
                   Icons.calendar_today_rounded,
                   size: 16,
-                  color: AppTheme.textSecondary,
+                  color: CyberpunkTheme.textSecondary,
                 ),
                 const SizedBox(width: 8),
                 Text(
                   '10-DAY FORECAST',
                   style: Theme.of(context).textTheme.labelLarge?.copyWith(
-                    color: AppTheme.textSecondary,
+                    color: CyberpunkTheme.textSecondary,
                     letterSpacing: 1,
                   ),
                 ),
@@ -58,7 +58,7 @@ class DailyForecastCard extends StatelessWidget {
           
           // Divider
           Divider(
-            color: AppTheme.glassBorder,
+            color: CyberpunkTheme.glassBorder,
             height: 1,
           ),
 
@@ -146,7 +146,7 @@ class _DailyItem extends StatelessWidget {
                     ? Text(
                         '${forecast.precipitationProbabilityMax}%',
                         style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                          color: AppTheme.textSecondary, // Monochromatic (was blue)
+                          color: CyberpunkTheme.textSecondary, // Monochromatic (was blue)
                           fontWeight: FontWeight.w600,
                         ),
                       )
@@ -159,7 +159,7 @@ class _DailyItem extends StatelessWidget {
                 child: Text(
                   settings.formatTempShort(forecast.temperatureMin),
                   style: Theme.of(context).textTheme.bodyLarge?.copyWith(
-                    color: AppTheme.textSecondary,
+                    color: CyberpunkTheme.textSecondary,
                   ),
                   textAlign: TextAlign.right,
                 ),
@@ -225,7 +225,7 @@ class _DailyItem extends StatelessWidget {
           Padding(
             padding: const EdgeInsets.symmetric(horizontal: 16),
             child: Divider(
-              color: AppTheme.glassBorder,
+              color: CyberpunkTheme.glassBorder,
               height: 1,
             ),
           ),
