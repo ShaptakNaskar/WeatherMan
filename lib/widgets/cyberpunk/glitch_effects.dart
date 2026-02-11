@@ -401,7 +401,7 @@ class _DigitalNoiseOverlayState extends State<DigitalNoiseOverlay>
     super.initState();
     _controller = AnimationController(
       vsync: this,
-      duration: const Duration(milliseconds: 100),
+      duration: const Duration(milliseconds: 500),
     )..repeat();
   }
 

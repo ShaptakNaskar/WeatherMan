@@ -40,19 +40,19 @@ class AlertEvaluator {
 
     // AQI
     final aqi = debugAqi ?? airQuality?.usAqi.toDouble() ?? 0;
-    if (aqi > 150) {
+    if (aqi > 200) {
       alerts.add(EnvironmentAlert(
         label: 'AQI',
         value: aqi.round().toString(),
-        description: aqi > 200 ? 'HAZARDOUS AIR // AVOID EXPOSURE' : 'UNHEALTHY AIR // LIMIT EXPOSURE',
-        severity: aqi > 200 ? AlertSeverity.danger : AlertSeverity.warning,
+        description: 'HAZARDOUS AIR // SEAL RESPIRATOR NOW',
+        severity: AlertSeverity.danger,
         icon: Icons.air_rounded,
       ));
     } else if (aqi > 100) {
       alerts.add(EnvironmentAlert(
         label: 'AQI',
         value: aqi.round().toString(),
-        description: 'SENSITIVE GROUPS AT RISK',
+        description: 'TOXIC PARTICLES DETECTED // MASK UP, CHOOM',
         severity: AlertSeverity.warning,
         icon: Icons.air_rounded,
       ));
@@ -64,7 +64,7 @@ class AlertEvaluator {
       alerts.add(EnvironmentAlert(
         label: 'TEMP',
         value: '${temp.round()}°C',
-        description: 'EXTREME HEAT // DANGER',
+        description: 'LETHAL HEAT // STAY INSIDE, COOLANT LOW',
         severity: AlertSeverity.danger,
         icon: Icons.thermostat,
       ));
@@ -72,7 +72,7 @@ class AlertEvaluator {
       alerts.add(EnvironmentAlert(
         label: 'TEMP',
         value: '${temp.round()}°C',
-        description: 'HIGH TEMPERATURE WARNING',
+        description: 'THERMAL OVERLOAD // HYDRATE & SEEK SHADE',
         severity: AlertSeverity.warning,
         icon: Icons.thermostat,
       ));
@@ -80,7 +80,7 @@ class AlertEvaluator {
       alerts.add(EnvironmentAlert(
         label: 'TEMP',
         value: '${temp.round()}°C',
-        description: 'EXTREME COLD // DANGER',
+        description: 'CRYO-HAZARD // FROSTBITE RISK CRITICAL',
         severity: AlertSeverity.danger,
         icon: Icons.ac_unit,
       ));
@@ -88,7 +88,7 @@ class AlertEvaluator {
       alerts.add(EnvironmentAlert(
         label: 'TEMP',
         value: '${temp.round()}°C',
-        description: 'SEVERE COLD WARNING',
+        description: 'SUB-ZERO ALERT // INSULATE CYBERWARE',
         severity: AlertSeverity.warning,
         icon: Icons.ac_unit,
       ));
@@ -100,7 +100,7 @@ class AlertEvaluator {
       alerts.add(EnvironmentAlert(
         label: 'HUMIDITY',
         value: '${humidity.round()}%',
-        description: 'EXTREME HUMIDITY // RESPIRATORY RISK',
+        description: 'MOISTURE SATURATION // CORROSION RISK ON IMPLANTS',
         severity: AlertSeverity.danger,
         icon: Icons.water_drop,
       ));
@@ -108,7 +108,7 @@ class AlertEvaluator {
       alerts.add(EnvironmentAlert(
         label: 'HUMIDITY',
         value: '${humidity.round()}%',
-        description: 'HIGH HUMIDITY DETECTED',
+        description: 'HIGH HUMIDITY // CONDENSATION ON OPTICS',
         severity: AlertSeverity.warning,
         icon: Icons.water_drop_outlined,
       ));
@@ -120,7 +120,7 @@ class AlertEvaluator {
       alerts.add(EnvironmentAlert(
         label: 'UV INDEX',
         value: uv.toStringAsFixed(1),
-        description: 'EXTREME UV // AVOID SUN EXPOSURE',
+        description: 'EXTREME UV // SKIN BURN IN <10 MIN, COVER UP',
         severity: AlertSeverity.danger,
         icon: Icons.wb_sunny,
       ));
@@ -128,7 +128,7 @@ class AlertEvaluator {
       alerts.add(EnvironmentAlert(
         label: 'UV INDEX',
         value: uv.toStringAsFixed(1),
-        description: 'VERY HIGH UV RADIATION',
+        description: 'UV SPIKE // DERMAL SHIELD RECOMMENDED',
         severity: AlertSeverity.warning,
         icon: Icons.wb_sunny_outlined,
       ));
@@ -140,7 +140,7 @@ class AlertEvaluator {
       alerts.add(EnvironmentAlert(
         label: 'WIND',
         value: '${wind.round()} km/h',
-        description: 'STORM FORCE WINDS // DANGER',
+        description: 'STORM FORCE // DEBRIS HAZARD, STAY ANCHORED',
         severity: AlertSeverity.danger,
         icon: Icons.storm,
       ));
@@ -148,7 +148,7 @@ class AlertEvaluator {
       alerts.add(EnvironmentAlert(
         label: 'WIND',
         value: '${wind.round()} km/h',
-        description: 'HIGH WIND WARNING',
+        description: 'HIGH WIND // SECURE LOOSE GEAR, BRACE',
         severity: AlertSeverity.warning,
         icon: Icons.air,
       ));
@@ -160,7 +160,7 @@ class AlertEvaluator {
       alerts.add(EnvironmentAlert(
         label: 'VISIBILITY',
         value: '${vis.round()}m',
-        description: 'NEAR ZERO VISIBILITY // DANGER',
+        description: 'NEAR BLIND // SWITCH TO THERMAL OPTICS',
         severity: AlertSeverity.danger,
         icon: Icons.visibility_off,
       ));
@@ -168,7 +168,7 @@ class AlertEvaluator {
       alerts.add(EnvironmentAlert(
         label: 'VISIBILITY',
         value: '${vis.round()}m',
-        description: 'LOW VISIBILITY WARNING',
+        description: 'LOW VIS // ENGAGE ENHANCED SENSORS',
         severity: AlertSeverity.warning,
         icon: Icons.visibility_outlined,
       ));
@@ -570,18 +570,18 @@ class _DangerFlashOverlayState extends State<DangerFlashOverlay>
       children: [
         widget.child,
         // Red flash overlay
-        IgnorePointer(
-          child: AnimatedBuilder(
-            animation: _flashController,
-            builder: (context, child) {
-              final opacity = (1.0 - _flashController.value) * 0.15;
-              if (opacity <= 0.001) return const SizedBox.shrink();
-              return Positioned.fill(
-                child: Container(
+        Positioned.fill(
+          child: IgnorePointer(
+            child: AnimatedBuilder(
+              animation: _flashController,
+              builder: (context, child) {
+                final opacity = (1.0 - _flashController.value) * 0.15;
+                if (opacity <= 0.001) return const SizedBox.shrink();
+                return Container(
                   color: CyberpunkTheme.neonRed.withValues(alpha: opacity),
-                ),
-              );
-            },
+                );
+              },
+            ),
           ),
         ),
       ],
@@ -602,8 +602,8 @@ class CyberpunkVignette extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    Color vignetteColor = Colors.black;
-    double vignetteOpacity = 0.4;
+    Color vignetteColor = const Color(0xFF050A18); // Deep blue-black
+    double vignetteOpacity = 0.5;
 
     if (hasDanger) {
       vignetteColor = CyberpunkTheme.neonRed;

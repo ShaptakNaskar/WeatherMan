@@ -93,6 +93,10 @@ class CyberpunkBackground extends StatelessWidget {
     if (!isDay && _isClear) {
       return const CyberStarOverlay();
     }
+    // Clear day — subtle floating data motes
+    if (isDay && _isClear) {
+      return const CyberDataMoteOverlay();
+    }
     // Digital clouds
     if (_isCloudy) {
       return const CyberCloudOverlay();
@@ -173,7 +177,7 @@ class _CyberRainOverlayState extends State<CyberRainOverlay>
     super.initState();
     _controller = AnimationController(
       vsync: this,
-      duration: const Duration(milliseconds: 500),
+      duration: const Duration(milliseconds: 800),
     )..repeat();
     _generateDrops();
   }
@@ -635,53 +639,205 @@ class _CyberStarPainter extends CustomPainter {
   bool shouldRepaint(covariant _CyberStarPainter oldDelegate) => true;
 }
 
-/// Cyberpunk cloud overlay — digital glitch clouds
-class CyberCloudOverlay extends StatelessWidget {
+/// Cyberpunk cloud overlay — drifting digital glitch clouds
+class CyberCloudOverlay extends StatefulWidget {
   const CyberCloudOverlay({super.key});
 
   @override
+  State<CyberCloudOverlay> createState() => _CyberCloudOverlayState();
+}
+
+class _CyberCloudOverlayState extends State<CyberCloudOverlay>
+    with SingleTickerProviderStateMixin {
+  late AnimationController _controller;
+
+  @override
+  void initState() {
+    super.initState();
+    _controller = AnimationController(
+      vsync: this,
+      duration: const Duration(seconds: 20),
+    )..repeat();
+  }
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
+  }
+
+  @override
   Widget build(BuildContext context) {
-    return CustomPaint(
-      painter: _CyberCloudPainter(),
-      size: Size.infinite,
+    return AnimatedBuilder(
+      animation: _controller,
+      builder: (context, child) {
+        return CustomPaint(
+          painter: _CyberCloudPainter(_controller.value),
+          size: Size.infinite,
+        );
+      },
     );
   }
 }
 
 class _CyberCloudPainter extends CustomPainter {
+  final double animValue;
+  _CyberCloudPainter(this.animValue);
+
   @override
   void paint(Canvas canvas, Size size) {
-    // Translucent neon cloud shapes
-    final paint = Paint()..color = CyberpunkTheme.neonCyan.withValues(alpha: 0.04);
+    final drift = sin(animValue * 2 * pi) * 20;
+    final drift2 = cos(animValue * 2 * pi) * 15;
+
+    final paint = Paint()
+      ..color = CyberpunkTheme.neonCyan.withValues(alpha: 0.04)
+      ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 12);
 
     canvas.drawRRect(
       RRect.fromRectAndRadius(
-        Rect.fromCenter(center: Offset(size.width * 0.2, size.height * 0.12), width: 160, height: 40),
+        Rect.fromCenter(
+          center: Offset(size.width * 0.2 + drift, size.height * 0.12),
+          width: 180,
+          height: 40,
+        ),
         const Radius.circular(4),
       ),
       paint,
     );
 
-    final paintMagenta = Paint()..color = CyberpunkTheme.neonMagenta.withValues(alpha: 0.03);
+    final paint2 = Paint()
+      ..color = CyberpunkTheme.neonCyan.withValues(alpha: 0.03)
+      ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 15);
+
     canvas.drawRRect(
       RRect.fromRectAndRadius(
-        Rect.fromCenter(center: Offset(size.width * 0.7, size.height * 0.08), width: 140, height: 30),
+        Rect.fromCenter(
+          center: Offset(size.width * 0.7 + drift2, size.height * 0.08),
+          width: 150,
+          height: 30,
+        ),
         const Radius.circular(4),
       ),
-      paintMagenta,
+      paint2,
     );
 
     canvas.drawRRect(
       RRect.fromRectAndRadius(
-        Rect.fromCenter(center: Offset(size.width * 0.5, size.height * 0.22), width: 200, height: 50),
+        Rect.fromCenter(
+          center: Offset(size.width * 0.5 - drift * 0.7, size.height * 0.22),
+          width: 220,
+          height: 50,
+        ),
         const Radius.circular(4),
       ),
       paint,
+    );
+
+    // Lower cloud band
+    canvas.drawRRect(
+      RRect.fromRectAndRadius(
+        Rect.fromCenter(
+          center: Offset(size.width * 0.35 + drift2 * 0.5, size.height * 0.35),
+          width: 160,
+          height: 35,
+        ),
+        const Radius.circular(4),
+      ),
+      paint2,
     );
   }
 
   @override
-  bool shouldRepaint(covariant CustomPainter oldDelegate) => false;
+  bool shouldRepaint(covariant _CyberCloudPainter oldDelegate) => true;
+}
+
+/// Subtle floating data motes for clear sky daytime
+class CyberDataMoteOverlay extends StatefulWidget {
+  const CyberDataMoteOverlay({super.key});
+
+  @override
+  State<CyberDataMoteOverlay> createState() => _CyberDataMoteOverlayState();
+}
+
+class _CyberDataMoteOverlayState extends State<CyberDataMoteOverlay>
+    with SingleTickerProviderStateMixin {
+  late AnimationController _controller;
+  late List<_DataMote> _motes;
+  final Random _random = Random();
+
+  @override
+  void initState() {
+    super.initState();
+    _controller = AnimationController(
+      vsync: this,
+      duration: const Duration(seconds: 8),
+    )..repeat();
+
+    _motes = List.generate(15, (_) => _DataMote(
+      x: _random.nextDouble(),
+      y: _random.nextDouble(),
+      phase: _random.nextDouble(),
+      speed: 0.3 + _random.nextDouble() * 0.5,
+      size: 1.0 + _random.nextDouble() * 1.5,
+    ));
+  }
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return AnimatedBuilder(
+      animation: _controller,
+      builder: (context, child) {
+        return CustomPaint(
+          painter: _DataMotePainter(_motes, _controller.value),
+          size: Size.infinite,
+        );
+      },
+    );
+  }
+}
+
+class _DataMote {
+  final double x, y, phase, speed, size;
+  _DataMote({
+    required this.x, required this.y, required this.phase,
+    required this.speed, required this.size,
+  });
+}
+
+class _DataMotePainter extends CustomPainter {
+  final List<_DataMote> motes;
+  final double animValue;
+
+  _DataMotePainter(this.motes, this.animValue);
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    for (final mote in motes) {
+      final drift = sin((animValue * mote.speed + mote.phase) * 2 * pi);
+      final alpha = 0.15 + 0.15 * drift.abs();
+
+      final cx = mote.x * size.width + drift * 8;
+      final cy = (mote.y + animValue * mote.speed * 0.05) % 1.0 * size.height;
+      final center = Offset(cx, cy);
+
+      final paint = Paint()..color = CyberpunkTheme.neonCyan.withValues(alpha: alpha);
+      canvas.drawCircle(center, mote.size, paint);
+
+      final glowPaint = Paint()
+        ..color = CyberpunkTheme.neonCyan.withValues(alpha: alpha * 0.3)
+        ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 4);
+      canvas.drawCircle(center, mote.size * 2.5, glowPaint);
+    }
+  }
+
+  @override
+  bool shouldRepaint(covariant _DataMotePainter oldDelegate) => true;
 }
 
 /// Cyberpunk fog — horizontal data stream bands
