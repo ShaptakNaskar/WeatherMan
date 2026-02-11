@@ -271,6 +271,11 @@ class _HudWarningOverlayState extends State<HudWarningOverlay>
       });
       _slideController.forward(from: 0);
       _scheduleCollapse();
+      
+      // If we went from empty to having alerts, the cycle loop likely died. Restart it.
+      if (oldWidget.alerts.isEmpty && widget.alerts.isNotEmpty) {
+        _startIconCycling();
+      }
     }
   }
 
