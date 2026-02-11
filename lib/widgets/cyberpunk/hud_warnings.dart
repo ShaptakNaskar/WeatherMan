@@ -236,7 +236,7 @@ class _HudWarningOverlayState extends State<HudWarningOverlay>
   void _startIconCycling() {
     _stopIconCycling();
     // Start delay before first cycle, then periodic
-    _cycleTimer = Timer.periodic(const Duration(seconds: 4), (timer) {
+    _cycleTimer = Timer.periodic(const Duration(milliseconds: 1800), (timer) {
       if (mounted) _cycleNextIcon();
     });
   }

@@ -260,7 +260,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
             ),
             const SizedBox(height: 4),
             Text(
-              'v1.0.6_CYBER',
+              'v1.0.7_CYBER',
               style: TextStyle(
                 fontFamily: 'monospace',
                 fontSize: 12,
