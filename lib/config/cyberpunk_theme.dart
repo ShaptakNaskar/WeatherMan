@@ -11,6 +11,7 @@ class CyberpunkTheme {
   static const Color neonOrange = Color(0xFFFF6B00);
   static const Color neonRed = Color(0xFFFF0040);
   static const Color neonPurple = Color(0xFFBF00FF);
+  static const Color neonBlue = Color(0xFF2979FF);
 
   // === BACKGROUND COLORS ===
   static const Color bgDarkest = Color(0xFF05080F);

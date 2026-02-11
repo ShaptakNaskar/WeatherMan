@@ -110,7 +110,7 @@ class _GlitchTextState extends State<GlitchText> with SingleTickerProviderStateM
           child: Text(
             _displayText,
             style: widget.style?.copyWith(
-              color: CyberpunkTheme.neonMagenta.withValues(alpha: 0.5),
+              color: CyberpunkTheme.neonBlue.withValues(alpha: 0.5),
             ),
             textAlign: widget.textAlign,
           ),

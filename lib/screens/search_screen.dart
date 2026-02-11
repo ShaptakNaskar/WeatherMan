@@ -247,7 +247,7 @@ class _SearchScreenState extends State<SearchScreen> {
             Icon(
               Icons.location_off_rounded,
               size: 64,
-              color: CyberpunkTheme.neonMagenta.withValues(alpha: 0.3),
+              color: CyberpunkTheme.neonCyan.withValues(alpha: 0.3),
             ),
             const SizedBox(height: 16),
             Text(

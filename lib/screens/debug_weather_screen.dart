@@ -85,12 +85,7 @@ class _DebugWeatherScreenState extends State<DebugWeatherScreen>
         isDay: _isDay,
         child: Stack(
           children: [
-            Positioned.fill(
-              child: CyberpunkVignette(
-                hasDanger: hasDanger,
-                hasWarning: hasWarning,
-              ),
-            ),
+            // Vignette - REMOVED for cleaner look
             Scaffold(
               backgroundColor: Colors.transparent,
               appBar: AppBar(
@@ -264,7 +259,7 @@ class _DebugWeatherScreenState extends State<DebugWeatherScreen>
               Icon(
                 _isDay ? Icons.wb_sunny : Icons.nightlight_round,
                 size: 36,
-                color: _isDay ? CyberpunkTheme.neonYellow : CyberpunkTheme.neonMagenta,
+                color: _isDay ? CyberpunkTheme.neonYellow : CyberpunkTheme.neonBlue,
               ),
               const SizedBox(width: 8),
               Text(
@@ -302,7 +297,7 @@ class _DebugWeatherScreenState extends State<DebugWeatherScreen>
             const Spacer(),
             Text('NIGHT', style: TextStyle(fontFamily: 'monospace', fontSize: 12, color: CyberpunkTheme.textSecondary)),
             const SizedBox(width: 8),
-            Icon(Icons.nightlight_round, color: CyberpunkTheme.neonMagenta, size: 20),
+            Icon(Icons.nightlight_round, color: CyberpunkTheme.neonBlue, size: 20),
           ],
         ),
       ),

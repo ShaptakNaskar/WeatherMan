@@ -100,13 +100,8 @@ class _HomeScreenState extends State<HomeScreen> {
             isDay: isDay,
             child: Stack(
               children: [
-                // Vignette
-                Positioned.fill(
-                  child: CyberpunkVignette(
-                    hasDanger: hasDanger,
-                    hasWarning: hasWarning,
-                  ),
-                ),
+                // Vignette - REMOVED for cleaner look
+
                 Scaffold(
                   backgroundColor: Colors.transparent,
                   body: SafeArea(

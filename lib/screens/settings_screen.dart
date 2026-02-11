@@ -274,8 +274,8 @@ class _SettingsScreenState extends State<SettingsScreen> {
               style: TextStyle(
                 fontFamily: 'monospace',
                 fontSize: 14,
-                color: CyberpunkTheme.neonMagenta,
-                shadows: CyberpunkTheme.neonMagentaGlow,
+                color: CyberpunkTheme.neonBlue,
+                shadows: CyberpunkTheme.neonCyanGlow,
               ),
             ),
             const SizedBox(height: 8),
