@@ -234,8 +234,9 @@ class _HudWarningOverlayState extends State<HudWarningOverlay>
     final warnings = widget.alerts.where((a) => a.severity == AlertSeverity.warning).toList();
 
     return Positioned(
-      top: MediaQuery.of(context).padding.top + 56,
+      top: MediaQuery.of(context).padding.top + 100,
       right: 8,
+      width: 220,
       child: SlideTransition(
         position: _slideAnimation,
         child: Column(

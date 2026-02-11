@@ -117,8 +117,10 @@ class _HomeScreenState extends State<HomeScreen> {
                     ),
                   ),
                 ),
-                // HUD Warning badges
-                HudWarningOverlay(alerts: alerts),
+                // HUD Warning badges (non-interactive, don't block scroll)
+                IgnorePointer(
+                  child: HudWarningOverlay(alerts: alerts),
+                ),
               ],
             ),
           ),

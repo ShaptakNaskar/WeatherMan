@@ -130,7 +130,9 @@ class _DebugWeatherScreenState extends State<DebugWeatherScreen>
               ),
             ),
             if (_currentTab == 1)
-              HudWarningOverlay(alerts: alerts),
+              IgnorePointer(
+                child: HudWarningOverlay(alerts: alerts),
+              ),
           ],
         ),
       ),
