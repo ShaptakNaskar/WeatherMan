@@ -293,7 +293,7 @@ class _HudWarningOverlayState extends State<HudWarningOverlay>
   Color get _pillColor {
     if (widget.alerts.isEmpty) return CyberpunkTheme.neonYellow;
     final hasDanger = widget.alerts.any((a) => a.severity == AlertSeverity.danger);
-    return hasDanger ? CyberpunkTheme.neonBlue : CyberpunkTheme.neonYellow;
+    return hasDanger ? CyberpunkTheme.neonRed : CyberpunkTheme.neonYellow;
   }
 
   /// Get the icon for the current cycle index
@@ -448,7 +448,7 @@ class _HudWarningOverlayState extends State<HudWarningOverlay>
   }
 
   Widget _buildAlertBadge(EnvironmentAlert alert, bool isDanger) {
-    final color = isDanger ? CyberpunkTheme.neonBlue : CyberpunkTheme.neonYellow;
+    final color = isDanger ? CyberpunkTheme.neonRed : CyberpunkTheme.neonYellow;
     final label = isDanger ? '▲ DANGER' : '⚠ WARNING';
 
     return AnimatedBuilder(
@@ -578,7 +578,7 @@ class _DangerFlashOverlayState extends State<DangerFlashOverlay>
                 final opacity = (1.0 - _flashController.value) * 0.15;
                 if (opacity <= 0.001) return const SizedBox.shrink();
                 return Container(
-                  color: CyberpunkTheme.neonBlue.withValues(alpha: opacity),
+                  color: CyberpunkTheme.neonRed.withValues(alpha: opacity),
                 );
               },
             ),
@@ -606,7 +606,7 @@ class CyberpunkVignette extends StatelessWidget {
     double vignetteOpacity = 0.5;
 
     if (hasDanger) {
-      vignetteColor = CyberpunkTheme.neonBlue;
+      vignetteColor = CyberpunkTheme.neonRed;
       vignetteOpacity = 0.15;
     } else if (hasWarning) {
       vignetteColor = CyberpunkTheme.neonYellow;
