@@ -15,7 +15,7 @@ if (keystorePropertiesFile.exists()) {
 }
 
 android {
-    namespace = "com.sappy.weatherman"
+    namespace = "com.sappy.cyberweather"
     compileSdk = flutter.compileSdkVersion
     ndkVersion = flutter.ndkVersion
 
