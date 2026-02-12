@@ -70,7 +70,7 @@ class WeatherManApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
-      title: 'W3ATHER.exe',
+      title: 'CyberWeather',
       debugShowCheckedModeBanner: false,
       theme: CyberpunkTheme.darkTheme,
       home: const _AppEntry(),

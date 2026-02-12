@@ -248,7 +248,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
             ),
             const SizedBox(height: 12),
             Text(
-              'W3ATHER.exe',
+              'CyberWeather',
               style: TextStyle(
                 fontFamily: 'monospace',
                 fontSize: 24,
@@ -260,7 +260,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
             ),
             const SizedBox(height: 4),
             Text(
-              'v1.0.7_CYBER',
+              'v1.0.8_CYBER',
               style: TextStyle(
                 fontFamily: 'monospace',
                 fontSize: 12,

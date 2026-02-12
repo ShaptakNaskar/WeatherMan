@@ -108,10 +108,19 @@ jobs:
         working-directory: other
 
       # === Gather info & create release ===
-      - name: Get version from pubspec
-        id: version
+      - name: Get version from pushed branch
+        id: version_pushed
         run: |
           FULL_VERSION=$(grep 'version:' pushed/pubspec.yaml | head -1 | awk '{print $2}' | tr -d '\r')
+          SEMVER=$(echo "$FULL_VERSION" | cut -d'+' -f1)
+          echo "full=$FULL_VERSION" >> $GITHUB_OUTPUT
+          echo "semver=$SEMVER" >> $GITHUB_OUTPUT
+
+      - name: Get version from other branch
+        id: version_other
+        if: steps.other_exists.outputs.exists == 'true'
+        run: |
+          FULL_VERSION=$(grep 'version:' other/pubspec.yaml | head -1 | awk '{print $2}' | tr -d '\r')
           SEMVER=$(echo "$FULL_VERSION" | cut -d'+' -f1)
           echo "full=$FULL_VERSION" >> $GITHUB_OUTPUT
           echo "semver=$SEMVER" >> $GITHUB_OUTPUT
@@ -133,22 +142,28 @@ jobs:
 
           if [ "$PUSHED" = "main" ] || [ "$PUSHED" = "master" ]; then
             PUSHED_LABEL="WeatherMan"
-            OTHER_LABEL="W3ATHER-Cyberpunk"
+            OTHER_LABEL="CyberWeather"
+            PUSHED_VERSION="${{ steps.version_pushed.outputs.semver }}"
+            OTHER_VERSION="${{ steps.version_other.outputs.semver }}"
           else
-            PUSHED_LABEL="W3ATHER-Cyberpunk"
+            PUSHED_LABEL="CyberWeather"
             OTHER_LABEL="WeatherMan"
+            PUSHED_VERSION="${{ steps.version_pushed.outputs.semver }}"
+            OTHER_VERSION="${{ steps.version_other.outputs.semver }}"
           fi
 
           echo "pushed_label=$PUSHED_LABEL" >> $GITHUB_OUTPUT
           echo "other_label=$OTHER_LABEL" >> $GITHUB_OUTPUT
+          echo "pushed_version=$PUSHED_VERSION" >> $GITHUB_OUTPUT
+          echo "other_version=$OTHER_VERSION" >> $GITHUB_OUTPUT
 
       - name: Rename APKs
         run: |
           mv pushed/build/app/outputs/flutter-apk/app-release.apk \
-             "${{ steps.apks.outputs.pushed_label }}-v${{ steps.version.outputs.semver }}.apk"
+             "${{ steps.apks.outputs.pushed_label }}-v${{ steps.apks.outputs.pushed_version }}.apk"
           if [ "${{ steps.other_exists.outputs.exists }}" = "true" ]; then
             mv other/build/app/outputs/flutter-apk/app-release.apk \
-               "${{ steps.apks.outputs.other_label }}-v${{ steps.version.outputs.semver }}.apk"
+               "${{ steps.apks.outputs.other_label }}-v${{ steps.apks.outputs.other_version }}.apk"
           fi
 
       - name: Build release body
@@ -157,16 +172,18 @@ jobs:
           PUSHED="${{ steps.branches.outputs.pushed }}"
           PUSHED_LABEL="${{ steps.apks.outputs.pushed_label }}"
           OTHER_LABEL="${{ steps.apks.outputs.other_label }}"
+          PUSHED_VERSION="${{ steps.apks.outputs.pushed_version }}"
+          OTHER_VERSION="${{ steps.apks.outputs.other_version }}"
           COMMIT_MSG=$(cat <<'MSGEOF'
           ${{ steps.commit.outputs.message }}
           MSGEOF
           )
 
           cat > release_body.md << BODYEOF
-          ## ${PUSHED_LABEL} (${PUSHED} branch)
+          ## ${PUSHED_LABEL} v${PUSHED_VERSION} (${PUSHED} branch)
           ${COMMIT_MSG}
 
-          ## ${OTHER_LABEL}
+          ## ${OTHER_LABEL} v${OTHER_VERSION}
           No change, posted here for completeness.
 
           ---
@@ -179,7 +196,7 @@ jobs:
         id: tag
         run: |
           PUSHED="${{ steps.branches.outputs.pushed }}"
-          SEMVER="${{ steps.version.outputs.semver }}"
+          SEMVER="${{ steps.version_pushed.outputs.semver }}"
           SHA="${{ steps.commit.outputs.sha_short }}"
           if [ "$PUSHED" = "main" ] || [ "$PUSHED" = "master" ]; then
             echo "name=v${SEMVER}" >> $GITHUB_OUTPUT
@@ -190,9 +207,9 @@ jobs:
       - name: Collect APK files
         id: files
         run: |
-          FILES="${{ steps.apks.outputs.pushed_label }}-v${{ steps.version.outputs.semver }}.apk"
+          FILES="${{ steps.apks.outputs.pushed_label }}-v${{ steps.apks.outputs.pushed_version }}.apk"
           if [ "${{ steps.other_exists.outputs.exists }}" = "true" ]; then
-            FILES="${FILES}\n${{ steps.apks.outputs.other_label }}-v${{ steps.version.outputs.semver }}.apk"
+            FILES="${FILES}\n${{ steps.apks.outputs.other_label }}-v${{ steps.apks.outputs.other_version }}.apk"
           fi
           echo "list<<EOF" >> $GITHUB_OUTPUT
           echo -e "$FILES" >> $GITHUB_OUTPUT
@@ -202,10 +219,10 @@ jobs:
         uses: softprops/action-gh-release@v2
         with:
           tag_name: ${{ steps.tag.outputs.name }}
-          name: "v${{ steps.version.outputs.semver }} — ${{ steps.branches.outputs.pushed }}"
+          name: "v${{ steps.version_pushed.outputs.semver }} — ${{ steps.branches.outputs.pushed }}"
           body_path: ${{ steps.body.outputs.path }}
           files: |
-            ${{ steps.apks.outputs.pushed_label }}-v${{ steps.version.outputs.semver }}.apk
-            ${{ steps.apks.outputs.other_label }}-v${{ steps.version.outputs.semver }}.apk
+            ${{ steps.apks.outputs.pushed_label }}-v${{ steps.apks.outputs.pushed_version }}.apk
+            ${{ steps.apks.outputs.other_label }}-v${{ steps.apks.outputs.other_version }}.apk
           make_latest: true
           fail_on_unmatched_files: false
