@@ -19,6 +19,12 @@ import 'package:weatherman/widgets/weather/daily_forecast.dart';
 import 'package:weatherman/widgets/weather/hourly_forecast.dart';
 import 'package:weatherman/widgets/weather/weather_details.dart';
 import 'package:weatherman/widgets/weather/advanced_details.dart';
+import 'package:weatherman/services/widget_service.dart';
+import 'package:weatherman/services/notification_service.dart';
+import 'package:weatherman/services/push_service.dart';
+import 'package:weatherman/services/storage_service.dart';
+import 'package:android_intent_plus/android_intent.dart';
+import 'dart:io';
 
 /// Main home screen displaying weather for selected location
 class HomeScreen extends StatefulWidget {
@@ -38,6 +44,8 @@ class _HomeScreenState extends State<HomeScreen> {
   Future<void> _initializeData() async {
     final locationProvider = context.read<LocationProvider>();
     final weatherProvider = context.read<WeatherProvider>();
+    final settings = context.read<SettingsProvider>();
+    final storage = StorageService();
 
     // Initialize providers
     await locationProvider.init();
@@ -49,17 +57,120 @@ class _HomeScreenState extends State<HomeScreen> {
     final selectedLocation = locationProvider.selectedLocation;
     if (selectedLocation != null) {
       await weatherProvider.fetchWeather(selectedLocation);
+      final weather = weatherProvider.getWeather(selectedLocation);
+      if (weather != null) {
+        await WidgetService.update(weather);
+        if (settings.persistentNotificationEnabled) {
+          await NotificationService.instance.showPersistent(weather);
+        }
+      }
     }
+
+    await _runFirstLaunchPrompts(storage);
   }
 
   Future<void> _refreshWeather() async {
     final locationProvider = context.read<LocationProvider>();
     final weatherProvider = context.read<WeatherProvider>();
+    final settings = context.read<SettingsProvider>();
+    final storage = StorageService();
 
     final selectedLocation = locationProvider.selectedLocation;
     if (selectedLocation != null) {
       await weatherProvider.refreshWeather(selectedLocation);
+      final weather = weatherProvider.getWeather(selectedLocation);
+      if (weather != null) {
+        await WidgetService.update(weather);
+        if (settings.persistentNotificationEnabled) {
+          await NotificationService.instance.showPersistent(weather);
+        }
+      }
     }
+
+    await _runFirstLaunchPrompts(storage);
+  }
+
+  Future<void> _runFirstLaunchPrompts(StorageService storage) async {
+    if (!mounted) return;
+
+    // Notification consent first
+    final notifPrompted = await storage.getNotificationPrompted();
+    if (!notifPrompted) {
+      final allow = await _showNotificationRationale();
+      if (allow == true) {
+        await NotificationService.instance.requestPermission();
+        await PushService.instance.init(requestPermission: true);
+      }
+      await storage.setNotificationPrompted();
+    }
+
+    // Battery optimization dialog next (Android only)
+    if (Platform.isAndroid) {
+      final batteryPrompted = await storage.getBatteryPrompted();
+      if (!batteryPrompted) {
+        final allow = await _showBatteryRationale();
+        if (allow == true) {
+          await _openBatterySettings();
+        }
+        await storage.setBatteryPrompted();
+      }
+    }
+  }
+
+  Future<bool?> _showNotificationRationale() {
+    return showDialog<bool>(
+      context: context,
+      builder: (context) => AlertDialog(
+        backgroundColor: Colors.black87,
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+        title: const Text('Authorize uplink pings?'),
+        content: const Text(
+          'Let CyberWeather beam morning/evening briefings, trend spikes, and HUD status direct to your deck.',
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context, false),
+            child: const Text('Not now'),
+          ),
+          TextButton(
+            onPressed: () => Navigator.pop(context, true),
+            child: const Text('Allow'),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Future<bool?> _showBatteryRationale() {
+    return showDialog<bool>(
+      context: context,
+      builder: (context) => AlertDialog(
+        backgroundColor: Colors.black87,
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+        title: const Text('Let CyberWeather run in the shadows?'),
+        content: const Text(
+          'Grant background access so widgets + briefings stay neon-fresh. You can revoke in system settings.',
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context, false),
+            child: const Text('Deny'),
+          ),
+          TextButton(
+            onPressed: () => Navigator.pop(context, true),
+            child: const Text('Allow'),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Future<void> _openBatterySettings() async {
+    final intent = AndroidIntent(
+      action: 'android.settings.REQUEST_IGNORE_BATTERY_OPTIMIZATIONS',
+      data: 'package:${Uri.encodeComponent('com.sappy.cyberweather')}',
+    );
+    await intent.launch();
   }
 
   @override
@@ -91,7 +202,6 @@ class _HomeScreenState extends State<HomeScreen> {
               )
             : <EnvironmentAlert>[];
         final hasDanger = alerts.any((a) => a.severity == AlertSeverity.danger);
-        final hasWarning = alerts.any((a) => a.severity == AlertSeverity.warning);
 
         return DangerFlashOverlay(
           hasDanger: hasDanger,

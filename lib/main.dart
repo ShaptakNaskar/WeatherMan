@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:firebase_core/firebase_core.dart';
 import 'package:provider/provider.dart';
 import 'package:weatherman/config/cyberpunk_theme.dart';
 import 'package:weatherman/providers/location_provider.dart';
@@ -10,9 +11,14 @@ import 'package:weatherman/screens/splash_screen.dart';
 import 'package:weatherman/services/location_service.dart';
 import 'package:weatherman/services/storage_service.dart';
 import 'package:weatherman/services/weather_service.dart';
+import 'package:weatherman/services/notification_service.dart';
+import 'package:weatherman/services/background_sync.dart';
+import 'package:weatherman/services/push_service.dart';
+import 'package:workmanager/workmanager.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
+  await Firebase.initializeApp();
   
   // Set preferred orientations (allow all)
   await SystemChrome.setPreferredOrientations([
@@ -36,6 +42,10 @@ void main() async {
   final storageService = StorageService();
   final weatherService = WeatherService();
   final locationService = LocationService();
+  await NotificationService.instance.init();
+  await PushService.instance.init(requestPermission: false);
+  await Workmanager().initialize(callbackDispatcher);
+  await BackgroundSync.register();
 
   // Create providers
   final settingsProvider = SettingsProvider(storageService: storageService);

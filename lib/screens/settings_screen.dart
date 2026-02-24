@@ -9,7 +9,9 @@ import 'package:weatherman/providers/location_provider.dart';
 import 'package:weatherman/providers/settings_provider.dart';
 import 'package:weatherman/providers/weather_provider.dart';
 import 'package:weatherman/screens/debug_weather_screen.dart';
+import 'package:weatherman/services/notification_service.dart';
 import 'package:weatherman/utils/unit_converter.dart';
+import 'package:weatherman/models/weather.dart';
 import 'package:weatherman/widgets/cyberpunk/cyber_background.dart';
 import 'package:weatherman/widgets/cyberpunk/cyber_glass_card.dart';
 
@@ -35,6 +37,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
   int _tapCount = 0;
   bool _developerOptionsUnlocked = false;
   static const int _requiredTaps = 7;
+  WeatherData? _latestWeather;
 
   void _onCloudTap() {
     setState(() {
@@ -62,6 +65,33 @@ class _SettingsScreenState extends State<SettingsScreen> {
     });
   }
 
+  Future<void> _sendDebugNotification() async {
+    await NotificationService.instance.showNow(
+      title: 'DEBUG PING // CYBERWEATHER',
+      body: 'Notif pipeline hotwired. Rerouting signals to your HUD.',
+    );
+  }
+
+  Future<void> _sendAllTestNotifications() async {
+    await NotificationService.instance.showNow(
+      title: 'Morning Briefing [TEST]',
+      body: 'Rain ping ~14:00. High 28°C. Stay lit.',
+    );
+    await NotificationService.instance.showNow(
+      title: 'Evening Outlook [TEST]',
+      body: 'Tonight 22°C. Tomorrow: Partly cloudy 21–29°C. Recharge.',
+    );
+    await NotificationService.instance.showNow(
+      title: 'Trend Alert [TEST]',
+      body: 'Heat drift — highs near 32°C in 48h. Prep coolant.',
+    );
+
+    // Persistent preview
+    if (_latestWeather != null) {
+      await NotificationService.instance.showPersistent(_latestWeather!);
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return Consumer2<LocationProvider, WeatherProvider>(
@@ -73,6 +103,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
             : null;
         final weatherCode = weather?.current.weatherCode ?? 0;
         final isDay = weather?.current.isDay ?? true;
+        _latestWeather = weather;
 
         return CyberpunkBackground(
           weatherCode: weatherCode,
@@ -225,6 +256,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
           ],
         ),
       ),
+
     ];
   }
 
@@ -260,7 +292,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
             ),
             const SizedBox(height: 4),
             Text(
-              'v1.0.8_CYBER',
+              'v1.0.9_CYBER',
               style: TextStyle(
                 fontFamily: 'monospace',
                 fontSize: 12,
@@ -370,6 +402,20 @@ class _SettingsScreenState extends State<SettingsScreen> {
                   ),
                 );
               },
+            ),
+            const SizedBox(height: 12),
+            _DebugButton(
+              icon: Icons.notifications_active,
+              title: 'DEBUG_NOTIFICATION',
+              subtitle: 'Send a test briefing notification',
+              onTap: _sendDebugNotification,
+            ),
+            const SizedBox(height: 12),
+            _DebugButton(
+              icon: Icons.science,
+              title: 'TEST_ALERTS',
+              subtitle: 'Test morning, evening, and trend alerts',
+              onTap: _sendAllTestNotifications,
             ),
           ],
         ),

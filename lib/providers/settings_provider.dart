@@ -9,6 +9,7 @@ class SettingsProvider extends ChangeNotifier {
   TemperatureUnit _temperatureUnit = TemperatureUnit.celsius;
   bool _advancedViewEnabled = false;
   bool _isLoading = true;
+  bool _persistentNotificationEnabled = false;
 
   SettingsProvider({required StorageService storageService})
       : _storageService = storageService;
@@ -17,11 +18,13 @@ class SettingsProvider extends ChangeNotifier {
   bool get advancedViewEnabled => _advancedViewEnabled;
   bool get isLoading => _isLoading;
   bool get useCelsius => _temperatureUnit == TemperatureUnit.celsius;
+  bool get persistentNotificationEnabled => _persistentNotificationEnabled;
 
   /// Initialize settings from storage
   Future<void> init() async {
     _temperatureUnit = await _storageService.getTemperatureUnit();
     _advancedViewEnabled = await _storageService.getAdvancedViewEnabled();
+    _persistentNotificationEnabled = await _storageService.getPersistentNotificationEnabled();
     _isLoading = false;
     notifyListeners();
   }
@@ -53,6 +56,13 @@ class SettingsProvider extends ChangeNotifier {
   /// Toggle advanced view
   Future<void> toggleAdvancedView() async {
     await setAdvancedViewEnabled(!_advancedViewEnabled);
+  }
+
+  Future<void> setPersistentNotificationEnabled(bool enabled) async {
+    if (_persistentNotificationEnabled == enabled) return;
+    _persistentNotificationEnabled = enabled;
+    notifyListeners();
+    await _storageService.setPersistentNotificationEnabled(enabled);
   }
 
   /// Format temperature using current unit

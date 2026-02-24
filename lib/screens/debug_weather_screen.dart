@@ -76,7 +76,6 @@ class _DebugWeatherScreenState extends State<DebugWeatherScreen>
   Widget build(BuildContext context) {
     final alerts = _currentTab == 1 ? _debugAlerts : <EnvironmentAlert>[];
     final hasDanger = alerts.any((a) => a.severity == AlertSeverity.danger);
-    final hasWarning = alerts.any((a) => a.severity == AlertSeverity.warning);
 
     return DangerFlashOverlay(
       hasDanger: hasDanger,

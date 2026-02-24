@@ -1,7 +1,7 @@
 name: weatherman
 description: "WeatherMan - A premium glassmorphic weather app"
 publish_to: 'none'
-version: 1.0.8+8
+version: 1.0.9+9
 
 environment:
   sdk: ^3.10.8
@@ -19,9 +19,9 @@ dependencies:
   http: ^1.2.2
   
   # Location Services
-  geolocator: ^13.0.2
-  geocoding: ^3.0.0
-  permission_handler: ^11.3.1
+  geolocator: ^14.0.2
+  geocoding: ^4.0.0
+  permission_handler: ^12.0.1
   
   # Local Storage
   shared_preferences: ^2.3.3
@@ -32,10 +32,25 @@ dependencies:
   # UI Enhancements
   flutter_animate: ^4.5.2
   shimmer: ^3.0.0
-  
+
   # Utils
   intl: ^0.20.2
   fluttertoast: ^9.0.0
+
+  # Background sync + notifications
+  workmanager: ^0.9.0+3
+  flutter_local_notifications: ^21.0.0-dev.2
+  timezone: ^0.11.0
+
+  # Home screen widgets
+  home_widget: ^0.9.0
+
+  # Platform intents (battery optimization prompt)
+  android_intent_plus: ^6.0.0
+
+  # Firebase push
+  firebase_core: ^4.4.0
+  firebase_messaging: ^16.1.1
 
 dev_dependencies:
   flutter_test:

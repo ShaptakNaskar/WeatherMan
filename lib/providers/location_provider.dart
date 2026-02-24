@@ -60,6 +60,9 @@ class LocationProvider extends ChangeNotifier {
       
       // Auto-select if no location selected
       _selectedLocation ??= _currentDeviceLocation;
+      if (_currentDeviceLocation != null) {
+        await _storageService.setLastLocation(_currentDeviceLocation!);
+      }
       
       _isLoadingLocation = false;
       notifyListeners();

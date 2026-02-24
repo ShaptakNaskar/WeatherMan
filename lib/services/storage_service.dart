@@ -11,6 +11,12 @@ class StorageService {
   static const String _temperatureUnitKey = 'temperature_unit';
   static const String _lastLocationKey = 'last_location';
   static const String _advancedViewKey = 'advanced_view_enabled';
+  static const String _lastMorningPushKey = 'last_morning_push';
+  static const String _lastEveningPushKey = 'last_evening_push';
+  static const String _lastTrendHashKey = 'last_trend_hash';
+  static const String _persistentNotifKey = 'persistent_notification_enabled';
+  static const String _notifPromptedKey = 'notif_prompted';
+  static const String _batteryPromptedKey = 'battery_prompted';
 
   SharedPreferences? _prefs;
 
@@ -158,5 +164,80 @@ class StorageService {
     final p = await prefs;
     await p.setString(_lastLocationKey, jsonEncode(location.toJson()));
   }
-}
 
+  // --- Persistent notification toggle ---
+  Future<bool> getPersistentNotificationEnabled() async {
+    final p = await prefs;
+    return p.getBool(_persistentNotifKey) ?? false;
+  }
+
+  Future<void> setPersistentNotificationEnabled(bool enabled) async {
+    final p = await prefs;
+    await p.setBool(_persistentNotifKey, enabled);
+  }
+
+  // --- First-run prompts ---
+  Future<bool> getNotificationPrompted() async {
+    final p = await prefs;
+    return p.getBool(_notifPromptedKey) ?? false;
+  }
+
+  Future<void> setNotificationPrompted() async {
+    final p = await prefs;
+    await p.setBool(_notifPromptedKey, true);
+  }
+
+  Future<bool> getBatteryPrompted() async {
+    final p = await prefs;
+    return p.getBool(_batteryPromptedKey) ?? false;
+  }
+
+  Future<void> setBatteryPrompted() async {
+    final p = await prefs;
+    await p.setBool(_batteryPromptedKey, true);
+  }
+
+  // --- Notification bookkeeping ---
+
+  Future<DateTime?> getLastMorningPush() async {
+    return _getDate(_lastMorningPushKey);
+  }
+
+  Future<void> setLastMorningPush(DateTime time) async {
+    await _setDate(_lastMorningPushKey, time);
+  }
+
+  Future<DateTime?> getLastEveningPush() async {
+    return _getDate(_lastEveningPushKey);
+  }
+
+  Future<void> setLastEveningPush(DateTime time) async {
+    await _setDate(_lastEveningPushKey, time);
+  }
+
+  Future<String?> getLastTrendHash() async {
+    final p = await prefs;
+    return p.getString(_lastTrendHashKey);
+  }
+
+  Future<void> setLastTrendHash(String hash) async {
+    final p = await prefs;
+    await p.setString(_lastTrendHashKey, hash);
+  }
+
+  Future<DateTime?> _getDate(String key) async {
+    final p = await prefs;
+    final value = p.getString(key);
+    if (value == null) return null;
+    try {
+      return DateTime.parse(value);
+    } catch (_) {
+      return null;
+    }
+  }
+
+  Future<void> _setDate(String key, DateTime value) async {
+    final p = await prefs;
+    await p.setString(key, value.toIso8601String());
+  }
+}
