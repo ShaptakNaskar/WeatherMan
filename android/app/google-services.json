@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "117603386925",
+    "project_id": "weatherman-e7873",
+    "storage_bucket": "weatherman-e7873.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:117603386925:android:e67a3a270a9afcc5351aa4",
+        "android_client_info": {
+          "package_name": "com.sappy.cyberweather"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyDlbJBAIcTqF-Yfln8xr9blHWZPkgcGgQE"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
