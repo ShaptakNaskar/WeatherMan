@@ -241,7 +241,7 @@ class _CyberpunkSplashScreenState extends State<CyberpunkSplashScreen>
                   // Bottom info
                   Center(
                     child: Text(
-                      'v1.0.9_CYBER',
+                      'v1.1.0_CYBER',
                       style: TextStyle(
                         fontFamily: 'monospace',
                         fontSize: 9,

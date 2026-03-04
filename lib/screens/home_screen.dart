@@ -10,6 +10,7 @@ import 'package:weatherman/providers/weather_provider.dart';
 import 'package:weatherman/screens/search_screen.dart';
 import 'package:weatherman/screens/settings_screen.dart';
 import 'package:weatherman/utils/date_utils.dart';
+import 'package:weatherman/utils/weather_utils.dart';
 import 'package:weatherman/widgets/cyberpunk/cyber_background.dart';
 import 'package:weatherman/widgets/cyberpunk/glitch_effects.dart';
 import 'package:weatherman/widgets/cyberpunk/hud_warnings.dart';
@@ -19,6 +20,8 @@ import 'package:weatherman/widgets/weather/daily_forecast.dart';
 import 'package:weatherman/widgets/weather/hourly_forecast.dart';
 import 'package:weatherman/widgets/weather/weather_details.dart';
 import 'package:weatherman/widgets/weather/advanced_details.dart';
+import 'package:weatherman/widgets/weather/weather_insights.dart';
+import 'package:weatherman/widgets/cyberpunk/system_status_bar.dart';
 import 'package:weatherman/services/widget_service.dart';
 import 'package:weatherman/services/notification_service.dart';
 import 'package:weatherman/services/push_service.dart';
@@ -514,6 +517,14 @@ class _HomeScreenState extends State<HomeScreen> {
 
       const SliverToBoxAdapter(child: SizedBox(height: 16)),
 
+      // Weather insights (smart alerts & trends)
+      SliverToBoxAdapter(
+        child: WeatherInsightsCard(weather: weather)
+            .animate().fadeIn(duration: 600.ms, delay: 425.ms).slideY(begin: 0.03, end: 0, duration: 500.ms, curve: Curves.easeOut),
+      ),
+
+      const SliverToBoxAdapter(child: SizedBox(height: 16)),
+
       // Weather details
       if (today != null)
         SliverToBoxAdapter(
@@ -545,6 +556,14 @@ class _HomeScreenState extends State<HomeScreen> {
             ).animate().fadeIn(duration: 600.ms, delay: 650.ms).slideY(begin: 0.03, end: 0, duration: 500.ms, curve: Curves.easeOut),
           );
         },
+      ),
+
+      // System status footer
+      SliverToBoxAdapter(
+        child: Padding(
+          padding: const EdgeInsets.only(top: 20, bottom: 4),
+          child: SystemStatusBar(weather: weather),
+        ).animate().fadeIn(duration: 600.ms, delay: 750.ms),
       ),
     ];
   }
@@ -755,27 +774,88 @@ class _CityListBottomSheet extends StatelessWidget {
                           final weather = weatherProvider.getWeather(location);
                           final isSelected = location == locationProvider.selectedLocation;
 
-                          return ListTile(
-                            leading: location.isCurrentLocation
-                                ? const Icon(Icons.my_location_rounded)
-                                : const Icon(Icons.location_city_rounded),
-                            title: Text(location.name),
-                            subtitle: weather != null
-                                ? Text('${weather.current.temperature.round()}°')
-                                : null,
-                            trailing: isSelected
-                                ? const Icon(Icons.check_circle, color: Colors.green)
-                                : null,
-                            onTap: () {
-                              locationProvider.selectLocation(location);
-                              weatherProvider.fetchWeather(location);
-                              Navigator.pop(context);
-                            },
-                            onLongPress: () {
-                              if (!location.isCurrentLocation) {
-                                _showDeleteDialog(context, locationProvider, location);
-                              }
-                            },
+                          return Container(
+                            margin: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
+                            decoration: BoxDecoration(
+                              color: isSelected
+                                  ? CyberpunkTheme.neonCyan.withValues(alpha: 0.08)
+                                  : CyberpunkTheme.bgPanel.withValues(alpha: 0.5),
+                              border: Border.all(
+                                color: isSelected
+                                    ? CyberpunkTheme.neonCyan.withValues(alpha: 0.4)
+                                    : CyberpunkTheme.glassBorder.withValues(alpha: 0.3),
+                                width: isSelected ? 1 : 0.5,
+                              ),
+                              borderRadius: BorderRadius.circular(4),
+                            ),
+                            child: ListTile(
+                              contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 2),
+                              leading: Icon(
+                                location.isCurrentLocation
+                                    ? Icons.my_location_rounded
+                                    : Icons.location_city_rounded,
+                                color: isSelected
+                                    ? CyberpunkTheme.neonCyan
+                                    : CyberpunkTheme.textSecondary,
+                                size: 20,
+                              ),
+                              title: Text(
+                                location.name,
+                                style: TextStyle(
+                                  fontFamily: 'monospace',
+                                  fontSize: 13,
+                                  color: isSelected
+                                      ? CyberpunkTheme.neonCyan
+                                      : CyberpunkTheme.textPrimary,
+                                  fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
+                                  letterSpacing: 0.5,
+                                ),
+                              ),
+                              subtitle: weather != null
+                                  ? Text(
+                                      '${weather.current.temperature.round()}°C · ${_getWeatherDesc(weather.current.weatherCode)}',
+                                      style: TextStyle(
+                                        fontFamily: 'monospace',
+                                        fontSize: 10,
+                                        color: CyberpunkTheme.textTertiary,
+                                        letterSpacing: 0.5,
+                                      ),
+                                    )
+                                  : null,
+                              trailing: isSelected
+                                  ? Icon(
+                                      Icons.check_circle,
+                                      color: CyberpunkTheme.neonGreen,
+                                      size: 18,
+                                      shadows: [
+                                        Shadow(
+                                          color: CyberpunkTheme.neonGreen.withValues(alpha: 0.5),
+                                          blurRadius: 8,
+                                        ),
+                                      ],
+                                    )
+                                  : weather != null
+                                      ? Text(
+                                          '${weather.current.temperature.round()}°',
+                                          style: TextStyle(
+                                            fontFamily: 'monospace',
+                                            fontSize: 16,
+                                            fontWeight: FontWeight.bold,
+                                            color: CyberpunkTheme.textPrimary.withValues(alpha: 0.8),
+                                          ),
+                                        )
+                                      : null,
+                              onTap: () {
+                                locationProvider.selectLocation(location);
+                                weatherProvider.fetchWeather(location);
+                                Navigator.pop(context);
+                              },
+                              onLongPress: () {
+                                if (!location.isCurrentLocation) {
+                                  _showDeleteDialog(context, locationProvider, location);
+                                }
+                              },
+                            ),
                           );
                         },
                       ),
@@ -798,22 +878,60 @@ class _CityListBottomSheet extends StatelessWidget {
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
-        title: const Text('Remove Location'),
-        content: Text('Remove ${location.name} from saved locations?'),
+        backgroundColor: CyberpunkTheme.bgDarkest.withValues(alpha: 0.95),
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(4),
+          side: BorderSide(color: CyberpunkTheme.neonRed.withValues(alpha: 0.4)),
+        ),
+        title: Text(
+          '// REMOVE NODE //',
+          style: TextStyle(
+            fontFamily: 'monospace',
+            color: CyberpunkTheme.neonRed,
+            letterSpacing: 2,
+            fontSize: 14,
+          ),
+        ),
+        content: Text(
+          'Disconnect ${location.name} from saved nodes?',
+          style: TextStyle(
+            fontFamily: 'monospace',
+            color: CyberpunkTheme.textSecondary,
+            fontSize: 13,
+          ),
+        ),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context),
-            child: const Text('Cancel'),
+            child: Text(
+              'ABORT',
+              style: TextStyle(
+                fontFamily: 'monospace',
+                color: CyberpunkTheme.textTertiary,
+                letterSpacing: 1,
+              ),
+            ),
           ),
           TextButton(
             onPressed: () {
               locationProvider.removeLocation(location);
               Navigator.pop(context);
             },
-            child: const Text('Remove'),
+            child: Text(
+              'CONFIRM',
+              style: TextStyle(
+                fontFamily: 'monospace',
+                color: CyberpunkTheme.neonRed,
+                letterSpacing: 1,
+              ),
+            ),
           ),
         ],
       ),
     );
+  }
+
+  static String _getWeatherDesc(int code) {
+    return WeatherUtils.getWeatherDescription(code);
   }
 }

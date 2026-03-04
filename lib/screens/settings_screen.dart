@@ -11,6 +11,7 @@ import 'package:weatherman/providers/weather_provider.dart';
 import 'package:weatherman/screens/debug_weather_screen.dart';
 import 'package:weatherman/services/notification_service.dart';
 import 'package:weatherman/utils/unit_converter.dart';
+import 'package:weatherman/utils/trend_analyzer.dart';
 import 'package:weatherman/models/weather.dart';
 import 'package:weatherman/widgets/cyberpunk/cyber_background.dart';
 import 'package:weatherman/widgets/cyberpunk/cyber_glass_card.dart';
@@ -73,18 +74,38 @@ class _SettingsScreenState extends State<SettingsScreen> {
   }
 
   Future<void> _sendAllTestNotifications() async {
-    await NotificationService.instance.showNow(
-      title: 'Morning Briefing [TEST]',
-      body: 'Rain ping ~14:00. High 28°C. Stay lit.',
-    );
-    await NotificationService.instance.showNow(
-      title: 'Evening Outlook [TEST]',
-      body: 'Tonight 22°C. Tomorrow: Partly cloudy 21–29°C. Recharge.',
-    );
-    await NotificationService.instance.showNow(
-      title: 'Trend Alert [TEST]',
-      body: 'Heat drift — highs near 32°C in 48h. Prep coolant.',
-    );
+    // Test morning briefing
+    if (_latestWeather != null) {
+      await NotificationService.instance.showMorningBriefing(_latestWeather!);
+    } else {
+      await NotificationService.instance.showNow(
+        title: '☀️ Good Morning — Test City',
+        body: 'Today: Partly cloudy, 18°–28°C. No rain expected this morning.',
+      );
+    }
+
+    // Test evening outlook
+    if (_latestWeather != null) {
+      await NotificationService.instance.showEveningOutlook(_latestWeather!);
+    } else {
+      await NotificationService.instance.showNow(
+        title: '🌙 Evening Outlook — Test City',
+        body: 'Currently 22°C. Tomorrow: Partly cloudy, 17°–26°C. Week range: 15°–30°C.',
+      );
+    }
+
+    // Test severe alert
+    await NotificationService.instance.showSevereAlert(const TrendInsight(
+      title: '⚡ Thunderstorm Alert [TEST]',
+      body: 'Thunderstorm expected in ~3h. Secure outdoor gear and find shelter.',
+      severity: InsightSeverity.severe,
+    ));
+
+    // Test insight
+    await NotificationService.instance.showInsight(const TrendInsight(
+      title: '📈 Warming Trend [TEST]',
+      body: 'Temperatures rising over the next 7 days — highs climbing from 24° to ~31°C.',
+    ));
 
     // Persistent preview
     if (_latestWeather != null) {
@@ -257,7 +278,100 @@ class _SettingsScreenState extends State<SettingsScreen> {
         ),
       ),
 
+      const SizedBox(height: 16),
+
+      // ── Notification Controls ────────────────────────────────
+      CyberGlassCard(
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              children: [
+                Icon(
+                  Icons.notifications_active_rounded,
+                  color: CyberpunkTheme.neonCyan,
+                  size: 20,
+                  shadows: CyberpunkTheme.subtleCyanGlow,
+                ),
+                const SizedBox(width: 8),
+                Text(
+                  'Notifications',
+                  style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                    shadows: _textShadows,
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 16),
+
+            // Persistent weather status
+            _NotifToggle(
+              icon: Icons.pin_rounded,
+              title: 'Live Weather Status',
+              subtitle: 'Ongoing notification with current conditions',
+              value: settings.persistentNotificationEnabled,
+              onChanged: (val) async {
+                await settings.setPersistentNotificationEnabled(val);
+                if (val && _latestWeather != null) {
+                  await NotificationService.instance.showPersistent(_latestWeather!);
+                } else if (!val) {
+                  await NotificationService.instance.cancelPersistent();
+                }
+              },
+            ),
+            _notifDivider(),
+
+            // Morning briefing
+            _NotifToggle(
+              icon: Icons.wb_sunny_rounded,
+              title: 'Morning Briefing',
+              subtitle: 'Daily summary at ~7 AM with rain, UV, wind',
+              value: settings.morningBriefingEnabled,
+              onChanged: (val) => settings.setMorningBriefingEnabled(val),
+            ),
+            _notifDivider(),
+
+            // Evening outlook
+            _NotifToggle(
+              icon: Icons.nightlight_round,
+              title: 'Evening Outlook',
+              subtitle: 'Tomorrow preview + week range at ~5 PM',
+              value: settings.eveningOutlookEnabled,
+              onChanged: (val) => settings.setEveningOutlookEnabled(val),
+            ),
+            _notifDivider(),
+
+            // Severe weather alerts
+            _NotifToggle(
+              icon: Icons.warning_amber_rounded,
+              title: 'Severe Weather Alerts',
+              subtitle: 'Thunderstorms, extreme heat/cold, heavy rain',
+              value: settings.severeAlertsEnabled,
+              onChanged: (val) => settings.setSevereAlertsEnabled(val),
+              accentColor: CyberpunkTheme.neonRed,
+            ),
+            _notifDivider(),
+
+            // Trend insights
+            _NotifToggle(
+              icon: Icons.insights_rounded,
+              title: 'Weather Insights',
+              subtitle: 'Warming/cooling trends, rain probability, UV',
+              value: settings.trendInsightsEnabled,
+              onChanged: (val) => settings.setTrendInsightsEnabled(val),
+            ),
+          ],
+        ),
+      ),
+
     ];
+  }
+
+  Widget _notifDivider() {
+    return Divider(
+      height: 1,
+      color: CyberpunkTheme.neonCyan.withValues(alpha: 0.1),
+    );
   }
 
   Widget _buildAboutSection() {
@@ -292,7 +406,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
             ),
             const SizedBox(height: 4),
             Text(
-              'v1.0.9_CYBER',
+              'v1.1.0_CYBER',
               style: TextStyle(
                 fontFamily: 'monospace',
                 fontSize: 12,
@@ -587,6 +701,80 @@ class _UnitButton extends StatelessWidget {
             ),
           ],
         ),
+      ),
+    );
+  }
+}
+
+/// Notification toggle row widget
+class _NotifToggle extends StatelessWidget {
+  final IconData icon;
+  final String title;
+  final String subtitle;
+  final bool value;
+  final ValueChanged<bool> onChanged;
+  final Color? accentColor;
+
+  // Text shadows for legibility
+  static const List<Shadow> _textShadows = [
+    Shadow(
+      color: Color(0x80000000),
+      blurRadius: 4,
+      offset: Offset(0, 1),
+    ),
+  ];
+
+  const _NotifToggle({
+    required this.icon,
+    required this.title,
+    required this.subtitle,
+    required this.value,
+    required this.onChanged,
+    this.accentColor,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final color = accentColor ?? CyberpunkTheme.neonCyan;
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 10),
+      child: Row(
+        children: [
+          Icon(icon, color: color, size: 20, shadows: [
+            Shadow(color: color.withValues(alpha: 0.5), blurRadius: 6),
+          ]),
+          const SizedBox(width: 12),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  title,
+                  style: Theme.of(context).textTheme.bodyLarge?.copyWith(
+                    fontWeight: FontWeight.w500,
+                    shadows: _textShadows,
+                  ),
+                ),
+                const SizedBox(height: 2),
+                Text(
+                  subtitle,
+                  style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                    color: Colors.white.withValues(alpha: 0.6),
+                    shadows: _textShadows,
+                  ),
+                ),
+              ],
+            ),
+          ),
+          Switch(
+            value: value,
+            onChanged: onChanged,
+            activeThumbColor: Colors.white,
+            activeTrackColor: color.withValues(alpha: 0.5),
+            inactiveThumbColor: Colors.white.withValues(alpha: 0.7),
+            inactiveTrackColor: Colors.white.withValues(alpha: 0.2),
+          ),
+        ],
       ),
     );
   }

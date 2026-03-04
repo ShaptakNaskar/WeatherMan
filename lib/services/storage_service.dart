@@ -15,8 +15,13 @@ class StorageService {
   static const String _lastEveningPushKey = 'last_evening_push';
   static const String _lastTrendHashKey = 'last_trend_hash';
   static const String _persistentNotifKey = 'persistent_notification_enabled';
+  static const String _morningBriefingKey = 'morning_briefing_enabled';
+  static const String _eveningOutlookKey = 'evening_outlook_enabled';
+  static const String _severeAlertsKey = 'severe_alerts_enabled';
+  static const String _trendInsightsKey = 'trend_insights_enabled';
   static const String _notifPromptedKey = 'notif_prompted';
   static const String _batteryPromptedKey = 'battery_prompted';
+  static const String _lastSevereHashKey = 'last_severe_hash';
 
   SharedPreferences? _prefs;
 
@@ -174,6 +179,57 @@ class StorageService {
   Future<void> setPersistentNotificationEnabled(bool enabled) async {
     final p = await prefs;
     await p.setBool(_persistentNotifKey, enabled);
+  }
+
+  // --- Notification toggles ---
+  Future<bool> getMorningBriefingEnabled() async {
+    final p = await prefs;
+    return p.getBool(_morningBriefingKey) ?? true;
+  }
+
+  Future<void> setMorningBriefingEnabled(bool enabled) async {
+    final p = await prefs;
+    await p.setBool(_morningBriefingKey, enabled);
+  }
+
+  Future<bool> getEveningOutlookEnabled() async {
+    final p = await prefs;
+    return p.getBool(_eveningOutlookKey) ?? true;
+  }
+
+  Future<void> setEveningOutlookEnabled(bool enabled) async {
+    final p = await prefs;
+    await p.setBool(_eveningOutlookKey, enabled);
+  }
+
+  Future<bool> getSevereAlertsEnabled() async {
+    final p = await prefs;
+    return p.getBool(_severeAlertsKey) ?? true;
+  }
+
+  Future<void> setSevereAlertsEnabled(bool enabled) async {
+    final p = await prefs;
+    await p.setBool(_severeAlertsKey, enabled);
+  }
+
+  Future<bool> getTrendInsightsEnabled() async {
+    final p = await prefs;
+    return p.getBool(_trendInsightsKey) ?? true;
+  }
+
+  Future<void> setTrendInsightsEnabled(bool enabled) async {
+    final p = await prefs;
+    await p.setBool(_trendInsightsKey, enabled);
+  }
+
+  Future<String?> getLastSevereHash() async {
+    final p = await prefs;
+    return p.getString(_lastSevereHashKey);
+  }
+
+  Future<void> setLastSevereHash(String hash) async {
+    final p = await prefs;
+    await p.setString(_lastSevereHashKey, hash);
   }
 
   // --- First-run prompts ---

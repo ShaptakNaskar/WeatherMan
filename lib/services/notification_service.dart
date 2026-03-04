@@ -3,6 +3,7 @@ import 'package:timezone/data/latest.dart' as tz;
 import 'package:timezone/timezone.dart' as tz;
 import 'package:weatherman/models/weather.dart';
 import 'package:weatherman/utils/weather_utils.dart';
+import 'package:weatherman/utils/trend_analyzer.dart';
 
 /// Handles local notification setup and delivery
 class NotificationService {
@@ -12,12 +13,17 @@ class NotificationService {
   final FlutterLocalNotificationsPlugin _plugin = FlutterLocalNotificationsPlugin();
   bool _initialized = false;
 
-  static const String _channelId = 'weather_alerts';
-  static const String _channelName = 'Weather Alerts';
-  static const String _channelDesc = 'Daily briefings, evening updates, and trend alerts';
-  static const String _channelPersistentId = 'weather_persistent';
-  static const String _channelPersistentName = 'Weather Status';
-  static const String _channelPersistentDesc = 'Live weather status';
+  // ── Channel IDs ──────────────────────────────────────────────
+  static const String _channelBriefing = 'weather_briefings';
+  static const String _channelSevere = 'weather_severe';
+  static const String _channelInsights = 'weather_insights';
+  static const String _channelPersistent = 'weather_persistent';
+
+  // ── Notification IDs ─────────────────────────────────────────
+  static const int _idPersistent = 9999;
+  static const int _idMorning = 1001;
+  static const int _idEvening = 1002;
+  // Severe & insight IDs are dynamic via _nextId()
 
   /// Initialize notification plugin and request permission if needed
   Future<void> init() async {
@@ -32,19 +38,41 @@ class NotificationService {
     final androidImpl =
         _plugin.resolvePlatformSpecificImplementation<AndroidFlutterLocalNotificationsPlugin>();
     if (androidImpl != null) {
+      // Daily briefings (morning / evening)
       await androidImpl.createNotificationChannel(const AndroidNotificationChannel(
-        _channelId,
-        _channelName,
-        description: _channelDesc,
+        _channelBriefing,
+        'Daily Briefings',
+        description: 'Morning and evening weather briefings',
+        importance: Importance.high,
+        enableLights: true,
+        enableVibration: true,
+        showBadge: true,
+      ));
+      // Severe weather alerts (max priority)
+      await androidImpl.createNotificationChannel(const AndroidNotificationChannel(
+        _channelSevere,
+        'Severe Weather Alerts',
+        description: 'Thunderstorms, extreme heat/cold, heavy rain/snow, high winds',
         importance: Importance.max,
         enableLights: true,
         enableVibration: true,
         showBadge: true,
       ));
+      // Smart insights & trends
       await androidImpl.createNotificationChannel(const AndroidNotificationChannel(
-        _channelPersistentId,
-        _channelPersistentName,
-        description: _channelPersistentDesc,
+        _channelInsights,
+        'Weather Insights',
+        description: 'Temperature trends, rain probability changes, UV alerts',
+        importance: Importance.defaultImportance,
+        enableLights: true,
+        enableVibration: false,
+        showBadge: true,
+      ));
+      // Persistent status (low priority, ongoing)
+      await androidImpl.createNotificationChannel(const AndroidNotificationChannel(
+        _channelPersistent,
+        'Current Weather Status',
+        description: 'Ongoing notification showing live weather conditions',
         importance: Importance.low,
         enableLights: false,
         enableVibration: false,
@@ -63,19 +91,20 @@ class NotificationService {
     return androidImpl?.requestNotificationsPermission();
   }
 
-  /// Show an immediate notification
+  // ── Generic show ─────────────────────────────────────────────
+
+  /// Show an immediate notification (legacy / debug)
   Future<void> showNow({
     required String title,
     required String body,
     String payload = '',
   }) async {
     await init();
-    final details = _details();
     await _plugin.show(
       id: _nextId(),
       title: title,
       body: body,
-      notificationDetails: details,
+      notificationDetails: _briefingDetails(),
       payload: payload,
     );
   }
@@ -89,26 +118,135 @@ class NotificationService {
   }) async {
     await init();
     final tzTime = tz.TZDateTime.from(time, tz.local);
-    final details = _details();
     await _plugin.zonedSchedule(
       id: _nextId(),
       title: title,
       body: body,
       scheduledDate: tzTime,
-      notificationDetails: details,
+      notificationDetails: _briefingDetails(),
       androidScheduleMode: AndroidScheduleMode.exactAllowWhileIdle,
       matchDateTimeComponents: DateTimeComponents.time,
       payload: payload,
     );
   }
 
-  /// Build Android notification details
-  NotificationDetails _details() {
+  // ── Briefing notifications ───────────────────────────────────
+
+  /// Morning briefing with rich weather summary
+  Future<void> showMorningBriefing(WeatherData weather) async {
+    await init();
+    final msg = _buildMorningMessage(weather);
+    await _plugin.show(
+      id: _idMorning,
+      title: '☀️ MORNING_BRIEF // ${weather.location.name}',
+      body: msg,
+      notificationDetails: _briefingDetails(),
+    );
+  }
+
+  /// Evening outlook with tomorrow preview
+  Future<void> showEveningOutlook(WeatherData weather) async {
+    await init();
+    final msg = _buildEveningMessage(weather);
+    await _plugin.show(
+      id: _idEvening,
+      title: '🌙 EVENING_RECON // ${weather.location.name}',
+      body: msg,
+      notificationDetails: _briefingDetails(),
+    );
+  }
+
+  // ── Severe weather alerts ────────────────────────────────────
+
+  /// Show a severe weather notification (max importance)
+  Future<void> showSevereAlert(TrendInsight insight) async {
+    await init();
+    await _plugin.show(
+      id: _nextId(),
+      title: insight.title,
+      body: insight.body,
+      notificationDetails: _severeDetails(),
+    );
+  }
+
+  // ── Smart insight notifications ──────────────────────────────
+
+  /// Show a weather insight notification
+  Future<void> showInsight(TrendInsight insight) async {
+    await init();
+    await _plugin.show(
+      id: _nextId(),
+      title: insight.title,
+      body: insight.body,
+      notificationDetails: _insightDetails(),
+    );
+  }
+
+  // ── Persistent weather status ────────────────────────────────
+
+  /// Persistent status notification (ongoing)
+  Future<void> showPersistent(WeatherData weather) async {
+    await init();
+    final current = weather.current;
+    final today = weather.daily.isNotEmpty ? weather.daily.first : null;
+    final cond = WeatherUtils.getWeatherDescription(current.weatherCode);
+    final place = weather.location.shortDisplayName;
+
+    // Build a concise, informative status line
+    final parts = <String>[];
+    parts.add('${current.temperature.toStringAsFixed(0)}°C');
+    parts.add(cond);
+    if (today != null) {
+      parts.add('H:${today.temperatureMax.toStringAsFixed(0)}° L:${today.temperatureMin.toStringAsFixed(0)}°');
+    }
+    parts.add('Humidity ${current.relativeHumidity}%');
+    parts.add('Wind ${current.windSpeed.toStringAsFixed(0)} km/h');
+
+    // Add upcoming change hint if available
+    String? hint;
+    final insights = TrendAnalyzer.detectAll(weather);
+    if (insights.isNotEmpty) {
+      hint = insights.first.title.replaceAll(RegExp(r'[^\w\s°—]'), '').trim();
+    }
+
+    final body = parts.join(' · ') + (hint != null ? '\n↗ $hint' : '');
+
     const android = AndroidNotificationDetails(
-      _channelId,
-      _channelName,
-      channelDescription: _channelDesc,
-      importance: Importance.max,
+      _channelPersistent,
+      'Current Weather Status',
+      channelDescription: 'Ongoing notification showing live weather conditions',
+      importance: Importance.low,
+      priority: Priority.low,
+      icon: '@drawable/ic_stat_weather',
+      ongoing: true,
+      autoCancel: false,
+      showWhen: true,
+      category: AndroidNotificationCategory.status,
+      styleInformation: BigTextStyleInformation(''),
+    );
+    const details = NotificationDetails(android: android);
+
+    await _plugin.show(
+      id: _idPersistent,
+      title: '📍 $place // ${current.temperature.toStringAsFixed(0)}°C $cond',
+      body: body,
+      notificationDetails: details,
+    );
+  }
+
+  Future<void> cancelPersistent() async {
+    await init();
+    await _plugin.cancel(id: _idPersistent);
+  }
+
+  // ── Channel-specific NotificationDetails builders ────────────
+
+  NotificationDetails _briefingDetails() {
+    const android = AndroidNotificationDetails(
+      _channelBriefing,
+      'Daily Briefings',
+      channelDescription: 'Morning and evening weather briefings',
+      importance: Importance.high,
       priority: Priority.high,
       icon: '@drawable/ic_stat_weather',
       styleInformation: BigTextStyleInformation(''),
@@ -117,42 +255,108 @@ class NotificationService {
     return const NotificationDetails(android: android);
   }
 
-  /// Persistent status notification (ongoing)
-  Future<void> showPersistent(WeatherData weather) async {
-    await init();
-    final current = weather.current;
-    final cond = WeatherUtils.getWeatherDescription(current.weatherCode);
-    final place = weather.location.shortDisplayName;
-    final body =
-        'NOW ${current.temperature.toStringAsFixed(1)}°C | $cond | HUM ${current.relativeHumidity}% | WIND ${current.windSpeed.toStringAsFixed(0)}km/h | AQI ${weather.airQuality?.usAqi ?? '--'} | PRECIP ${current.precipitation.toStringAsFixed(1)}mm | PRESS ${current.pressure.toStringAsFixed(0)}hPa';
-
+  NotificationDetails _severeDetails() {
     const android = AndroidNotificationDetails(
-      _channelPersistentId,
-      _channelPersistentName,
-      channelDescription: _channelPersistentDesc,
-      importance: Importance.low,
-      priority: Priority.low,
+      _channelSevere,
+      'Severe Weather Alerts',
+      channelDescription: 'Thunderstorms, extreme heat/cold, heavy rain/snow, high winds',
+      importance: Importance.max,
+      priority: Priority.max,
       icon: '@drawable/ic_stat_weather',
-      ongoing: true,
-      autoCancel: false,
-      category: AndroidNotificationCategory.service,
       styleInformation: BigTextStyleInformation(''),
+      playSound: true,
+      enableLights: true,
+      enableVibration: true,
+      fullScreenIntent: true,
     );
-    const details = NotificationDetails(android: android);
-
-    await _plugin.show(
-      id: 9999,
-      title: 'CYBERWEATHER // $place',
-      body: body,
-      notificationDetails: details,
-    );
+    return const NotificationDetails(android: android);
   }
 
-  Future<void> cancelPersistent() async {
-    await init();
-    await _plugin.cancel(id: 9999);
+  NotificationDetails _insightDetails() {
+    const android = AndroidNotificationDetails(
+      _channelInsights,
+      'Weather Insights',
+      channelDescription: 'Temperature trends, rain probability changes, UV alerts',
+      importance: Importance.defaultImportance,
+      priority: Priority.defaultPriority,
+      icon: '@drawable/ic_stat_weather',
+      styleInformation: BigTextStyleInformation(''),
+      playSound: false,
+    );
+    return const NotificationDetails(android: android);
   }
 
-  int _counter = 0;
+  // ── Briefing message builders ────────────────────────────────
+
+  String _buildMorningMessage(WeatherData weather) {
+    final hourly = weather.hourly;
+    final daily = weather.daily;
+    if (hourly.isEmpty || daily.isEmpty) return 'SYNC_ERR // Weather feed offline...';
+
+    final today = daily.first;
+    final cond = WeatherUtils.getWeatherDescription(today.weatherCode);
+    final parts = <String>[];
+
+    // Today's overview
+    parts.add('STATUS: $cond // ${today.temperatureMin.round()}°–${today.temperatureMax.round()}°C.');
+
+    // Rain check for the day
+    final dayHours = hourly.take(12).toList();
+    final rainyHour = dayHours.where(
+      (h) => h.precipitationProbability >= 50 || h.rain >= 1 || h.precipitation >= 1,
+    );
+    if (rainyHour.isNotEmpty) {
+      final t = rainyHour.first.time;
+      parts.add('Precip ping ~${t.hour.toString().padLeft(2, '0')}:00 (${rainyHour.first.precipitationProbability}%). Pack accordingly.');
+    } else {
+      parts.add('No precip in AM window.');
+    }
+
+    // UV warning
+    if (today.uvIndexMax >= 8) {
+      parts.add('UV index ${today.uvIndexMax.round()} — dermal shield recommended.');
+    }
+
+    // Wind note
+    if (today.windSpeedMax >= 30) {
+      parts.add('Wind gusts ${today.windGustsMax.round()} km/h — brace for turbulence.');
+    }
+
+    return parts.join(' ');
+  }
+
+  String _buildEveningMessage(WeatherData weather) {
+    if (weather.daily.length < 2 || weather.hourly.isEmpty) {
+      return 'SYNC_ERR // Weather feed updating...';
+    }
+    final current = weather.current;
+    final tomorrow = weather.daily[1];
+    final tomorrowCond = WeatherUtils.getWeatherDescription(tomorrow.weatherCode);
+    final parts = <String>[];
+
+    // Current temp
+    parts.add('Ambient: ${current.temperature.round()}°C.');
+
+    // Tomorrow preview
+    parts.add('Tomorrow forecast: $tomorrowCond, ${tomorrow.temperatureMin.round()}°–${tomorrow.temperatureMax.round()}°C.');
+
+    // Tomorrow rain?
+    if (tomorrow.precipitationProbabilityMax >= 40) {
+      parts.add('Precip probability ${tomorrow.precipitationProbabilityMax}%.');
+    }
+
+    // Week outlook
+    if (weather.daily.length >= 5) {
+      final weekHighs = weather.daily.skip(1).take(5).map((d) => d.temperatureMax);
+      final weekLows = weather.daily.skip(1).take(5).map((d) => d.temperatureMin);
+      final maxH = weekHighs.reduce((a, b) => a > b ? a : b);
+      final minL = weekLows.reduce((a, b) => a < b ? a : b);
+      parts.add('Week thermal range: ${minL.round()}°–${maxH.round()}°C.');
+    }
+
+    return parts.join(' ');
+  }
+
+  int _counter = 2000;
   int _nextId() => ++_counter;
 }

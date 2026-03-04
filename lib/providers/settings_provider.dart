@@ -10,6 +10,10 @@ class SettingsProvider extends ChangeNotifier {
   bool _advancedViewEnabled = false;
   bool _isLoading = true;
   bool _persistentNotificationEnabled = false;
+  bool _morningBriefingEnabled = true;
+  bool _eveningOutlookEnabled = true;
+  bool _severeAlertsEnabled = true;
+  bool _trendInsightsEnabled = true;
 
   SettingsProvider({required StorageService storageService})
       : _storageService = storageService;
@@ -19,12 +23,20 @@ class SettingsProvider extends ChangeNotifier {
   bool get isLoading => _isLoading;
   bool get useCelsius => _temperatureUnit == TemperatureUnit.celsius;
   bool get persistentNotificationEnabled => _persistentNotificationEnabled;
+  bool get morningBriefingEnabled => _morningBriefingEnabled;
+  bool get eveningOutlookEnabled => _eveningOutlookEnabled;
+  bool get severeAlertsEnabled => _severeAlertsEnabled;
+  bool get trendInsightsEnabled => _trendInsightsEnabled;
 
   /// Initialize settings from storage
   Future<void> init() async {
     _temperatureUnit = await _storageService.getTemperatureUnit();
     _advancedViewEnabled = await _storageService.getAdvancedViewEnabled();
     _persistentNotificationEnabled = await _storageService.getPersistentNotificationEnabled();
+    _morningBriefingEnabled = await _storageService.getMorningBriefingEnabled();
+    _eveningOutlookEnabled = await _storageService.getEveningOutlookEnabled();
+    _severeAlertsEnabled = await _storageService.getSevereAlertsEnabled();
+    _trendInsightsEnabled = await _storageService.getTrendInsightsEnabled();
     _isLoading = false;
     notifyListeners();
   }
@@ -63,6 +75,34 @@ class SettingsProvider extends ChangeNotifier {
     _persistentNotificationEnabled = enabled;
     notifyListeners();
     await _storageService.setPersistentNotificationEnabled(enabled);
+  }
+
+  Future<void> setMorningBriefingEnabled(bool enabled) async {
+    if (_morningBriefingEnabled == enabled) return;
+    _morningBriefingEnabled = enabled;
+    notifyListeners();
+    await _storageService.setMorningBriefingEnabled(enabled);
+  }
+
+  Future<void> setEveningOutlookEnabled(bool enabled) async {
+    if (_eveningOutlookEnabled == enabled) return;
+    _eveningOutlookEnabled = enabled;
+    notifyListeners();
+    await _storageService.setEveningOutlookEnabled(enabled);
+  }
+
+  Future<void> setSevereAlertsEnabled(bool enabled) async {
+    if (_severeAlertsEnabled == enabled) return;
+    _severeAlertsEnabled = enabled;
+    notifyListeners();
+    await _storageService.setSevereAlertsEnabled(enabled);
+  }
+
+  Future<void> setTrendInsightsEnabled(bool enabled) async {
+    if (_trendInsightsEnabled == enabled) return;
+    _trendInsightsEnabled = enabled;
+    notifyListeners();
+    await _storageService.setTrendInsightsEnabled(enabled);
   }
 
   /// Format temperature using current unit

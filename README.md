@@ -154,6 +154,6 @@ Coded with ❤️ by [Sappy](https://sappy-dir.vercel.app)
 
 ```
 > SESSION_END
-> CyberWeather v1.0.9_CYBER
+> CyberWeather v1.1.0_CYBER
 > ALL SYSTEMS NOMINAL
 ```
