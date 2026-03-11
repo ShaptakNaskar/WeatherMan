@@ -1,167 +1,226 @@
 import 'dart:ui';
 import 'package:flutter/material.dart';
+import 'package:weatherman/config/design_system.dart';
+import 'package:weatherman/widgets/glassmorphic/grain_painter.dart';
 
-/// A glassmorphic card widget with frosted glass effect
-/// Optimized version with reduced blur for better performance
-class GlassCard extends StatelessWidget {
+// ── Helper: builds the layered glass recipe ──
+Widget _buildGlass({
+  required Widget child,
+  required double blur,
+  required double tintOpacity,
+  required double borderRadius,
+  required Color glassTint,
+  required int grainSeed,
+  required EdgeInsetsGeometry padding,
+  bool useBackdropFilter = true,
+  VoidCallback? onTap,
+  EdgeInsetsGeometry? margin,
+  Color? borderColor,
+}) {
+  final fill = DesignSystem.glassColor(glassTint, tintOpacity);
+  final border = Border.all(
+    color: borderColor ?? DesignSystem.glassBorderColor,
+    width: DesignSystem.glassBorderWidth,
+  );
+  final radius = BorderRadius.circular(borderRadius);
+
+  Widget inner = Container(
+    decoration: BoxDecoration(color: fill, borderRadius: radius, border: border),
+    child: Stack(
+      children: [
+        Positioned.fill(
+          child: CustomPaint(painter: GrainPainter(seed: grainSeed)),
+        ),
+        Padding(padding: padding, child: child),
+      ],
+    ),
+  );
+
+  Widget card;
+  if (useBackdropFilter) {
+    card = ClipRRect(
+      borderRadius: radius,
+      child: BackdropFilter(
+        filter: ImageFilter.blur(sigmaX: blur, sigmaY: blur),
+        child: inner,
+      ),
+    );
+  } else {
+    card = ClipRRect(borderRadius: radius, child: inner);
+  }
+
+  if (onTap != null) card = GestureDetector(onTap: onTap, child: card);
+  if (margin != null) card = Padding(padding: margin, child: card);
+  return card;
+}
+
+/// Primary glass card — blur 20, tint 0.14. For main content sections.
+class PrimaryGlassCard extends StatelessWidget {
   final Widget child;
+  final Color glassTint;
   final EdgeInsetsGeometry? padding;
   final EdgeInsetsGeometry? margin;
-  final double borderRadius;
-  final double blur;
-  final double opacity;
-  final Color? borderColor;
   final VoidCallback? onTap;
+  final int grainSeed;
+  final Color? borderColor;
 
-  const GlassCard({
+  const PrimaryGlassCard({
     super.key,
     required this.child,
+    this.glassTint = DesignSystem.defaultGlassTint,
     this.padding,
     this.margin,
-    this.borderRadius = 20,
-    this.blur = 2.0, // Reduced from 15 for transparent look
-    this.opacity = 0.1, // Reduced from 0.22 for clearer glass
-    this.borderColor,
     this.onTap,
+    this.grainSeed = 42,
+    this.borderColor,
   });
 
   @override
-  Widget build(BuildContext context) {
-    Widget content = ClipRRect(
-      borderRadius: BorderRadius.circular(borderRadius),
-      child: BackdropFilter(
-        filter: ImageFilter.blur(sigmaX: blur, sigmaY: blur),
-        child: Container(
-          decoration: BoxDecoration(
-            color: Colors.white.withValues(alpha: opacity),
-            borderRadius: BorderRadius.circular(borderRadius),
-            border: Border.all(
-              color: borderColor ?? Colors.white.withValues(alpha: 0.2), // Slightly more subtle border
-              width: 0.5,
-            ),
-          ),
-          padding: padding ?? const EdgeInsets.all(16),
-          child: child,
-        ),
-      ),
-    );
-
-    if (onTap != null) {
-      content = GestureDetector(
+  Widget build(BuildContext context) => _buildGlass(
+        child: child,
+        blur: DesignSystem.primaryBlur,
+        tintOpacity: DesignSystem.primaryTintOpacity,
+        borderRadius: DesignSystem.radiusCard,
+        glassTint: glassTint,
+        grainSeed: grainSeed,
+        padding: padding ?? const EdgeInsets.all(DesignSystem.spacingM),
         onTap: onTap,
-        child: content,
+        margin: margin,
+        borderColor: borderColor,
       );
-    }
-
-    if (margin != null) {
-      content = Padding(padding: margin!, child: content);
-    }
-
-    return content;
-  }
 }
 
-/// A glassmorphic container without padding defaults
-/// Simplified version without backdrop filter for performance
-class GlassContainer extends StatelessWidget {
+/// Secondary glass card — blur 14, tint 0.10. For grid detail tiles.
+class SecondaryGlassCard extends StatelessWidget {
   final Widget child;
-  final double borderRadius;
-  final double blur;
-  final double opacity;
-  final Color? borderColor;
-  final BoxConstraints? constraints;
+  final Color glassTint;
+  final EdgeInsetsGeometry? padding;
+  final EdgeInsetsGeometry? margin;
+  final VoidCallback? onTap;
+  final int grainSeed;
 
-  const GlassContainer({
+  const SecondaryGlassCard({
     super.key,
     required this.child,
-    this.borderRadius = 16,
-    this.blur = 2.0, // Reduced from 10
-    this.opacity = 0.1, // Reduced from 0.15
-    this.borderColor,
-    this.constraints,
+    this.glassTint = DesignSystem.defaultGlassTint,
+    this.padding,
+    this.margin,
+    this.onTap,
+    this.grainSeed = 17,
   });
 
   @override
-  Widget build(BuildContext context) {
-    return ClipRRect(
-      borderRadius: BorderRadius.circular(borderRadius),
-      child: BackdropFilter(
-        filter: ImageFilter.blur(sigmaX: blur, sigmaY: blur),
-        child: Container(
-          constraints: constraints,
-          decoration: BoxDecoration(
-            color: Colors.white.withValues(alpha: opacity),
-            borderRadius: BorderRadius.circular(borderRadius),
-            border: Border.all(
-              color: borderColor ?? Colors.white.withValues(alpha: 0.15),
-              width: 0.5,
-            ),
-          ),
-          child: child,
-        ),
-      ),
-    );
-  }
+  Widget build(BuildContext context) => _buildGlass(
+        child: child,
+        blur: DesignSystem.secondaryBlur,
+        tintOpacity: DesignSystem.secondaryTintOpacity,
+        borderRadius: DesignSystem.radiusTile,
+        glassTint: glassTint,
+        grainSeed: grainSeed,
+        padding: padding ?? const EdgeInsets.all(DesignSystem.spacingM),
+        onTap: onTap,
+        margin: margin,
+      );
 }
 
-/// A small glassmorphic pill/chip widget
-/// No backdrop filter for performance in lists
+/// Subtle glass card — blur 8, tint 0.07. For hourly/daily rows.
+class SubtleGlassCard extends StatelessWidget {
+  final Widget child;
+  final Color glassTint;
+  final EdgeInsetsGeometry? padding;
+  final EdgeInsetsGeometry? margin;
+  final VoidCallback? onTap;
+  final int grainSeed;
+
+  const SubtleGlassCard({
+    super.key,
+    required this.child,
+    this.glassTint = DesignSystem.defaultGlassTint,
+    this.padding,
+    this.margin,
+    this.onTap,
+    this.grainSeed = 7,
+  });
+
+  @override
+  Widget build(BuildContext context) => _buildGlass(
+        child: child,
+        blur: DesignSystem.subtleBlur,
+        tintOpacity: DesignSystem.subtleTintOpacity,
+        borderRadius: DesignSystem.radiusTile,
+        glassTint: glassTint,
+        grainSeed: grainSeed,
+        padding: padding ?? const EdgeInsets.all(DesignSystem.spacingS),
+        useBackdropFilter: false,
+        onTap: onTap,
+        margin: margin,
+      );
+}
+
+/// Glass pill — blur 12, tint 0.12. For tags, chips, hourly items.
 class GlassPill extends StatelessWidget {
   final Widget child;
+  final Color glassTint;
   final EdgeInsetsGeometry? padding;
-  final double blur;
+  final VoidCallback? onTap;
+  final int grainSeed;
+  final bool selected;
 
   const GlassPill({
     super.key,
     required this.child,
+    this.glassTint = DesignSystem.defaultGlassTint,
     this.padding,
-    this.blur = 0, // Disabled blur for performance
+    this.onTap,
+    this.grainSeed = 3,
+    this.selected = false,
   });
 
   @override
-  Widget build(BuildContext context) {
-    return Container(
-      padding: padding ?? const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-      decoration: BoxDecoration(
-        color: Colors.white.withValues(alpha: 0.12),
-        borderRadius: BorderRadius.circular(20),
-        border: Border.all(
-          color: Colors.white.withValues(alpha: 0.15),
-          width: 0.5,
-        ),
-      ),
-      child: child,
-    );
-  }
+  Widget build(BuildContext context) => _buildGlass(
+        child: child,
+        blur: DesignSystem.pillBlur,
+        tintOpacity:
+            selected ? DesignSystem.pillTintOpacity + 0.06 : DesignSystem.pillTintOpacity,
+        borderRadius: DesignSystem.radiusPill,
+        glassTint: glassTint,
+        grainSeed: grainSeed,
+        padding: padding ??
+            const EdgeInsets.symmetric(
+              horizontal: DesignSystem.spacingM,
+              vertical: DesignSystem.spacingS,
+            ),
+        useBackdropFilter: false,
+        onTap: onTap,
+        borderColor:
+            selected ? Colors.white.withValues(alpha: 0.35) : null,
+      );
 }
 
-/// A lightweight glass card without BackdropFilter for performance
-/// Used in dense grids where many cards are visible simultaneously
+/// Lightweight glass card — no BackdropFilter. For dense lists.
 class LightGlassCard extends StatelessWidget {
   final Widget child;
+  final Color glassTint;
   final EdgeInsetsGeometry? padding;
   final double borderRadius;
 
   const LightGlassCard({
     super.key,
     required this.child,
+    this.glassTint = DesignSystem.defaultGlassTint,
     this.padding,
-    this.borderRadius = 16,
+    this.borderRadius = DesignSystem.radiusTile,
   });
 
   @override
-  Widget build(BuildContext context) {
-    return Container(
-      padding: padding ?? const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color: Colors.white.withValues(alpha: 0.1), // Reduced from 0.18
-        borderRadius: BorderRadius.circular(borderRadius),
-        border: Border.all(
-          color: Colors.white.withValues(alpha: 0.22),
-          width: 0.5,
-        ),
-      ),
-      child: child,
-    );
-  }
+  Widget build(BuildContext context) => _buildGlass(
+        child: child,
+        blur: 0,
+        tintOpacity: DesignSystem.subtleTintOpacity,
+        borderRadius: borderRadius,
+        glassTint: glassTint,
+        grainSeed: 1,
+        padding: padding ?? const EdgeInsets.all(DesignSystem.spacingM),
+        useBackdropFilter: false,
+      );
 }

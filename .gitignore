@@ -49,3 +49,9 @@ android/key.properties
 keystore/
 *.jks
 *.keystore
+.vscode/settings.json
+CLAUDE.md
+.gitignore
+GEMINI.md
+PROMPT.md
+WeatherMan_clean.zip

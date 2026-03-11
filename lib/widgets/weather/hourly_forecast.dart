@@ -1,77 +1,65 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
-import 'package:weatherman/config/theme.dart';
+import 'package:weatherman/config/design_system.dart';
 import 'package:weatherman/models/weather.dart';
 import 'package:weatherman/providers/settings_provider.dart';
 import 'package:weatherman/utils/date_utils.dart';
-import 'package:weatherman/utils/weather_utils.dart';
 import 'package:weatherman/widgets/glassmorphic/glass_card.dart';
+import 'package:weatherman/widgets/weather/weather_icon_painter.dart';
 
-/// Horizontal scrolling hourly forecast widget
+/// Horizontal scrolling hourly forecast inside a PrimaryGlassCard.
 class HourlyForecastCard extends StatelessWidget {
   final List<HourlyForecast> hourly;
+  final Color glassTint;
 
   const HourlyForecastCard({
     super.key,
     required this.hourly,
+    this.glassTint = DesignSystem.defaultGlassTint,
   });
 
   @override
   Widget build(BuildContext context) {
-    // Get next 24 hours starting from current hour
     final now = DateTime.now();
-    final filteredHourly = hourly.where((h) => h.time.isAfter(now.subtract(const Duration(hours: 1)))).take(24).toList();
+    final filtered = hourly
+        .where((h) => h.time.isAfter(now.subtract(const Duration(hours: 1))))
+        .take(24)
+        .toList();
 
-    return GlassCard(
-      padding: const EdgeInsets.symmetric(vertical: 16),
-      margin: const EdgeInsets.symmetric(horizontal: 16),
+    return PrimaryGlassCard(
+      glassTint: glassTint,
+      padding: const EdgeInsets.only(top: DesignSystem.spacingM, bottom: DesignSystem.spacingS),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          // Header
           Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 16),
-            child: Row(
-              children: [
-                Icon(
-                  Icons.access_time_rounded,
-                  size: 16,
-                  color: AppTheme.textSecondary,
-                ),
-                const SizedBox(width: 8),
-                Text(
-                  'HOURLY FORECAST',
-                  style: Theme.of(context).textTheme.labelLarge?.copyWith(
-                    color: AppTheme.textSecondary,
-                    letterSpacing: 1,
-                  ),
-                ),
-              ],
-            ),
+            padding: const EdgeInsets.symmetric(horizontal: DesignSystem.spacingM),
+            child: Text('HOURLY FORECAST', style: DesignSystem.sectionHeader),
           ),
-
-          const SizedBox(height: 12),
-          
-          // Divider
-          Divider(
-            color: AppTheme.glassBorder,
-            height: 1,
-          ),
-
-          const SizedBox(height: 12),
-
-          // Scrollable hourly items
+          const SizedBox(height: DesignSystem.spacingS),
           SizedBox(
-            height: 100,
-            child: ListView.builder(
+            height: 110,
+            child: ListView.separated(
               scrollDirection: Axis.horizontal,
               physics: const BouncingScrollPhysics(),
-              padding: const EdgeInsets.symmetric(horizontal: 12),
-              itemCount: filteredHourly.length,
-              itemBuilder: (context, index) {
-                return _HourlyItem(
-                  forecast: filteredHourly[index],
-                  isFirst: index == 0,
+              padding: const EdgeInsets.symmetric(horizontal: DesignSystem.spacingM),
+              itemCount: filtered.length,
+              separatorBuilder: (_, _) => const SizedBox(width: DesignSystem.spacingS),
+              itemBuilder: (context, i) {
+                final h = filtered[i];
+                final isNow = i == 0;
+                return GestureDetector(
+                  onTap: () => HapticFeedback.lightImpact(),
+                  child: GlassPill(
+                    glassTint: glassTint,
+                    selected: isNow,
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: DesignSystem.spacingS + 2,
+                      vertical: DesignSystem.spacingS,
+                    ),
+                    child: _HourlyContent(forecast: h, isNow: isNow),
+                  ),
                 );
               },
             ),
@@ -82,69 +70,47 @@ class HourlyForecastCard extends StatelessWidget {
   }
 }
 
-class _HourlyItem extends StatelessWidget {
+class _HourlyContent extends StatelessWidget {
   final HourlyForecast forecast;
-  final bool isFirst;
-
-  const _HourlyItem({
-    required this.forecast,
-    required this.isFirst,
-  });
+  final bool isNow;
+  const _HourlyContent({required this.forecast, required this.isNow});
 
   @override
   Widget build(BuildContext context) {
     final settings = context.watch<SettingsProvider>();
-    
-    return Container(
-      width: 60,
-      padding: const EdgeInsets.symmetric(horizontal: 4),
-      child: Column(
-        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-        children: [
-          // Time
+    return Column(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        Text(
+          DateTimeUtils.formatHourOrNow(forecast.time),
+          style: DesignSystem.caption.copyWith(
+            color: isNow ? DesignSystem.textPrimary : DesignSystem.textSecondary,
+            fontWeight: isNow ? FontWeight.w600 : FontWeight.w400,
+          ),
+        ),
+        const SizedBox(height: 6),
+        WeatherIconPainter.forCode(
+          forecast.weatherCode,
+          isDay: forecast.isDay,
+          size: DesignSystem.iconHourly,
+        ),
+        const SizedBox(height: 4),
+        if (forecast.precipitationProbability > 5)
           Text(
-            DateTimeUtils.formatHourOrNow(forecast.time),
-            style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-              color: isFirst ? AppTheme.textPrimary : AppTheme.textSecondary,
-              fontWeight: isFirst ? FontWeight.w600 : FontWeight.w400,
+            '${forecast.precipitationProbability}%',
+            style: DesignSystem.caption.copyWith(
+              fontSize: 10,
+              color: Colors.lightBlueAccent.withValues(alpha: 0.9),
             ),
-          ),
-
-          // Icon
-          Icon(
-            WeatherUtils.getWeatherIcon(forecast.weatherCode, isDay: forecast.isDay),
-            size: 28,
-            color: WeatherUtils.getWeatherIconColor(forecast.weatherCode, isDay: forecast.isDay),
-            shadows: const [
-              Shadow(
-                color: Color(0x80000000),
-                blurRadius: 4,
-                offset: Offset(0, 2),
-              ),
-            ],
-          ),
-
-          // Precipitation probability
-          if (forecast.precipitationProbability > 0)
-            Text(
-              '${forecast.precipitationProbability}%',
-              style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                color: AppTheme.textSecondary, // Monochromatic (was blue)
-                fontWeight: FontWeight.w600,
-              ),
-            )
-          else
-            const SizedBox(height: 14),
-
-          // Temperature
-          Text(
-            settings.formatTempShort(forecast.temperature),
-            style: Theme.of(context).textTheme.bodyLarge?.copyWith(
-              fontWeight: FontWeight.w500,
-            ),
-          ),
-        ],
-      ),
+          )
+        else
+          const SizedBox(height: 14),
+        const SizedBox(height: 2),
+        Text(
+          settings.formatTempShort(forecast.temperature),
+          style: DesignSystem.bodyText.copyWith(fontWeight: FontWeight.w500),
+        ),
+      ],
     );
   }
 }

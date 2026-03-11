@@ -1,235 +1,176 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import 'package:weatherman/config/theme.dart';
+import 'package:weatherman/config/design_system.dart';
 import 'package:weatherman/models/weather.dart';
 import 'package:weatherman/providers/settings_provider.dart';
 import 'package:weatherman/utils/date_utils.dart';
-import 'package:weatherman/utils/weather_utils.dart';
 import 'package:weatherman/widgets/glassmorphic/glass_card.dart';
+import 'package:weatherman/widgets/weather/weather_icon_painter.dart';
 
-/// 10-day forecast list widget
+/// 10-day forecast list inside a PrimaryGlassCard.
 class DailyForecastCard extends StatelessWidget {
   final List<DailyForecast> daily;
+  final Color glassTint;
 
   const DailyForecastCard({
     super.key,
     required this.daily,
+    this.glassTint = DesignSystem.defaultGlassTint,
   });
 
   @override
   Widget build(BuildContext context) {
     final settings = context.watch<SettingsProvider>();
-    
-    // Find min and max temps for the bar visualization
-    final allTemps = daily.expand((d) => [d.temperatureMax, d.temperatureMin]).toList();
-    final globalMin = allTemps.reduce((a, b) => a < b ? a : b);
-    final globalMax = allTemps.reduce((a, b) => a > b ? a : b);
-    final tempRange = globalMax - globalMin;
+    final allTemps = daily.expand((d) => [d.temperatureMax, d.temperatureMin]);
+    final gMin = allTemps.reduce((a, b) => a < b ? a : b);
+    final gMax = allTemps.reduce((a, b) => a > b ? a : b);
+    final range = gMax - gMin;
 
-    return GlassCard(
-      padding: const EdgeInsets.symmetric(vertical: 16),
-      margin: const EdgeInsets.symmetric(horizontal: 16),
+    return PrimaryGlassCard(
+      glassTint: glassTint,
+      padding: const EdgeInsets.symmetric(vertical: DesignSystem.spacingM),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          // Header
           Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 16),
-            child: Row(
-              children: [
-                Icon(
-                  Icons.calendar_today_rounded,
-                  size: 16,
-                  color: AppTheme.textSecondary,
-                ),
-                const SizedBox(width: 8),
-                Text(
-                  '10-DAY FORECAST',
-                  style: Theme.of(context).textTheme.labelLarge?.copyWith(
-                    color: AppTheme.textSecondary,
-                    letterSpacing: 1,
-                  ),
-                ),
-              ],
-            ),
+            padding: const EdgeInsets.symmetric(horizontal: DesignSystem.spacingM),
+            child: Text('10-DAY FORECAST', style: DesignSystem.sectionHeader),
           ),
-
-          const SizedBox(height: 12),
-          
-          // Divider
-          Divider(
-            color: AppTheme.glassBorder,
-            height: 1,
-          ),
-
-          // Daily items
-          ...daily.asMap().entries.map((entry) {
-            final index = entry.key;
-            final day = entry.value;
-            final isLast = index == daily.length - 1;
-            
-            return _DailyItem(
-              forecast: day,
-              globalMin: globalMin,
-              tempRange: tempRange,
-              settings: settings,
-              showDivider: !isLast,
-            );
-          }),
+          const SizedBox(height: DesignSystem.spacingS),
+          ...daily.map((d) => _DailyRow(
+                forecast: d,
+                gMin: gMin,
+                range: range,
+                settings: settings,
+                glassTint: glassTint,
+              )),
         ],
       ),
     );
   }
 }
 
-class _DailyItem extends StatelessWidget {
+class _DailyRow extends StatelessWidget {
   final DailyForecast forecast;
-  final double globalMin;
-  final double tempRange;
+  final double gMin;
+  final double range;
   final SettingsProvider settings;
-  final bool showDivider;
+  final Color glassTint;
 
-  const _DailyItem({
+  const _DailyRow({
     required this.forecast,
-    required this.globalMin,
-    required this.tempRange,
+    required this.gMin,
+    required this.range,
     required this.settings,
-    required this.showDivider,
+    required this.glassTint,
   });
 
   @override
   Widget build(BuildContext context) {
-    // Calculate positions for the temperature bar
-    final lowPercent = tempRange > 0 ? (forecast.temperatureMin - globalMin) / tempRange : 0.0;
-    final highPercent = tempRange > 0 ? (forecast.temperatureMax - globalMin) / tempRange : 1.0;
+    final lowPct = range > 0 ? (forecast.temperatureMin - gMin) / range : 0.0;
+    final highPct = range > 0 ? (forecast.temperatureMax - gMin) / range : 1.0;
 
-    return Column(
-      children: [
-        Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-          child: Row(
-            children: [
-              // Day name
-              SizedBox(
-                width: 80,
-                child: Text(
-                  DateTimeUtils.formatDayName(forecast.date),
-                  style: Theme.of(context).textTheme.bodyLarge?.copyWith(
-                    fontWeight: DateTimeUtils.isToday(forecast.date)
-                        ? FontWeight.w600
-                        : FontWeight.w400,
-                  ),
-                ),
+    return Padding(
+      padding: const EdgeInsets.symmetric(
+        horizontal: DesignSystem.spacingM,
+        vertical: 6,
+      ),
+      child: Row(
+        children: [
+          // Day
+          SizedBox(
+            width: 78,
+            child: Text(
+              DateTimeUtils.formatDayName(forecast.date),
+              style: DesignSystem.bodyText.copyWith(
+                fontWeight: DateTimeUtils.isToday(forecast.date)
+                    ? FontWeight.w600
+                    : FontWeight.w400,
               ),
-
-              // Weather icon
-              SizedBox(
-                width: 40,
-                child: Icon(
-                  WeatherUtils.getWeatherIcon(forecast.weatherCode),
-                  size: 24,
-                  color: WeatherUtils.getWeatherIconColor(forecast.weatherCode),
-                  shadows: const [
-                    Shadow(
-                      color: Color(0x80000000),
-                      blurRadius: 4,
-                      offset: Offset(0, 2),
-                    ),
-                  ],
-                ),
-              ),
-
-              // Precipitation probability
-              SizedBox(
-                width: 40,
-                child: forecast.precipitationProbabilityMax > 0
-                    ? Text(
-                        '${forecast.precipitationProbabilityMax}%',
-                        style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                          color: AppTheme.textSecondary, // Monochromatic (was blue)
-                          fontWeight: FontWeight.w600,
-                        ),
-                      )
-                    : null,
-              ),
-
-              // Low temp
-              SizedBox(
-                width: 40,
-                child: Text(
-                  settings.formatTempShort(forecast.temperatureMin),
-                  style: Theme.of(context).textTheme.bodyLarge?.copyWith(
-                    color: AppTheme.textSecondary,
-                  ),
-                  textAlign: TextAlign.right,
-                ),
-              ),
-
-              const SizedBox(width: 12),
-
-              // Temperature bar
-              Expanded(
-                child: LayoutBuilder(
-                  builder: (context, constraints) {
-                    final barWidth = constraints.maxWidth;
-                    final leftMargin = barWidth * lowPercent;
-                    final barLength = barWidth * (highPercent - lowPercent);
-
-                    return Container(
-                      height: 6,
-                      decoration: BoxDecoration(
-                        color: Colors.white.withValues(alpha: 0.1),
-                        borderRadius: BorderRadius.circular(3),
-                      ),
-                      child: Stack(
-                        children: [
-                          Positioned(
-                            left: leftMargin,
-                            child: Container(
-                              width: barLength.clamp(8.0, barWidth),
-                              height: 6,
-                              decoration: BoxDecoration(
-                                gradient: LinearGradient(
-                                  colors: [
-                                    const Color(0xFF64B5F6),
-                                    const Color(0xFFFFB74D),
-                                  ],
-                                ),
-                                borderRadius: BorderRadius.circular(3),
-                              ),
-                            ),
-                          ),
-                        ],
-                      ),
-                    );
-                  },
-                ),
-              ),
-
-              const SizedBox(width: 12),
-
-              // High temp
-              SizedBox(
-                width: 40,
-                child: Text(
-                  settings.formatTempShort(forecast.temperatureMax),
-                  style: Theme.of(context).textTheme.bodyLarge,
-                  textAlign: TextAlign.left,
-                ),
-              ),
-            ],
-          ),
-        ),
-
-        if (showDivider)
-          Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 16),
-            child: Divider(
-              color: AppTheme.glassBorder,
-              height: 1,
             ),
           ),
-      ],
+          // Icon
+          SizedBox(
+            width: 28,
+            child: WeatherIconPainter.forCode(
+              forecast.weatherCode,
+              size: DesignSystem.iconDetail,
+            ),
+          ),
+          const SizedBox(width: 4),
+          // Precip
+          SizedBox(
+            width: 36,
+            child: forecast.precipitationProbabilityMax > 5
+                ? Text(
+                    '${forecast.precipitationProbabilityMax}%',
+                    style: DesignSystem.caption.copyWith(
+                      color: Colors.lightBlueAccent.withValues(alpha: 0.9),
+                      fontWeight: FontWeight.w600,
+                      fontSize: 11,
+                    ),
+                  )
+                : const SizedBox.shrink(),
+          ),
+          // Min temp
+          SizedBox(
+            width: 36,
+            child: Text(
+              settings.formatTempShort(forecast.temperatureMin),
+              style: DesignSystem.bodyText.copyWith(color: DesignSystem.textTertiary),
+              textAlign: TextAlign.right,
+            ),
+          ),
+          const SizedBox(width: 8),
+          // Gradient bar
+          Expanded(child: _TempBar(lowPct: lowPct, highPct: highPct)),
+          const SizedBox(width: 8),
+          // Max temp
+          SizedBox(
+            width: 36,
+            child: Text(
+              settings.formatTempShort(forecast.temperatureMax),
+              style: DesignSystem.bodyText,
+            ),
+          ),
+        ],
+      ),
     );
+  }
+}
+
+class _TempBar extends StatelessWidget {
+  final double lowPct, highPct;
+  const _TempBar({required this.lowPct, required this.highPct});
+
+  @override
+  Widget build(BuildContext context) {
+    return LayoutBuilder(builder: (_, c) {
+      final w = c.maxWidth;
+      final left = w * lowPct;
+      final bar = (w * (highPct - lowPct)).clamp(6.0, w);
+      return Container(
+        height: 5,
+        decoration: BoxDecoration(
+          color: Colors.white.withValues(alpha: 0.08),
+          borderRadius: BorderRadius.circular(3),
+        ),
+        child: Stack(children: [
+          Positioned(
+            left: left,
+            child: Container(
+              width: bar,
+              height: 5,
+              decoration: BoxDecoration(
+                gradient: const LinearGradient(
+                  colors: [Color(0xFF64B5F6), Color(0xFFFFB74D)],
+                ),
+                borderRadius: BorderRadius.circular(3),
+              ),
+            ),
+          ),
+        ]),
+      );
+    });
   }
 }
