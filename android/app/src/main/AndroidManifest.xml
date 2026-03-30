@@ -9,7 +9,7 @@
     <uses-permission android:name="android.permission.REQUEST_IGNORE_BATTERY_OPTIMIZATIONS"/>
     
     <application
-        android:label="CyberWeather"
+        android:label="SappyWeather"
         android:name="${applicationName}"
         android:icon="@mipmap/ic_launcher"
         android:enableOnBackInvokedCallback="true">
@@ -38,9 +38,9 @@
 
         <!-- Home screen widget provider -->
         <receiver
-            android:name="com.sappy.cyberweather.WeatherHomeWidgetProvider"
+            android:name="com.sappy.weather.WeatherHomeWidgetProvider"
             android:exported="false"
-            android:label="CyberWeather">
+            android:label="SappyWeather">
             <intent-filter>
                 <action android:name="android.appwidget.action.APPWIDGET_UPDATE"/>
             </intent-filter>

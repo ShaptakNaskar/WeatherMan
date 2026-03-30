@@ -1,5 +1,6 @@
 import 'dart:convert';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:weatherman/config/app_theme_data.dart';
 import 'package:weatherman/models/location.dart';
 import 'package:weatherman/models/weather.dart';
 import 'package:weatherman/utils/unit_converter.dart';
@@ -22,6 +23,7 @@ class StorageService {
   static const String _notifPromptedKey = 'notif_prompted';
   static const String _batteryPromptedKey = 'battery_prompted';
   static const String _lastSevereHashKey = 'last_severe_hash';
+  static const String _themeKey = 'app_theme';
 
   SharedPreferences? _prefs;
 
@@ -295,5 +297,20 @@ class StorageService {
   Future<void> _setDate(String key, DateTime value) async {
     final p = await prefs;
     await p.setString(key, value.toIso8601String());
+  }
+
+  // --- Theme ---
+  Future<AppThemeType> getTheme() async {
+    final p = await prefs;
+    final value = p.getString(_themeKey);
+    for (final t in AppThemeType.values) {
+      if (t.name == value) return t;
+    }
+    return AppThemeType.cyberpunk;
+  }
+
+  Future<void> setTheme(AppThemeType theme) async {
+    final p = await prefs;
+    await p.setString(_themeKey, theme.name);
   }
 }

@@ -1,10 +1,11 @@
 import 'package:flutter/material.dart';
-import 'package:weatherman/config/cyberpunk_theme.dart';
+import 'package:provider/provider.dart';
 import 'package:weatherman/models/weather.dart';
+import 'package:weatherman/providers/theme_provider.dart';
 import 'package:weatherman/utils/date_utils.dart';
 import 'package:weatherman/utils/unit_converter.dart';
 import 'package:weatherman/utils/weather_utils.dart';
-import 'package:weatherman/widgets/cyberpunk/cyber_glass_card.dart';
+import 'package:weatherman/widgets/themed/themed_card.dart';
 
 /// Weather details grid showing UV index, humidity, wind, etc.
 class WeatherDetailsGrid extends StatelessWidget {
@@ -23,14 +24,12 @@ class WeatherDetailsGrid extends StatelessWidget {
   Widget build(BuildContext context) {
     return LayoutBuilder(
       builder: (context, constraints) {
-        // Use 3 columns in landscape (wider), 2 in portrait
         final isWide = constraints.maxWidth > 600;
         final columns = isWide ? 3 : 2;
         final spacing = 12.0;
         final cardWidth = (constraints.maxWidth - 32 - (spacing * (columns - 1))) / columns;
 
         final cards = <Widget>[
-          // UV Index
           SizedBox(
             width: cardWidth,
             child: _DetailCard(
@@ -41,7 +40,6 @@ class WeatherDetailsGrid extends StatelessWidget {
               valueColor: WeatherUtils.getUvColor(current.uvIndex),
             ),
           ),
-          // Sunset
           SizedBox(
             width: cardWidth,
             child: _DetailCard(
@@ -51,7 +49,6 @@ class WeatherDetailsGrid extends StatelessWidget {
               subtitle: 'Sunrise: ${DateTimeUtils.formatTime(today.sunrise)}',
             ),
           ),
-          // Wind
           SizedBox(
             width: cardWidth,
             child: _WindCard(
@@ -60,7 +57,6 @@ class WeatherDetailsGrid extends StatelessWidget {
               gusts: current.windGusts,
             ),
           ),
-          // Feels Like
           SizedBox(
             width: cardWidth,
             child: _DetailCard(
@@ -70,7 +66,6 @@ class WeatherDetailsGrid extends StatelessWidget {
               subtitle: _getFeelsLikeDescription(current),
             ),
           ),
-          // Humidity
           SizedBox(
             width: cardWidth,
             child: _DetailCard(
@@ -80,7 +75,6 @@ class WeatherDetailsGrid extends StatelessWidget {
               subtitle: _getHumidityDescription(current.relativeHumidity),
             ),
           ),
-          // Rainfall
           SizedBox(
             width: cardWidth,
             child: _DetailCard(
@@ -90,12 +84,10 @@ class WeatherDetailsGrid extends StatelessWidget {
               subtitle: 'Expected today',
             ),
           ),
-          // Pressure
           SizedBox(
             width: cardWidth,
             child: _PressureCard(pressure: current.pressure),
           ),
-          // Cloud Cover
           SizedBox(
             width: cardWidth,
             child: _DetailCard(
@@ -105,17 +97,15 @@ class WeatherDetailsGrid extends StatelessWidget {
               subtitle: _getCloudDescription(current.cloudCover),
             ),
           ),
-          // Visibility
           SizedBox(
             width: cardWidth,
             child: _VisibilityCard(visibility: current.visibility),
           ),
-          // AQI
           SizedBox(
             width: cardWidth,
             child: airQuality != null
                 ? _AqiCard(airQuality: airQuality!)
-                : _DetailCard(
+                : const _DetailCard(
                     icon: Icons.air_rounded,
                     title: 'AIR QUALITY',
                     value: '--',
@@ -176,45 +166,42 @@ class _DetailCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return CyberLightCard(
+    final t = context.watch<ThemeProvider>().current;
+
+    return ThemedLightCard(
       padding: const EdgeInsets.all(16),
       child: SizedBox(
         height: 100,
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            // Icon and title
             Row(
               children: [
-                Icon(icon, size: 16, color: CyberpunkTheme.textSecondary),
+                Icon(icon, size: 16, color: t.textSecondary),
                 const SizedBox(width: 6),
                 Text(
                   title,
                   style: Theme.of(context).textTheme.labelSmall?.copyWith(
-                    color: CyberpunkTheme.textSecondary,
-                    letterSpacing: 0.5,
-                  ),
+                        color: t.textSecondary,
+                        letterSpacing: 0.5,
+                      ),
                 ),
               ],
             ),
-
             const SizedBox(height: 12),
-
-            // Value
             Text(
               value,
               style: Theme.of(context).textTheme.headlineMedium?.copyWith(
-                color: valueColor ?? CyberpunkTheme.textPrimary,
-              ),
+                    color: valueColor ?? t.textPrimary,
+                  ),
             ),
-
             if (subtitle != null) ...[
               const Spacer(),
               Text(
                 subtitle!,
                 style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                  color: CyberpunkTheme.textSecondary,
-                ),
+                      color: t.textSecondary,
+                    ),
               ),
             ],
           ],
@@ -238,31 +225,29 @@ class _WindCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return CyberLightCard(
+    final t = context.watch<ThemeProvider>().current;
+
+    return ThemedLightCard(
       padding: const EdgeInsets.all(16),
       child: SizedBox(
         height: 100,
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            // Icon and title
             Row(
               children: [
-                Icon(Icons.air, size: 16, color: CyberpunkTheme.textSecondary),
+                Icon(Icons.air, size: 16, color: t.textSecondary),
                 const SizedBox(width: 6),
                 Text(
                   'WIND',
                   style: Theme.of(context).textTheme.labelSmall?.copyWith(
-                    color: CyberpunkTheme.textSecondary,
-                    letterSpacing: 0.5,
-                  ),
+                        color: t.textSecondary,
+                        letterSpacing: 0.5,
+                      ),
                 ),
               ],
             ),
-
             const SizedBox(height: 12),
-
-            // Wind speed and direction
             Row(
               crossAxisAlignment: CrossAxisAlignment.end,
               children: [
@@ -276,30 +261,27 @@ class _WindCard extends StatelessWidget {
                   child: Text(
                     'km/h',
                     style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                      color: CyberpunkTheme.textSecondary,
-                    ),
+                          color: t.textSecondary,
+                        ),
                   ),
                 ),
                 const Spacer(),
-                // Compass arrow
                 Transform.rotate(
                   angle: direction * 3.14159 / 180,
                   child: Icon(
                     Icons.navigation_rounded,
-                    color: CyberpunkTheme.textSecondary,
+                    color: t.textSecondary,
                     size: 24,
                   ),
                 ),
               ],
             ),
-
             const Spacer(),
-
             Text(
               '${WeatherUtils.getWindDirection(direction)} · Gusts ${gusts.round()} km/h',
               style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                color: CyberpunkTheme.textSecondary,
-              ),
+                    color: t.textSecondary,
+                  ),
             ),
           ],
         ),
@@ -308,7 +290,7 @@ class _WindCard extends StatelessWidget {
   }
 }
 
-/// Pressure card with gauge
+/// Pressure card
 class _PressureCard extends StatelessWidget {
   final double pressure;
 
@@ -316,7 +298,8 @@ class _PressureCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    // Normal range is roughly 980-1050 hPa
+    final t = context.watch<ThemeProvider>().current;
+
     String description;
     if (pressure < 1000) {
       description = 'Low pressure';
@@ -326,31 +309,27 @@ class _PressureCard extends StatelessWidget {
       description = 'High pressure';
     }
 
-    return CyberLightCard(
+    return ThemedLightCard(
       padding: const EdgeInsets.all(16),
       child: SizedBox(
         height: 100,
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            // Icon and title
             Row(
               children: [
-                Icon(Icons.speed_outlined, size: 16, color: CyberpunkTheme.textSecondary),
+                Icon(Icons.speed_outlined, size: 16, color: t.textSecondary),
                 const SizedBox(width: 6),
                 Text(
                   'PRESSURE',
                   style: Theme.of(context).textTheme.labelSmall?.copyWith(
-                    color: CyberpunkTheme.textSecondary,
-                    letterSpacing: 0.5,
-                  ),
+                        color: t.textSecondary,
+                        letterSpacing: 0.5,
+                      ),
                 ),
               ],
             ),
-
             const SizedBox(height: 12),
-
-            // Pressure value
             Row(
               crossAxisAlignment: CrossAxisAlignment.end,
               children: [
@@ -364,20 +343,18 @@ class _PressureCard extends StatelessWidget {
                   child: Text(
                     'hPa',
                     style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                      color: CyberpunkTheme.textSecondary,
-                    ),
+                          color: t.textSecondary,
+                        ),
                   ),
                 ),
               ],
             ),
-
             const Spacer(),
-
             Text(
               description,
               style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                color: CyberpunkTheme.textSecondary,
-              ),
+                    color: t.textSecondary,
+                  ),
             ),
           ],
         ),
@@ -394,6 +371,8 @@ class _VisibilityCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final t = context.watch<ThemeProvider>().current;
+
     String description;
     if (visibility >= 10000) {
       description = 'Excellent';
@@ -414,43 +393,37 @@ class _VisibilityCard extends StatelessWidget {
       value = '${visibility.round()} m';
     }
 
-    return CyberLightCard(
+    return ThemedLightCard(
       padding: const EdgeInsets.all(16),
       child: SizedBox(
         height: 100,
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            // Icon and title
             Row(
               children: [
-                Icon(Icons.visibility_outlined, size: 16, color: CyberpunkTheme.textSecondary),
+                Icon(Icons.visibility_outlined, size: 16, color: t.textSecondary),
                 const SizedBox(width: 6),
                 Text(
                   'VISIBILITY',
                   style: Theme.of(context).textTheme.labelSmall?.copyWith(
-                    color: CyberpunkTheme.textSecondary,
-                    letterSpacing: 0.5,
-                  ),
+                        color: t.textSecondary,
+                        letterSpacing: 0.5,
+                      ),
                 ),
               ],
             ),
-
             const SizedBox(height: 12),
-
-            // Visibility value
             Text(
               value,
               style: Theme.of(context).textTheme.headlineMedium,
             ),
-
             const Spacer(),
-
             Text(
               description,
               style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                color: CyberpunkTheme.textSecondary,
-              ),
+                    color: t.textSecondary,
+                  ),
             ),
           ],
         ),
@@ -467,38 +440,35 @@ class _AqiCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final t = context.watch<ThemeProvider>().current;
     final category = airQuality.category;
 
-    return CyberLightCard(
+    return ThemedLightCard(
       padding: const EdgeInsets.all(16),
       child: SizedBox(
         height: 100,
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            // Icon and title
             Row(
               children: [
-                Icon(Icons.air_rounded, size: 16, color: CyberpunkTheme.textSecondary),
+                Icon(Icons.air_rounded, size: 16, color: t.textSecondary),
                 const SizedBox(width: 6),
                 Text(
                   'AIR QUALITY',
                   style: Theme.of(context).textTheme.labelSmall?.copyWith(
-                    color: CyberpunkTheme.textSecondary,
-                    letterSpacing: 0.5,
-                  ),
+                        color: t.textSecondary,
+                        letterSpacing: 0.5,
+                      ),
                 ),
               ],
             ),
-
             const SizedBox(height: 12),
-
-            // AQI value with color indicator
             Row(
               children: [
                 Text(
                   '${airQuality.usAqi}',
-                  style: Theme.of(context).textTheme.headlineMedium, // Monochromatic (White)
+                  style: Theme.of(context).textTheme.headlineMedium,
                 ),
                 const SizedBox(width: 8),
                 Container(
@@ -511,16 +481,14 @@ class _AqiCard extends StatelessWidget {
                 ),
               ],
             ),
-
             const Spacer(),
-
             Text(
-              category.label.length > 15 
-                  ? category.label.split(' ').first 
+              category.label.length > 15
+                  ? category.label.split(' ').first
                   : category.label,
               style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                color: CyberpunkTheme.textSecondary, // Monochromatic
-              ),
+                    color: t.textSecondary,
+                  ),
               overflow: TextOverflow.ellipsis,
             ),
           ],

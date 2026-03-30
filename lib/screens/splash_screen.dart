@@ -85,7 +85,7 @@ class _CyberpunkSplashScreenState extends State<CyberpunkSplashScreen>
 
     // Boot complete
     setState(() {
-      _bootLines.add(_BootLine('> CyberWeather ONLINE', CyberpunkTheme.neonGreen));
+      _bootLines.add(_BootLine('> SappyWeather ONLINE', CyberpunkTheme.neonGreen));
       _bootComplete = true;
     });
 
@@ -206,7 +206,7 @@ class _CyberpunkSplashScreenState extends State<CyberpunkSplashScreen>
                           children: [
                             // App name
                             Text(
-                              'CyberWeather',
+                              'SappyWeather',
                               style: TextStyle(
                                 fontFamily: 'monospace',
                                 fontSize: 32,
@@ -241,7 +241,7 @@ class _CyberpunkSplashScreenState extends State<CyberpunkSplashScreen>
                   // Bottom info
                   Center(
                     child: Text(
-                      'v1.1.0_CYBER',
+                      'v2.0.0_CYBER',
                       style: TextStyle(
                         fontFamily: 'monospace',
                         fontSize: 9,

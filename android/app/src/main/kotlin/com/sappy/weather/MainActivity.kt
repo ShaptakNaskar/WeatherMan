@@ -1,4 +1,4 @@
-package com.sappy.cyberweather
+package com.sappy.weather
 
 import io.flutter.embedding.android.FlutterActivity
 

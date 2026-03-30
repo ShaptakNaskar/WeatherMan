@@ -1,20 +1,13 @@
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 import 'package:weatherman/models/weather.dart';
-import 'package:weatherman/widgets/cyberpunk/cyber_glass_card.dart';
+import 'package:weatherman/providers/theme_provider.dart';
+import 'package:weatherman/widgets/themed/themed_card.dart';
 
 /// Advanced weather details widget with categorized data
 class AdvancedDetailsCard extends StatelessWidget {
   final WeatherData weather;
   final String Function(double, {bool showUnit}) formatTemp;
-
-  // Text shadows for legibility
-  static const List<Shadow> _textShadows = [
-    Shadow(
-      color: Color(0x80000000),
-      blurRadius: 4,
-      offset: Offset(0, 1),
-    ),
-  ];
 
   const AdvancedDetailsCard({
     super.key,
@@ -24,6 +17,7 @@ class AdvancedDetailsCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final t = context.watch<ThemeProvider>().current;
     final current = weather.current;
     final today = weather.daily.isNotEmpty ? weather.daily.first : null;
     final airQuality = weather.airQuality;
@@ -37,15 +31,16 @@ class AdvancedDetailsCard extends StatelessWidget {
           child: Text(
             'Detailed Conditions',
             style: Theme.of(context).textTheme.titleLarge?.copyWith(
-              fontWeight: FontWeight.w600,
-              shadows: _textShadows,
-            ),
+                  fontWeight: FontWeight.w600,
+                  shadows: t.textShadows,
+                ),
           ),
         ),
 
         // Atmosphere Section
         _buildSection(
           context,
+          t,
           icon: Icons.cloud_outlined,
           title: 'Atmosphere',
           items: [
@@ -63,6 +58,7 @@ class AdvancedDetailsCard extends StatelessWidget {
         // Wind Section
         _buildSection(
           context,
+          t,
           icon: Icons.air_rounded,
           title: 'Wind',
           items: [
@@ -79,6 +75,7 @@ class AdvancedDetailsCard extends StatelessWidget {
         // Precipitation Section
         _buildSection(
           context,
+          t,
           icon: Icons.water_drop_outlined,
           title: 'Precipitation',
           items: [
@@ -102,6 +99,7 @@ class AdvancedDetailsCard extends StatelessWidget {
         if (today != null)
           _buildSection(
             context,
+            t,
             icon: Icons.wb_sunny_outlined,
             title: 'Sun & Daylight',
             items: [
@@ -119,6 +117,7 @@ class AdvancedDetailsCard extends StatelessWidget {
         // UV Section
         _buildSection(
           context,
+          t,
           icon: Icons.wb_twilight_rounded,
           title: 'UV & Radiation',
           items: [
@@ -132,55 +131,53 @@ class AdvancedDetailsCard extends StatelessWidget {
         // Air Quality Section (if available)
         if (airQuality != null) ...[
           const SizedBox(height: 12),
-          _buildAirQualitySection(context, airQuality),
+          _buildAirQualitySection(context, t, airQuality),
         ],
       ],
     );
   }
 
   Widget _buildSection(
-    BuildContext context, {
+    BuildContext context,
+    dynamic t, {
     required IconData icon,
     required String title,
     required List<_DetailItem> items,
   }) {
-    // Filter out empty items
     final validItems = items.where((item) => item.value.isNotEmpty).toList();
     if (validItems.isEmpty) {
       return const SizedBox.shrink();
     }
 
-    return CyberGlassCard(
+    return ThemedCard(
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          // Section header
           Row(
             children: [
-              Icon(icon, size: 20, color: Colors.white.withValues(alpha: 0.8), shadows: _textShadows),
+              Icon(icon, size: 20, color: t.textSecondary, shadows: t.textShadows),
               const SizedBox(width: 8),
               Text(
                 title,
                 style: Theme.of(context).textTheme.titleSmall?.copyWith(
-                  fontWeight: FontWeight.w600,
-                  shadows: _textShadows,
-                ),
+                      fontWeight: FontWeight.w600,
+                      shadows: t.textShadows,
+                    ),
               ),
             ],
           ),
           const SizedBox(height: 12),
-          // Grid of items
           Wrap(
             spacing: 16,
             runSpacing: 8,
-            children: validItems.map((item) => _buildDetailItem(context, item)).toList(),
+            children: validItems.map((item) => _buildDetailItem(context, t, item)).toList(),
           ),
         ],
       ),
     );
   }
 
-  Widget _buildDetailItem(BuildContext context, _DetailItem item) {
+  Widget _buildDetailItem(BuildContext context, dynamic t, _DetailItem item) {
     return SizedBox(
       width: 100,
       child: Column(
@@ -189,43 +186,41 @@ class AdvancedDetailsCard extends StatelessWidget {
           Text(
             item.label,
             style: Theme.of(context).textTheme.bodySmall?.copyWith(
-              color: Colors.white.withValues(alpha: 0.6),
-              shadows: _textShadows,
-            ),
+                  color: t.textSecondary,
+                  shadows: t.textShadows,
+                ),
           ),
           Text(
             item.value,
             style: Theme.of(context).textTheme.bodyLarge?.copyWith(
-              fontWeight: FontWeight.w500,
-              shadows: _textShadows,
-            ),
+                  fontWeight: FontWeight.w500,
+                  shadows: t.textShadows,
+                ),
           ),
         ],
       ),
     );
   }
 
-  Widget _buildAirQualitySection(BuildContext context, AirQuality aq) {
+  Widget _buildAirQualitySection(BuildContext context, dynamic t, AirQuality aq) {
     final category = aq.category;
-    
-    return CyberGlassCard(
+
+    return ThemedCard(
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          // Section header with AQI badge
           Row(
             children: [
-              Icon(Icons.air_rounded, size: 20, color: Colors.white.withValues(alpha: 0.8), shadows: _textShadows),
+              Icon(Icons.air_rounded, size: 20, color: t.textSecondary, shadows: t.textShadows),
               const SizedBox(width: 8),
               Text(
                 'Air Quality',
                 style: Theme.of(context).textTheme.titleSmall?.copyWith(
-                  fontWeight: FontWeight.w600,
-                  shadows: _textShadows,
-                ),
+                      fontWeight: FontWeight.w600,
+                      shadows: t.textShadows,
+                    ),
               ),
               const Spacer(),
-              // AQI badge
               Container(
                 padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
                 decoration: BoxDecoration(
@@ -244,25 +239,23 @@ class AdvancedDetailsCard extends StatelessWidget {
             ],
           ),
           const SizedBox(height: 8),
-          // Category label
           Text(
             category.label,
             style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-              color: Color(category.color),
-              fontWeight: FontWeight.w500,
-              shadows: _textShadows,
-            ),
+                  color: Color(category.color),
+                  fontWeight: FontWeight.w500,
+                  shadows: t.textShadows,
+                ),
           ),
           const SizedBox(height: 12),
-          // Pollutant details
           Wrap(
             spacing: 16,
             runSpacing: 8,
             children: [
-              _buildDetailItem(context, _DetailItem('PM2.5', '${aq.pm2_5.round()} µg/m³')),
-              _buildDetailItem(context, _DetailItem('PM10', '${aq.pm10.round()} µg/m³')),
-              _buildDetailItem(context, _DetailItem('Ozone', '${aq.ozone.round()} µg/m³')),
-              _buildDetailItem(context, _DetailItem('NO₂', '${aq.nitrogenDioxide.round()} µg/m³')),
+              _buildDetailItem(context, t, _DetailItem('PM2.5', '${aq.pm2_5.round()} µg/m³')),
+              _buildDetailItem(context, t, _DetailItem('PM10', '${aq.pm10.round()} µg/m³')),
+              _buildDetailItem(context, t, _DetailItem('Ozone', '${aq.ozone.round()} µg/m³')),
+              _buildDetailItem(context, t, _DetailItem('NO₂', '${aq.nitrogenDioxide.round()} µg/m³')),
             ],
           ),
         ],
@@ -281,8 +274,10 @@ class AdvancedDetailsCard extends StatelessWidget {
   }
 
   String _formatWindDirection(int degrees) {
-    const directions = ['N', 'NNE', 'NE', 'ENE', 'E', 'ESE', 'SE', 'SSE',
-                         'S', 'SSW', 'SW', 'WSW', 'W', 'WNW', 'NW', 'NNW'];
+    const directions = [
+      'N', 'NNE', 'NE', 'ENE', 'E', 'ESE', 'SE', 'SSE',
+      'S', 'SSW', 'SW', 'WSW', 'W', 'WNW', 'NW', 'NNW'
+    ];
     final index = ((degrees + 11.25) / 22.5).floor() % 16;
     return '${directions[index]} ($degrees°)';
   }

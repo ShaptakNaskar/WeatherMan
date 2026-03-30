@@ -2,12 +2,15 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:provider/provider.dart';
-import 'package:weatherman/config/cyberpunk_theme.dart';
+import 'package:weatherman/config/app_theme_data.dart';
 import 'package:weatherman/providers/location_provider.dart';
 import 'package:weatherman/providers/settings_provider.dart';
+import 'package:weatherman/providers/theme_provider.dart';
 import 'package:weatherman/providers/weather_provider.dart';
 import 'package:weatherman/screens/home_screen.dart';
 import 'package:weatherman/screens/splash_screen.dart';
+import 'package:weatherman/screens/splash/clean_splash.dart';
+import 'package:weatherman/screens/splash/pastel_splash.dart';
 import 'package:weatherman/services/location_service.dart';
 import 'package:weatherman/services/storage_service.dart';
 import 'package:weatherman/services/weather_service.dart';
@@ -19,7 +22,7 @@ import 'package:workmanager/workmanager.dart';
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   await Firebase.initializeApp();
-  
+
   // Set preferred orientations (allow all)
   await SystemChrome.setPreferredOrientations([
     DeviceOrientation.portraitUp,
@@ -51,10 +54,14 @@ void main() async {
   final settingsProvider = SettingsProvider(storageService: storageService);
   await settingsProvider.init();
 
+  final themeProvider = ThemeProvider(storageService: storageService);
+  await themeProvider.init();
+
   runApp(
     MultiProvider(
       providers: [
         ChangeNotifierProvider.value(value: settingsProvider),
+        ChangeNotifierProvider.value(value: themeProvider),
         ChangeNotifierProvider(
           create: (_) => LocationProvider(
             locationService: locationService,
@@ -79,10 +86,23 @@ class WeatherManApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final themeProvider = context.watch<ThemeProvider>();
+
+    // Adjust status bar brightness based on theme
+    final brightness = themeProvider.isDark ? Brightness.light : Brightness.dark;
+    SystemChrome.setSystemUIOverlayStyle(
+      SystemUiOverlayStyle(
+        statusBarColor: Colors.transparent,
+        statusBarIconBrightness: brightness,
+        systemNavigationBarColor: Colors.transparent,
+        systemNavigationBarIconBrightness: brightness,
+      ),
+    );
+
     return MaterialApp(
-      title: 'CyberWeather',
+      title: 'SappyWeather',
       debugShowCheckedModeBanner: false,
-      theme: CyberpunkTheme.darkTheme,
+      theme: themeProvider.themeData,
       home: const _AppEntry(),
     );
   }
@@ -99,16 +119,28 @@ class _AppEntry extends StatefulWidget {
 class _AppEntryState extends State<_AppEntry> {
   bool _splashDone = false;
 
+  void _onSplashComplete() {
+    if (mounted) setState(() => _splashDone = true);
+  }
+
   @override
   Widget build(BuildContext context) {
     if (_splashDone) {
       return const HomeScreen();
     }
 
-    return CyberpunkSplashScreen(
-      onComplete: () {
-        if (mounted) setState(() => _splashDone = true);
-      },
-    );
+    final themeProvider = context.watch<ThemeProvider>();
+
+    switch (themeProvider.currentType) {
+      case AppThemeType.cyberpunk:
+        return CyberpunkSplashScreen(onComplete: _onSplashComplete);
+      case AppThemeType.clean:
+      case AppThemeType.ocean:
+      case AppThemeType.sunset:
+        return CleanSplashScreen(onComplete: _onSplashComplete);
+      case AppThemeType.pastel:
+      case AppThemeType.pastelDark:
+        return PastelSplashScreen(onComplete: _onSplashComplete);
+    }
   }
 }

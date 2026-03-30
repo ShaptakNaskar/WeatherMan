@@ -291,14 +291,14 @@ class NotificationService {
   String _buildMorningMessage(WeatherData weather) {
     final hourly = weather.hourly;
     final daily = weather.daily;
-    if (hourly.isEmpty || daily.isEmpty) return 'SYNC_ERR // Weather feed offline...';
+    if (hourly.isEmpty || daily.isEmpty) return 'Weather data unavailable. Try refreshing later.';
 
     final today = daily.first;
     final cond = WeatherUtils.getWeatherDescription(today.weatherCode);
     final parts = <String>[];
 
     // Today's overview
-    parts.add('STATUS: $cond // ${today.temperatureMin.round()}°–${today.temperatureMax.round()}°C.');
+    parts.add('Today: $cond, ${today.temperatureMin.round()}°–${today.temperatureMax.round()}°C.');
 
     // Rain check for the day
     final dayHours = hourly.take(12).toList();
@@ -307,19 +307,19 @@ class NotificationService {
     );
     if (rainyHour.isNotEmpty) {
       final t = rainyHour.first.time;
-      parts.add('Precip ping ~${t.hour.toString().padLeft(2, '0')}:00 (${rainyHour.first.precipitationProbability}%). Pack accordingly.');
+      parts.add('Rain likely around ${t.hour.toString().padLeft(2, '0')}:00 (${rainyHour.first.precipitationProbability}%). Bring an umbrella.');
     } else {
-      parts.add('No precip in AM window.');
+      parts.add('No rain expected this morning.');
     }
 
     // UV warning
     if (today.uvIndexMax >= 8) {
-      parts.add('UV index ${today.uvIndexMax.round()} — dermal shield recommended.');
+      parts.add('UV index ${today.uvIndexMax.round()} — wear sunscreen.');
     }
 
     // Wind note
     if (today.windSpeedMax >= 30) {
-      parts.add('Wind gusts ${today.windGustsMax.round()} km/h — brace for turbulence.');
+      parts.add('Wind gusts up to ${today.windGustsMax.round()} km/h expected.');
     }
 
     return parts.join(' ');
@@ -327,7 +327,7 @@ class NotificationService {
 
   String _buildEveningMessage(WeatherData weather) {
     if (weather.daily.length < 2 || weather.hourly.isEmpty) {
-      return 'SYNC_ERR // Weather feed updating...';
+      return 'Weather data updating. Try again later.';
     }
     final current = weather.current;
     final tomorrow = weather.daily[1];
@@ -335,7 +335,7 @@ class NotificationService {
     final parts = <String>[];
 
     // Current temp
-    parts.add('Ambient: ${current.temperature.round()}°C.');
+    parts.add('Currently: ${current.temperature.round()}°C.');
 
     // Tomorrow preview
     parts.add('Tomorrow forecast: $tomorrowCond, ${tomorrow.temperatureMin.round()}°–${tomorrow.temperatureMax.round()}°C.');
@@ -351,7 +351,7 @@ class NotificationService {
       final weekLows = weather.daily.skip(1).take(5).map((d) => d.temperatureMin);
       final maxH = weekHighs.reduce((a, b) => a > b ? a : b);
       final minL = weekLows.reduce((a, b) => a < b ? a : b);
-      parts.add('Week thermal range: ${minL.round()}°–${maxH.round()}°C.');
+      parts.add('Week range: ${minL.round()}°–${maxH.round()}°C.');
     }
 
     return parts.join(' ');

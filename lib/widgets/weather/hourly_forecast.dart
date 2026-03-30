@@ -1,11 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import 'package:weatherman/config/cyberpunk_theme.dart';
 import 'package:weatherman/models/weather.dart';
 import 'package:weatherman/providers/settings_provider.dart';
+import 'package:weatherman/providers/theme_provider.dart';
 import 'package:weatherman/utils/date_utils.dart';
 import 'package:weatherman/utils/weather_utils.dart';
-import 'package:weatherman/widgets/cyberpunk/cyber_glass_card.dart';
+import 'package:weatherman/widgets/themed/themed_card.dart';
 
 /// Horizontal scrolling hourly forecast widget
 class HourlyForecastCard extends StatelessWidget {
@@ -18,11 +18,14 @@ class HourlyForecastCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    // Get next 24 hours starting from current hour
+    final t = context.watch<ThemeProvider>().current;
     final now = DateTime.now();
-    final filteredHourly = hourly.where((h) => h.time.isAfter(now.subtract(const Duration(hours: 1)))).take(24).toList();
+    final filteredHourly = hourly
+        .where((h) => h.time.isAfter(now.subtract(const Duration(hours: 1))))
+        .take(24)
+        .toList();
 
-    return CyberGlassCard(
+    return ThemedCard(
       padding: const EdgeInsets.symmetric(vertical: 16),
       margin: const EdgeInsets.symmetric(horizontal: 16),
       child: Column(
@@ -36,25 +39,24 @@ class HourlyForecastCard extends StatelessWidget {
                 Icon(
                   Icons.access_time_rounded,
                   size: 16,
-                  color: CyberpunkTheme.textSecondary,
+                  color: t.textSecondary,
                 ),
                 const SizedBox(width: 8),
                 Text(
                   'HOURLY FORECAST',
                   style: Theme.of(context).textTheme.labelLarge?.copyWith(
-                    color: CyberpunkTheme.textSecondary,
-                    letterSpacing: 1,
-                  ),
+                        color: t.textSecondary,
+                        letterSpacing: 1,
+                      ),
                 ),
               ],
             ),
           ),
 
           const SizedBox(height: 12),
-          
-          // Divider
+
           Divider(
-            color: CyberpunkTheme.glassBorder,
+            color: t.cardBorderColor.withValues(alpha: 0.3),
             height: 1,
           ),
 
@@ -94,7 +96,8 @@ class _HourlyItem extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final settings = context.watch<SettingsProvider>();
-    
+    final t = context.watch<ThemeProvider>().current;
+
     return Container(
       width: 60,
       padding: const EdgeInsets.symmetric(horizontal: 4),
@@ -105,9 +108,9 @@ class _HourlyItem extends StatelessWidget {
           Text(
             DateTimeUtils.formatHourOrNow(forecast.time),
             style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-              color: isFirst ? CyberpunkTheme.textPrimary : CyberpunkTheme.textSecondary,
-              fontWeight: isFirst ? FontWeight.w600 : FontWeight.w400,
-            ),
+                  color: isFirst ? t.textPrimary : t.textSecondary,
+                  fontWeight: isFirst ? FontWeight.w600 : FontWeight.w400,
+                ),
           ),
 
           // Icon
@@ -129,9 +132,9 @@ class _HourlyItem extends StatelessWidget {
             Text(
               '${forecast.precipitationProbability}%',
               style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                color: CyberpunkTheme.textSecondary, // Monochromatic (was blue)
-                fontWeight: FontWeight.w600,
-              ),
+                    color: t.textSecondary,
+                    fontWeight: FontWeight.w600,
+                  ),
             )
           else
             const SizedBox(height: 14),
@@ -140,8 +143,8 @@ class _HourlyItem extends StatelessWidget {
           Text(
             settings.formatTempShort(forecast.temperature),
             style: Theme.of(context).textTheme.bodyLarge?.copyWith(
-              fontWeight: FontWeight.w500,
-            ),
+                  fontWeight: FontWeight.w500,
+                ),
           ),
         ],
       ),
