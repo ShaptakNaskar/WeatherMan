@@ -2,16 +2,17 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:provider/provider.dart';
-import 'package:weatherman/config/cyberpunk_theme.dart';
+import 'package:weatherman/config/app_theme_data.dart';
 import 'package:weatherman/models/weather.dart';
 import 'package:weatherman/providers/location_provider.dart';
 import 'package:weatherman/providers/settings_provider.dart';
+import 'package:weatherman/providers/theme_provider.dart';
 import 'package:weatherman/providers/weather_provider.dart';
 import 'package:weatherman/screens/search_screen.dart';
 import 'package:weatherman/screens/settings_screen.dart';
 import 'package:weatherman/utils/date_utils.dart';
 import 'package:weatherman/utils/weather_utils.dart';
-import 'package:weatherman/widgets/cyberpunk/cyber_background.dart';
+import 'package:weatherman/widgets/themed/themed_background.dart';
 import 'package:weatherman/widgets/cyberpunk/glitch_effects.dart';
 import 'package:weatherman/widgets/cyberpunk/hud_warnings.dart';
 import 'package:weatherman/widgets/common/shimmer_loading.dart';
@@ -21,6 +22,9 @@ import 'package:weatherman/widgets/weather/hourly_forecast.dart';
 import 'package:weatherman/widgets/weather/weather_details.dart';
 import 'package:weatherman/widgets/weather/advanced_details.dart';
 import 'package:weatherman/widgets/weather/weather_insights.dart';
+import 'package:weatherman/widgets/weather/clothing_advice.dart';
+import 'package:weatherman/widgets/weather/rain_timeline.dart';
+import 'package:weatherman/widgets/weather/sunrise_countdown.dart';
 import 'package:weatherman/widgets/cyberpunk/system_status_bar.dart';
 import 'package:weatherman/services/widget_service.dart';
 import 'package:weatherman/services/notification_service.dart';
@@ -50,13 +54,16 @@ class _HomeScreenState extends State<HomeScreen> {
     final settings = context.read<SettingsProvider>();
     final storage = StorageService();
 
-    // Initialize providers
     await locationProvider.init();
 
-    // Try to get current location
+    // On first launch (no saved/last location), show rationale before requesting GPS
+    if (locationProvider.selectedLocation == null &&
+        locationProvider.currentDeviceLocation == null) {
+      if (mounted) await _showLocationRationale();
+    }
+
     await locationProvider.fetchCurrentLocation();
 
-    // Fetch weather for selected location
     final selectedLocation = locationProvider.selectedLocation;
     if (selectedLocation != null) {
       await weatherProvider.fetchWeather(selectedLocation);
@@ -76,7 +83,6 @@ class _HomeScreenState extends State<HomeScreen> {
     final locationProvider = context.read<LocationProvider>();
     final weatherProvider = context.read<WeatherProvider>();
     final settings = context.read<SettingsProvider>();
-    final storage = StorageService();
 
     final selectedLocation = locationProvider.selectedLocation;
     if (selectedLocation != null) {
@@ -90,13 +96,15 @@ class _HomeScreenState extends State<HomeScreen> {
       }
     }
 
-    await _runFirstLaunchPrompts(storage);
+    // Permission prompts are now handled in onboarding
+    // await _runFirstLaunchPrompts(storage);
   }
 
+  // Legacy first-launch prompts - now handled in OnboardingScreen
+  // Kept for reference but no longer called
   Future<void> _runFirstLaunchPrompts(StorageService storage) async {
     if (!mounted) return;
 
-    // Notification consent first
     final notifPrompted = await storage.getNotificationPrompted();
     if (!notifPrompted) {
       final allow = await _showNotificationRationale();
@@ -107,7 +115,6 @@ class _HomeScreenState extends State<HomeScreen> {
       await storage.setNotificationPrompted();
     }
 
-    // Battery optimization dialog next (Android only)
     if (Platform.isAndroid) {
       final batteryPrompted = await storage.getBatteryPrompted();
       if (!batteryPrompted) {
@@ -120,15 +127,77 @@ class _HomeScreenState extends State<HomeScreen> {
     }
   }
 
+  Future<void> _showLocationRationale() async {
+    final t = context.read<ThemeProvider>().current;
+    await showDialog<void>(
+      context: context,
+      barrierDismissible: false,
+      builder: (context) => AlertDialog(
+        backgroundColor: t.themeData.brightness == Brightness.light
+            ? Colors.white
+            : Colors.black87,
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(t.cardBorderRadius),
+        ),
+        title: Row(
+          children: [
+            Icon(Icons.location_on_rounded, color: t.accentColor, size: 24),
+            const SizedBox(width: 8),
+            Text(
+              'Location Access',
+              style: TextStyle(
+                color: t.themeData.brightness == Brightness.light
+                    ? t.textPrimary
+                    : Colors.white,
+              ),
+            ),
+          ],
+        ),
+        content: Text(
+          'SappyWeather needs your location to show weather for where you are. '
+          'Please allow location access on the next prompt to get started!',
+          style: TextStyle(
+            color: t.themeData.brightness == Brightness.light
+                ? t.textSecondary
+                : Colors.white70,
+          ),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: Text('Got it!', style: TextStyle(color: t.accentColor)),
+          ),
+        ],
+      ),
+    );
+  }
+
   Future<bool?> _showNotificationRationale() {
+    final t = context.read<ThemeProvider>().current;
     return showDialog<bool>(
       context: context,
       builder: (context) => AlertDialog(
-        backgroundColor: Colors.black87,
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-        title: const Text('Authorize uplink pings?'),
-        content: const Text(
-          'Let CyberWeather beam morning/evening briefings, trend spikes, and HUD status direct to your deck.',
+        backgroundColor: t.themeData.brightness == Brightness.light
+            ? Colors.white
+            : Colors.black87,
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(t.cardBorderRadius),
+        ),
+        title: Text(
+          'Enable notifications?',
+          style: TextStyle(
+            color: t.themeData.brightness == Brightness.light
+                ? t.textPrimary
+                : Colors.white,
+          ),
+        ),
+        content: Text(
+          'Get morning/evening briefings, severe weather alerts, and trend insights.',
+          style: TextStyle(
+            color: t.themeData.brightness == Brightness.light
+                ? t.textSecondary
+                : Colors.white70,
+          ),
         ),
         actions: [
           TextButton(
@@ -145,14 +214,31 @@ class _HomeScreenState extends State<HomeScreen> {
   }
 
   Future<bool?> _showBatteryRationale() {
+    final t = context.read<ThemeProvider>().current;
     return showDialog<bool>(
       context: context,
       builder: (context) => AlertDialog(
-        backgroundColor: Colors.black87,
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-        title: const Text('Let CyberWeather run in the shadows?'),
-        content: const Text(
-          'Grant background access so widgets + briefings stay neon-fresh. You can revoke in system settings.',
+        backgroundColor: t.themeData.brightness == Brightness.light
+            ? Colors.white
+            : Colors.black87,
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(t.cardBorderRadius),
+        ),
+        title: Text(
+          'Allow background access?',
+          style: TextStyle(
+            color: t.themeData.brightness == Brightness.light
+                ? t.textPrimary
+                : Colors.white,
+          ),
+        ),
+        content: Text(
+          'Keep widgets and briefings up to date. You can revoke in system settings.',
+          style: TextStyle(
+            color: t.themeData.brightness == Brightness.light
+                ? t.textSecondary
+                : Colors.white70,
+          ),
         ),
         actions: [
           TextButton(
@@ -171,18 +257,21 @@ class _HomeScreenState extends State<HomeScreen> {
   Future<void> _openBatterySettings() async {
     final intent = AndroidIntent(
       action: 'android.settings.REQUEST_IGNORE_BATTERY_OPTIMIZATIONS',
-      data: 'package:${Uri.encodeComponent('com.sappy.cyberweather')}',
+      data: 'package:${Uri.encodeComponent('com.sappy.weather')}',
     );
     await intent.launch();
   }
 
   @override
   Widget build(BuildContext context) {
-    // Set status bar to transparent
+    final themeProvider = context.watch<ThemeProvider>();
+
     SystemChrome.setSystemUIOverlayStyle(
-      const SystemUiOverlayStyle(
+      SystemUiOverlayStyle(
         statusBarColor: Colors.transparent,
-        statusBarIconBrightness: Brightness.light,
+        statusBarIconBrightness: themeProvider.isDark
+            ? Brightness.light
+            : Brightness.dark,
       ),
     );
 
@@ -193,11 +282,10 @@ class _HomeScreenState extends State<HomeScreen> {
             ? weatherProvider.getWeather(selectedLocation)
             : null;
 
-        // Determine background based on weather
         final weatherCode = weather?.current.weatherCode ?? 0;
         final isDay = weather?.current.isDay ?? true;
 
-        // Evaluate alerts for HUD overlay
+        // HUD alerts (cyberpunk only shows the overlay, but evaluate for all)
         final alerts = weather != null
             ? AlertEvaluator.evaluate(
                 current: weather.current,
@@ -206,31 +294,29 @@ class _HomeScreenState extends State<HomeScreen> {
             : <EnvironmentAlert>[];
         final hasDanger = alerts.any((a) => a.severity == AlertSeverity.danger);
 
-        return DangerFlashOverlay(
-          hasDanger: hasDanger,
-          child: CyberpunkBackground(
-            weatherCode: weatherCode,
-            isDay: isDay,
-            child: Stack(
-              children: [
-                // Vignette - REMOVED for cleaner look
-
-                Scaffold(
-                  backgroundColor: Colors.transparent,
-                  body: SafeArea(
-                    child: _buildBody(
-                      locationProvider,
-                      weatherProvider,
-                      weather,
-                    ),
-                  ),
+        Widget body = ThemedBackground(
+          weatherCode: weatherCode,
+          isDay: isDay,
+          child: Stack(
+            children: [
+              Scaffold(
+                backgroundColor: Colors.transparent,
+                body: SafeArea(
+                  child: _buildBody(locationProvider, weatherProvider, weather),
                 ),
-                // HUD Warning badges
-                HudWarningOverlay(alerts: alerts),
-              ],
-            ),
+              ),
+              // HUD warnings only for cyberpunk
+              if (themeProvider.isCyberpunk) HudWarningOverlay(alerts: alerts),
+            ],
           ),
         );
+
+        // Danger flash only for cyberpunk
+        if (themeProvider.isCyberpunk) {
+          body = DangerFlashOverlay(hasDanger: hasDanger, child: body);
+        }
+
+        return body;
       },
     );
   }
@@ -242,27 +328,27 @@ class _HomeScreenState extends State<HomeScreen> {
   ) {
     final selectedLocation = locationProvider.selectedLocation;
 
-    // Loading state
     if (weatherProvider.isLoading && weather == null) {
       return const WeatherLoadingShimmer();
     }
 
-    // Error state with no cached data
     if (weatherProvider.state == WeatherState.error && weather == null) {
       return _buildErrorState(weatherProvider.error ?? 'Unknown error');
     }
 
-    // No location selected
+    // Show loading state while GPS is being fetched (first launch)
+    if (selectedLocation == null && locationProvider.isLoadingLocation) {
+      return _buildLocationLoadingState();
+    }
+
     if (selectedLocation == null) {
       return _buildNoLocationState();
     }
 
-    // Weather data available
     if (weather != null) {
       return _buildWeatherContent(weather, weatherProvider.isRefreshing);
     }
 
-    // Fetch weather if not already loading
     if (!weatherProvider.isLoading) {
       WidgetsBinding.instance.addPostFrameCallback((_) {
         weatherProvider.fetchWeather(selectedLocation);
@@ -278,14 +364,12 @@ class _HomeScreenState extends State<HomeScreen> {
     return OrientationBuilder(
       builder: (context, orientation) {
         if (orientation == Orientation.landscape) {
-          // Enable immersive fullscreen mode in landscape
           SystemChrome.setEnabledSystemUIMode(
             SystemUiMode.immersiveSticky,
             overlays: [],
           );
           return _buildLandscapeContent(weather, today, isRefreshing);
         }
-        // Restore normal UI in portrait
         SystemChrome.setEnabledSystemUIMode(
           SystemUiMode.edgeToEdge,
           overlays: SystemUiOverlay.values,
@@ -295,59 +379,108 @@ class _HomeScreenState extends State<HomeScreen> {
     );
   }
 
-  Widget _buildPortraitContent(WeatherData weather, DailyForecast? today, bool isRefreshing) {
+  Widget _buildPortraitContent(
+    WeatherData weather,
+    DailyForecast? today,
+    bool isRefreshing,
+  ) {
+    final t = context.watch<ThemeProvider>().current;
+
     return RefreshIndicator(
       onRefresh: _refreshWeather,
-      color: CyberpunkTheme.neonCyan,
-      backgroundColor: CyberpunkTheme.bgPanel.withValues(alpha: 0.8),
+      color: t.accentColor,
+      backgroundColor: t.cardColor.withValues(alpha: 0.8),
       child: CustomScrollView(
         physics: const BouncingScrollPhysics(
           parent: AlwaysScrollableScrollPhysics(),
         ),
         slivers: [
-          // App bar with actions
           _buildAppBar(),
 
-          // Current weather display
           SliverToBoxAdapter(
-            child: Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 16),
-              child: CurrentWeatherDisplay(
-                weather: weather.current,
-                locationName: weather.location.name,
-                temperatureMax: today?.temperatureMax ?? weather.current.temperature,
-                temperatureMin: today?.temperatureMin ?? weather.current.temperature,
-              ),
-            ).animate().fadeIn(duration: 600.ms).slideY(begin: 0.05, end: 0, duration: 500.ms, curve: Curves.easeOut),
+            child:
+                Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: 16),
+                      child: CurrentWeatherDisplay(
+                        weather: weather.current,
+                        locationName: weather.location.name,
+                        temperatureMax:
+                            today?.temperatureMax ??
+                            weather.current.temperature,
+                        temperatureMin:
+                            today?.temperatureMin ??
+                            weather.current.temperature,
+                      ),
+                    )
+                    .animate()
+                    .fadeIn(duration: 600.ms)
+                    .slideY(
+                      begin: 0.05,
+                      end: 0,
+                      duration: 500.ms,
+                      curve: Curves.easeOut,
+                    ),
           ),
 
-          // Refresh indicator
           if (isRefreshing) _buildRefreshingIndicator(),
 
-          // HUD status line
-          _buildCyberStatusLine(weather),
+          _buildStatusLine(weather),
 
-          const SliverToBoxAdapter(child: SizedBox(height: 24)),
+          const SliverToBoxAdapter(child: SizedBox(height: 16)),
 
-          // Forecasts and details
+          // Clothing advice (new feature)
+          SliverToBoxAdapter(
+            child: ClothingAdviceCard(
+              weather: weather,
+            ).animate().fadeIn(duration: 600.ms, delay: 100.ms),
+          ),
+
+          const SliverToBoxAdapter(child: SizedBox(height: 16)),
+
+          // Rain timeline (new feature — only shows when rain expected)
+          SliverToBoxAdapter(
+            child: RainTimelineCard(
+              hourly: weather.hourly,
+            ).animate().fadeIn(duration: 600.ms, delay: 150.ms),
+          ),
+
+          const SliverToBoxAdapter(child: SizedBox(height: 8)),
+
+          // Sunrise/sunset countdown
+          if (today != null)
+            SliverToBoxAdapter(
+              child: Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 16),
+                child: SunriseSunsetCard(
+                  today: today,
+                ).animate().fadeIn(duration: 600.ms, delay: 200.ms),
+              ),
+            ),
+
+          const SliverToBoxAdapter(child: SizedBox(height: 8)),
+
           ..._buildForecastSlivers(weather, today),
 
-          // Bottom padding
           const SliverToBoxAdapter(child: SizedBox(height: 32)),
         ],
       ),
     );
   }
 
-  Widget _buildLandscapeContent(WeatherData weather, DailyForecast? today, bool isRefreshing) {
+  Widget _buildLandscapeContent(
+    WeatherData weather,
+    DailyForecast? today,
+    bool isRefreshing,
+  ) {
+    final t = context.watch<ThemeProvider>().current;
+
     return Row(
       children: [
-        // Left panel - Static weather display
+        // Left panel
         SizedBox(
           width: MediaQuery.of(context).size.width * 0.38,
           child: Column(
             children: [
-              // App bar actions
               Padding(
                 padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
                 child: Row(
@@ -368,7 +501,6 @@ class _HomeScreenState extends State<HomeScreen> {
                   ],
                 ),
               ),
-              // Current weather display
               Expanded(
                 child: Center(
                   child: SingleChildScrollView(
@@ -379,8 +511,12 @@ class _HomeScreenState extends State<HomeScreen> {
                         CurrentWeatherDisplay(
                           weather: weather.current,
                           locationName: weather.location.name,
-                          temperatureMax: today?.temperatureMax ?? weather.current.temperature,
-                          temperatureMin: today?.temperatureMin ?? weather.current.temperature,
+                          temperatureMax:
+                              today?.temperatureMax ??
+                              weather.current.temperature,
+                          temperatureMin:
+                              today?.temperatureMin ??
+                              weather.current.temperature,
                         ),
                         const SizedBox(height: 16),
                         if (isRefreshing)
@@ -390,17 +526,14 @@ class _HomeScreenState extends State<HomeScreen> {
                             child: CircularProgressIndicator(
                               strokeWidth: 2,
                               valueColor: AlwaysStoppedAnimation<Color>(
-                                Colors.white.withValues(alpha: 0.7),
+                                t.textSecondary.withValues(alpha: 0.7),
                               ),
                             ),
                           ),
                         Text(
                           'Updated ${DateTimeUtils.formatRelativeTime(weather.fetchedAt)}',
-                          style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                            color: CyberpunkTheme.textTertiary,
-                            fontFamily: 'monospace',
-                            letterSpacing: 1,
-                          ),
+                          style: Theme.of(context).textTheme.bodySmall
+                              ?.copyWith(color: t.textTertiary),
                         ),
                       ],
                     ),
@@ -410,23 +543,40 @@ class _HomeScreenState extends State<HomeScreen> {
             ],
           ),
         ),
-        // Divider
-        Container(
-          width: 1,
-          color: CyberpunkTheme.neonCyan.withValues(alpha: 0.15),
-        ),
-        // Right panel - Scrollable forecasts
+        Container(width: 1, color: t.accentColor.withValues(alpha: 0.15)),
+        // Right panel
         Expanded(
           child: RefreshIndicator(
             onRefresh: _refreshWeather,
-            color: CyberpunkTheme.neonCyan,
-            backgroundColor: CyberpunkTheme.bgPanel.withValues(alpha: 0.8),
+            color: t.accentColor,
+            backgroundColor: t.cardColor.withValues(alpha: 0.8),
             child: CustomScrollView(
               physics: const BouncingScrollPhysics(
                 parent: AlwaysScrollableScrollPhysics(),
               ),
               slivers: [
                 const SliverToBoxAdapter(child: SizedBox(height: 16)),
+
+                // Clothing advice
+                SliverToBoxAdapter(child: ClothingAdviceCard(weather: weather)),
+                const SliverToBoxAdapter(child: SizedBox(height: 16)),
+
+                // Rain timeline
+                SliverToBoxAdapter(
+                  child: RainTimelineCard(hourly: weather.hourly),
+                ),
+                const SliverToBoxAdapter(child: SizedBox(height: 8)),
+
+                // Sunrise/sunset countdown
+                if (today != null)
+                  SliverToBoxAdapter(
+                    child: Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: 16),
+                      child: SunriseSunsetCard(today: today),
+                    ),
+                  ),
+                const SliverToBoxAdapter(child: SizedBox(height: 8)),
+
                 ..._buildForecastSlivers(weather, today),
                 const SliverToBoxAdapter(child: SizedBox(height: 32)),
               ],
@@ -460,6 +610,7 @@ class _HomeScreenState extends State<HomeScreen> {
   }
 
   SliverToBoxAdapter _buildRefreshingIndicator() {
+    final t = context.watch<ThemeProvider>().current;
     return SliverToBoxAdapter(
       child: Center(
         child: Padding(
@@ -470,7 +621,7 @@ class _HomeScreenState extends State<HomeScreen> {
             child: CircularProgressIndicator(
               strokeWidth: 2,
               valueColor: AlwaysStoppedAnimation<Color>(
-                CyberpunkTheme.neonCyan.withValues(alpha: 0.7),
+                t.accentColor.withValues(alpha: 0.7),
               ),
             ),
           ),
@@ -479,32 +630,65 @@ class _HomeScreenState extends State<HomeScreen> {
     );
   }
 
-  SliverToBoxAdapter _buildCyberStatusLine(WeatherData weather) {
+  SliverToBoxAdapter _buildStatusLine(WeatherData weather) {
+    final themeProvider = context.watch<ThemeProvider>();
+    final t = themeProvider.current;
+
+    if (themeProvider.isCyberpunk) {
+      return SliverToBoxAdapter(
+        child: Center(
+          child: Padding(
+            padding: const EdgeInsets.only(top: 16, bottom: 8),
+            child: GlitchText(
+              text:
+                  '// UPDATED ${DateTimeUtils.formatRelativeTime(weather.fetchedAt).toUpperCase()} //',
+              style: TextStyle(
+                fontFamily: 'monospace',
+                fontSize: 10,
+                color: t.textTertiary,
+                letterSpacing: 2,
+              ),
+              glitchIntensity: 0.3,
+            ),
+          ),
+        ).animate().fadeIn(duration: 400.ms, delay: 100.ms),
+      );
+    }
+
     return SliverToBoxAdapter(
       child: Center(
         child: Padding(
-          padding: const EdgeInsets.only(top: 16, bottom: 8),
-          child: GlitchText(
-            text: '// UPDATED ${DateTimeUtils.formatRelativeTime(weather.fetchedAt).toUpperCase()} //',
-            style: TextStyle(
-              fontFamily: 'monospace',
-              fontSize: 10,
-              color: CyberpunkTheme.textTertiary,
-              letterSpacing: 2,
+          padding: const EdgeInsets.only(top: 12, bottom: 8),
+          child: Text(
+            'Updated ${DateTimeUtils.formatRelativeTime(weather.fetchedAt)}',
+            style: Theme.of(context).textTheme.bodySmall?.copyWith(
+              color: t.textTertiary,
+              shadows: t.textShadows,
             ),
-            glitchIntensity: 0.3,
           ),
         ),
-      ).animate().fadeIn(duration: 400.ms, delay: 100.ms),
+      ),
     );
   }
 
-  List<Widget> _buildForecastSlivers(WeatherData weather, DailyForecast? today) {
+  List<Widget> _buildForecastSlivers(
+    WeatherData weather,
+    DailyForecast? today,
+  ) {
+    final themeProvider = context.watch<ThemeProvider>();
+
     return [
       // Hourly forecast
       SliverToBoxAdapter(
         child: HourlyForecastCard(hourly: weather.hourly)
-            .animate().fadeIn(duration: 600.ms, delay: 200.ms).slideY(begin: 0.03, end: 0, duration: 500.ms, curve: Curves.easeOut),
+            .animate()
+            .fadeIn(duration: 600.ms, delay: 200.ms)
+            .slideY(
+              begin: 0.03,
+              end: 0,
+              duration: 500.ms,
+              curve: Curves.easeOut,
+            ),
       ),
 
       const SliverToBoxAdapter(child: SizedBox(height: 16)),
@@ -512,15 +696,29 @@ class _HomeScreenState extends State<HomeScreen> {
       // Daily forecast
       SliverToBoxAdapter(
         child: DailyForecastCard(daily: weather.daily)
-            .animate().fadeIn(duration: 600.ms, delay: 350.ms).slideY(begin: 0.03, end: 0, duration: 500.ms, curve: Curves.easeOut),
+            .animate()
+            .fadeIn(duration: 600.ms, delay: 350.ms)
+            .slideY(
+              begin: 0.03,
+              end: 0,
+              duration: 500.ms,
+              curve: Curves.easeOut,
+            ),
       ),
 
       const SliverToBoxAdapter(child: SizedBox(height: 16)),
 
-      // Weather insights (smart alerts & trends)
+      // Weather insights
       SliverToBoxAdapter(
         child: WeatherInsightsCard(weather: weather)
-            .animate().fadeIn(duration: 600.ms, delay: 425.ms).slideY(begin: 0.03, end: 0, duration: 500.ms, curve: Curves.easeOut),
+            .animate()
+            .fadeIn(duration: 600.ms, delay: 425.ms)
+            .slideY(
+              begin: 0.03,
+              end: 0,
+              duration: 500.ms,
+              curve: Curves.easeOut,
+            ),
       ),
 
       const SliverToBoxAdapter(child: SizedBox(height: 16)),
@@ -528,47 +726,67 @@ class _HomeScreenState extends State<HomeScreen> {
       // Weather details
       if (today != null)
         SliverToBoxAdapter(
-          child: WeatherDetailsGrid(
-            current: weather.current,
-            today: today,
-            airQuality: weather.airQuality,
-          ).animate().fadeIn(duration: 600.ms, delay: 500.ms).slideY(begin: 0.03, end: 0, duration: 500.ms, curve: Curves.easeOut),
+          child:
+              WeatherDetailsGrid(
+                    current: weather.current,
+                    today: today,
+                    airQuality: weather.airQuality,
+                  )
+                  .animate()
+                  .fadeIn(duration: 600.ms, delay: 500.ms)
+                  .slideY(
+                    begin: 0.03,
+                    end: 0,
+                    duration: 500.ms,
+                    curve: Curves.easeOut,
+                  ),
         ),
 
-      // Advanced details (if enabled in settings)
+      // Advanced details
       Consumer<SettingsProvider>(
         builder: (context, settings, _) {
           if (!settings.advancedViewEnabled) {
             return const SliverToBoxAdapter(child: SizedBox.shrink());
           }
           return SliverToBoxAdapter(
-            child: Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 16),
-              child: Column(
-                children: [
-                  const SizedBox(height: 24),
-                  AdvancedDetailsCard(
-                    weather: weather,
-                    formatTemp: settings.formatTemp,
-                  ),
-                ],
-              ),
-            ).animate().fadeIn(duration: 600.ms, delay: 650.ms).slideY(begin: 0.03, end: 0, duration: 500.ms, curve: Curves.easeOut),
+            child:
+                Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: 16),
+                      child: Column(
+                        children: [
+                          const SizedBox(height: 24),
+                          AdvancedDetailsCard(
+                            weather: weather,
+                            formatTemp: settings.formatTemp,
+                          ),
+                        ],
+                      ),
+                    )
+                    .animate()
+                    .fadeIn(duration: 600.ms, delay: 650.ms)
+                    .slideY(
+                      begin: 0.03,
+                      end: 0,
+                      duration: 500.ms,
+                      curve: Curves.easeOut,
+                    ),
           );
         },
       ),
 
-      // System status footer
-      SliverToBoxAdapter(
-        child: Padding(
-          padding: const EdgeInsets.only(top: 20, bottom: 4),
-          child: SystemStatusBar(weather: weather),
-        ).animate().fadeIn(duration: 600.ms, delay: 750.ms),
-      ),
+      // System status bar (cyberpunk only)
+      if (themeProvider.isCyberpunk)
+        SliverToBoxAdapter(
+          child: Padding(
+            padding: const EdgeInsets.only(top: 20, bottom: 4),
+            child: SystemStatusBar(weather: weather),
+          ).animate().fadeIn(duration: 600.ms, delay: 750.ms),
+        ),
     ];
   }
 
   Widget _buildErrorState(String error) {
+    final t = context.watch<ThemeProvider>().current;
     return Center(
       child: Padding(
         padding: const EdgeInsets.all(32),
@@ -578,23 +796,22 @@ class _HomeScreenState extends State<HomeScreen> {
             Icon(
               Icons.warning_amber_rounded,
               size: 64,
-              color: CyberpunkTheme.neonRed.withValues(alpha: 0.7),
+              color: t.dangerColor.withValues(alpha: 0.7),
             ),
             const SizedBox(height: 16),
-            GlitchText(
-              text: '// SYSTEM ERROR //',
+            Text(
+              'Something went wrong',
               style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                color: CyberpunkTheme.neonRed,
-                fontFamily: 'monospace',
-                letterSpacing: 2,
+                color: t.dangerColor,
+                shadows: t.textShadows,
               ),
             ),
             const SizedBox(height: 8),
             Text(
               error,
               style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                color: CyberpunkTheme.textSecondary,
-                fontFamily: 'monospace',
+                color: t.textSecondary,
+                shadows: t.textShadows,
               ),
               textAlign: TextAlign.center,
             ),
@@ -602,12 +819,52 @@ class _HomeScreenState extends State<HomeScreen> {
             ElevatedButton.icon(
               onPressed: _refreshWeather,
               icon: const Icon(Icons.refresh_rounded),
-              label: const Text('RETRY'),
+              label: const Text('Retry'),
               style: ElevatedButton.styleFrom(
-                backgroundColor: CyberpunkTheme.neonCyan.withValues(alpha: 0.15),
-                foregroundColor: CyberpunkTheme.neonCyan,
-                side: BorderSide(color: CyberpunkTheme.neonCyan.withValues(alpha: 0.5)),
-                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(4)),
+                backgroundColor: t.accentColor.withValues(alpha: 0.15),
+                foregroundColor: t.accentColor,
+                side: BorderSide(color: t.accentColor.withValues(alpha: 0.5)),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(t.cardBorderRadius),
+                ),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildLocationLoadingState() {
+    final t = context.watch<ThemeProvider>().current;
+    return Center(
+      child: Padding(
+        padding: const EdgeInsets.all(32),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            SizedBox(
+              width: 48,
+              height: 48,
+              child: CircularProgressIndicator(
+                strokeWidth: 3,
+                valueColor: AlwaysStoppedAnimation(t.accentColor),
+              ),
+            ),
+            const SizedBox(height: 24),
+            Text(
+              'Getting your location...',
+              style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                color: t.textPrimary,
+                shadows: t.textShadows,
+              ),
+            ),
+            const SizedBox(height: 8),
+            Text(
+              'Fetching weather for your area',
+              style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                color: t.textSecondary,
+                shadows: t.textShadows,
               ),
             ),
           ],
@@ -617,6 +874,7 @@ class _HomeScreenState extends State<HomeScreen> {
   }
 
   Widget _buildNoLocationState() {
+    final t = context.watch<ThemeProvider>().current;
     return Center(
       child: Padding(
         padding: const EdgeInsets.all(32),
@@ -626,23 +884,22 @@ class _HomeScreenState extends State<HomeScreen> {
             Icon(
               Icons.gps_off_rounded,
               size: 64,
-              color: CyberpunkTheme.neonYellow.withValues(alpha: 0.7),
+              color: t.warningColor.withValues(alpha: 0.7),
             ),
             const SizedBox(height: 16),
-            GlitchText(
-              text: '// NO SIGNAL //',
+            Text(
+              'No location selected',
               style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                color: CyberpunkTheme.neonYellow,
-                fontFamily: 'monospace',
-                letterSpacing: 2,
+                color: t.warningColor,
+                shadows: t.textShadows,
               ),
             ),
             const SizedBox(height: 8),
             Text(
-              'Initialize location module to begin data acquisition',
+              'Search for a city to get started',
               style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                color: CyberpunkTheme.textSecondary,
-                fontFamily: 'monospace',
+                color: t.textSecondary,
+                shadows: t.textShadows,
               ),
               textAlign: TextAlign.center,
             ),
@@ -650,12 +907,14 @@ class _HomeScreenState extends State<HomeScreen> {
             ElevatedButton.icon(
               onPressed: () => _openSearch(),
               icon: const Icon(Icons.add_rounded),
-              label: const Text('ADD NODE'),
+              label: const Text('Add city'),
               style: ElevatedButton.styleFrom(
-                backgroundColor: CyberpunkTheme.neonCyan.withValues(alpha: 0.15),
-                foregroundColor: CyberpunkTheme.neonCyan,
-                side: BorderSide(color: CyberpunkTheme.neonCyan.withValues(alpha: 0.5)),
-                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(4)),
+                backgroundColor: t.accentColor.withValues(alpha: 0.15),
+                foregroundColor: t.accentColor,
+                side: BorderSide(color: t.accentColor.withValues(alpha: 0.5)),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(t.cardBorderRadius),
+                ),
               ),
             ),
           ],
@@ -665,23 +924,18 @@ class _HomeScreenState extends State<HomeScreen> {
   }
 
   void _openSearch() {
-    Navigator.of(context).push(
-      MaterialPageRoute(
-        builder: (context) => const SearchScreen(),
-      ),
-    );
+    Navigator.of(
+      context,
+    ).push(MaterialPageRoute(builder: (context) => const SearchScreen()));
   }
 
   void _openSettings() {
-    Navigator.of(context).push(
-      MaterialPageRoute(
-        builder: (context) => const SettingsScreen(),
-      ),
-    );
+    Navigator.of(
+      context,
+    ).push(MaterialPageRoute(builder: (context) => const SettingsScreen()));
   }
 
   void _openCityList() {
-    // Show bottom sheet with saved cities
     showModalBottomSheet(
       context: context,
       backgroundColor: Colors.transparent,
@@ -695,6 +949,8 @@ class _HomeScreenState extends State<HomeScreen> {
 class _CityListBottomSheet extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
+    final t = context.watch<ThemeProvider>().current;
+
     return Consumer2<LocationProvider, WeatherProvider>(
       builder: (context, locationProvider, weatherProvider, _) {
         final allLocations = locationProvider.allLocations;
@@ -704,9 +960,13 @@ class _CityListBottomSheet extends StatelessWidget {
             maxHeight: MediaQuery.of(context).size.height * 0.7,
           ),
           decoration: BoxDecoration(
-            color: CyberpunkTheme.bgDarkest.withValues(alpha: 0.95),
-            borderRadius: const BorderRadius.vertical(top: Radius.circular(4)),
-            border: Border.all(color: CyberpunkTheme.neonCyan.withValues(alpha: 0.3)),
+            color: t.themeData.brightness == Brightness.light
+                ? Colors.white.withValues(alpha: 0.95)
+                : t.backgroundColor.withValues(alpha: 0.95),
+            borderRadius: BorderRadius.vertical(
+              top: Radius.circular(t.cardBorderRadius),
+            ),
+            border: Border.all(color: t.accentColor.withValues(alpha: 0.3)),
           ),
           child: Column(
             mainAxisSize: MainAxisSize.min,
@@ -715,10 +975,10 @@ class _CityListBottomSheet extends StatelessWidget {
               Container(
                 margin: const EdgeInsets.only(top: 12),
                 width: 40,
-                height: 2,
+                height: 4,
                 decoration: BoxDecoration(
-                  color: CyberpunkTheme.neonCyan.withValues(alpha: 0.5),
-                  borderRadius: BorderRadius.circular(1),
+                  color: t.textTertiary.withValues(alpha: 0.5),
+                  borderRadius: BorderRadius.circular(2),
                 ),
               ),
 
@@ -728,12 +988,10 @@ class _CityListBottomSheet extends StatelessWidget {
                 child: Row(
                   children: [
                     Text(
-                      '// SAVED NODES //',
-                      style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                        fontFamily: 'monospace',
-                        letterSpacing: 2,
-                        color: CyberpunkTheme.neonCyan,
-                      ),
+                      'Saved Locations',
+                      style: Theme.of(
+                        context,
+                      ).textTheme.titleLarge?.copyWith(color: t.accentColor),
                     ),
                     const Spacer(),
                     IconButton(
@@ -759,10 +1017,8 @@ class _CityListBottomSheet extends StatelessWidget {
                           padding: const EdgeInsets.all(32),
                           child: Text(
                             'No saved locations',
-                            style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                              color: CyberpunkTheme.textSecondary,
-                              fontFamily: 'monospace',
-                            ),
+                            style: Theme.of(context).textTheme.bodyMedium
+                                ?.copyWith(color: t.textSecondary),
                           ),
                         ),
                       )
@@ -772,79 +1028,81 @@ class _CityListBottomSheet extends StatelessWidget {
                         itemBuilder: (context, index) {
                           final location = allLocations[index];
                           final weather = weatherProvider.getWeather(location);
-                          final isSelected = location == locationProvider.selectedLocation;
+                          final isSelected =
+                              location == locationProvider.selectedLocation;
 
                           return Container(
-                            margin: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
+                            margin: const EdgeInsets.symmetric(
+                              horizontal: 12,
+                              vertical: 4,
+                            ),
                             decoration: BoxDecoration(
                               color: isSelected
-                                  ? CyberpunkTheme.neonCyan.withValues(alpha: 0.08)
-                                  : CyberpunkTheme.bgPanel.withValues(alpha: 0.5),
+                                  ? t.accentColor.withValues(alpha: 0.08)
+                                  : t.cardColor.withValues(alpha: 0.5),
                               border: Border.all(
                                 color: isSelected
-                                    ? CyberpunkTheme.neonCyan.withValues(alpha: 0.4)
-                                    : CyberpunkTheme.glassBorder.withValues(alpha: 0.3),
+                                    ? t.accentColor.withValues(alpha: 0.4)
+                                    : t.cardBorderColor.withValues(alpha: 0.3),
                                 width: isSelected ? 1 : 0.5,
                               ),
-                              borderRadius: BorderRadius.circular(4),
+                              borderRadius: BorderRadius.circular(
+                                t.cardBorderRadius,
+                              ),
                             ),
                             child: ListTile(
-                              contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 2),
+                              contentPadding: const EdgeInsets.symmetric(
+                                horizontal: 14,
+                                vertical: 2,
+                              ),
                               leading: Icon(
                                 location.isCurrentLocation
                                     ? Icons.my_location_rounded
                                     : Icons.location_city_rounded,
                                 color: isSelected
-                                    ? CyberpunkTheme.neonCyan
-                                    : CyberpunkTheme.textSecondary,
+                                    ? t.accentColor
+                                    : t.textSecondary,
                                 size: 20,
                               ),
                               title: Text(
                                 location.name,
                                 style: TextStyle(
-                                  fontFamily: 'monospace',
-                                  fontSize: 13,
+                                  fontSize: 14,
                                   color: isSelected
-                                      ? CyberpunkTheme.neonCyan
-                                      : CyberpunkTheme.textPrimary,
-                                  fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
-                                  letterSpacing: 0.5,
+                                      ? t.accentColor
+                                      : t.textPrimary,
+                                  fontWeight: isSelected
+                                      ? FontWeight.bold
+                                      : FontWeight.normal,
                                 ),
                               ),
                               subtitle: weather != null
                                   ? Text(
-                                      '${weather.current.temperature.round()}°C · ${_getWeatherDesc(weather.current.weatherCode)}',
+                                      '${weather.current.temperature.round()}°C · ${WeatherUtils.getWeatherDescription(weather.current.weatherCode)}',
                                       style: TextStyle(
-                                        fontFamily: 'monospace',
-                                        fontSize: 10,
-                                        color: CyberpunkTheme.textTertiary,
-                                        letterSpacing: 0.5,
+                                        fontSize: 12,
+                                        color: t.textTertiary,
                                       ),
                                     )
                                   : null,
                               trailing: isSelected
                                   ? Icon(
                                       Icons.check_circle,
-                                      color: CyberpunkTheme.neonGreen,
+                                      color: t.successColor,
                                       size: 18,
-                                      shadows: [
-                                        Shadow(
-                                          color: CyberpunkTheme.neonGreen.withValues(alpha: 0.5),
-                                          blurRadius: 8,
-                                        ),
-                                      ],
                                     )
                                   : weather != null
-                                      ? Text(
-                                          '${weather.current.temperature.round()}°',
-                                          style: TextStyle(
-                                            fontFamily: 'monospace',
-                                            fontSize: 16,
-                                            fontWeight: FontWeight.bold,
-                                            color: CyberpunkTheme.textPrimary.withValues(alpha: 0.8),
-                                          ),
-                                        )
-                                      : null,
+                                  ? Text(
+                                      '${weather.current.temperature.round()}°',
+                                      style: TextStyle(
+                                        fontSize: 16,
+                                        fontWeight: FontWeight.bold,
+                                        color: t.textPrimary.withValues(
+                                          alpha: 0.8,
+                                        ),
+                                      ),
+                                    )
+                                  : null,
                               onTap: () {
                                 locationProvider.selectLocation(location);
                                 weatherProvider.fetchWeather(location);
@@ -852,7 +1110,12 @@ class _CityListBottomSheet extends StatelessWidget {
                               },
                               onLongPress: () {
                                 if (!location.isCurrentLocation) {
-                                  _showDeleteDialog(context, locationProvider, location);
+                                  _showDeleteDialog(
+                                    context,
+                                    locationProvider,
+                                    location,
+                                    t,
+                                  );
                                 }
                               },
                             ),
@@ -861,7 +1124,6 @@ class _CityListBottomSheet extends StatelessWidget {
                       ),
               ),
 
-              // Safe area padding
               SizedBox(height: MediaQuery.of(context).padding.bottom),
             ],
           ),
@@ -874,64 +1136,40 @@ class _CityListBottomSheet extends StatelessWidget {
     BuildContext context,
     LocationProvider locationProvider,
     dynamic location,
+    AppThemeData t,
   ) {
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
-        backgroundColor: CyberpunkTheme.bgDarkest.withValues(alpha: 0.95),
+        backgroundColor: t.themeData.brightness == Brightness.light
+            ? Colors.white
+            : t.backgroundColor.withValues(alpha: 0.95),
         shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(4),
-          side: BorderSide(color: CyberpunkTheme.neonRed.withValues(alpha: 0.4)),
+          borderRadius: BorderRadius.circular(t.cardBorderRadius),
+          side: BorderSide(color: t.dangerColor.withValues(alpha: 0.4)),
         ),
         title: Text(
-          '// REMOVE NODE //',
-          style: TextStyle(
-            fontFamily: 'monospace',
-            color: CyberpunkTheme.neonRed,
-            letterSpacing: 2,
-            fontSize: 14,
-          ),
+          'Remove location?',
+          style: TextStyle(color: t.dangerColor, fontSize: 16),
         ),
         content: Text(
-          'Disconnect ${location.name} from saved nodes?',
-          style: TextStyle(
-            fontFamily: 'monospace',
-            color: CyberpunkTheme.textSecondary,
-            fontSize: 13,
-          ),
+          'Remove ${location.name} from saved locations?',
+          style: TextStyle(color: t.textSecondary, fontSize: 14),
         ),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context),
-            child: Text(
-              'ABORT',
-              style: TextStyle(
-                fontFamily: 'monospace',
-                color: CyberpunkTheme.textTertiary,
-                letterSpacing: 1,
-              ),
-            ),
+            child: Text('Cancel', style: TextStyle(color: t.textTertiary)),
           ),
           TextButton(
             onPressed: () {
               locationProvider.removeLocation(location);
               Navigator.pop(context);
             },
-            child: Text(
-              'CONFIRM',
-              style: TextStyle(
-                fontFamily: 'monospace',
-                color: CyberpunkTheme.neonRed,
-                letterSpacing: 1,
-              ),
-            ),
+            child: Text('Remove', style: TextStyle(color: t.dangerColor)),
           ),
         ],
       ),
     );
-  }
-
-  static String _getWeatherDesc(int code) {
-    return WeatherUtils.getWeatherDescription(code);
   }
 }

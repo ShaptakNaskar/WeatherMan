@@ -4,17 +4,18 @@ import 'package:flutter/services.dart';
 import 'package:fluttertoast/fluttertoast.dart';
 import 'package:provider/provider.dart';
 import 'package:url_launcher/url_launcher.dart';
-import 'package:weatherman/config/cyberpunk_theme.dart';
+import 'package:weatherman/config/app_theme_data.dart';
 import 'package:weatherman/providers/location_provider.dart';
 import 'package:weatherman/providers/settings_provider.dart';
+import 'package:weatherman/providers/theme_provider.dart';
 import 'package:weatherman/providers/weather_provider.dart';
 import 'package:weatherman/screens/debug_weather_screen.dart';
 import 'package:weatherman/services/notification_service.dart';
 import 'package:weatherman/utils/unit_converter.dart';
 import 'package:weatherman/utils/trend_analyzer.dart';
 import 'package:weatherman/models/weather.dart';
-import 'package:weatherman/widgets/cyberpunk/cyber_background.dart';
-import 'package:weatherman/widgets/cyberpunk/cyber_glass_card.dart';
+import 'package:weatherman/widgets/themed/themed_background.dart';
+import 'package:weatherman/widgets/themed/themed_card.dart';
 
 /// Settings screen
 class SettingsScreen extends StatefulWidget {
@@ -25,15 +26,6 @@ class SettingsScreen extends StatefulWidget {
 }
 
 class _SettingsScreenState extends State<SettingsScreen> {
-  // Text shadows for legibility on light backgrounds
-  static const List<Shadow> _textShadows = [
-    Shadow(
-      color: Color(0x80000000),
-      blurRadius: 4,
-      offset: Offset(0, 1),
-    ),
-  ];
-
   // Easter egg: tap cloud icon 7 times to unlock developer options
   int _tapCount = 0;
   bool _developerOptionsUnlocked = false;
@@ -43,13 +35,12 @@ class _SettingsScreenState extends State<SettingsScreen> {
   void _onCloudTap() {
     setState(() {
       _tapCount++;
-      // Cancel any existing toast first (override, don't queue)
       Fluttertoast.cancel();
-      
+
       if (_tapCount >= _requiredTaps && !_developerOptionsUnlocked) {
         _developerOptionsUnlocked = true;
         Fluttertoast.showToast(
-          msg: '🎉 Developer options unlocked!',
+          msg: 'Developer options unlocked!',
           toastLength: Toast.LENGTH_LONG,
           gravity: ToastGravity.BOTTOM,
         );
@@ -68,46 +59,48 @@ class _SettingsScreenState extends State<SettingsScreen> {
 
   Future<void> _sendDebugNotification() async {
     await NotificationService.instance.showNow(
-      title: 'DEBUG PING // CYBERWEATHER',
-      body: 'Notif pipeline hotwired. Rerouting signals to your HUD.',
+      title: 'DEBUG — SappyWeather',
+      body: 'Notification pipeline is working.',
     );
   }
 
   Future<void> _sendAllTestNotifications() async {
-    // Test morning briefing
     if (_latestWeather != null) {
       await NotificationService.instance.showMorningBriefing(_latestWeather!);
     } else {
       await NotificationService.instance.showNow(
-        title: '☀️ Good Morning — Test City',
+        title: 'Good Morning — Test City',
         body: 'Today: Partly cloudy, 18°–28°C. No rain expected this morning.',
       );
     }
 
-    // Test evening outlook
     if (_latestWeather != null) {
       await NotificationService.instance.showEveningOutlook(_latestWeather!);
     } else {
       await NotificationService.instance.showNow(
-        title: '🌙 Evening Outlook — Test City',
-        body: 'Currently 22°C. Tomorrow: Partly cloudy, 17°–26°C. Week range: 15°–30°C.',
+        title: 'Evening Outlook — Test City',
+        body:
+            'Currently 22°C. Tomorrow: Partly cloudy, 17°–26°C. Week range: 15°–30°C.',
       );
     }
 
-    // Test severe alert
-    await NotificationService.instance.showSevereAlert(const TrendInsight(
-      title: '⚡ Thunderstorm Alert [TEST]',
-      body: 'Thunderstorm expected in ~3h. Secure outdoor gear and find shelter.',
-      severity: InsightSeverity.severe,
-    ));
+    await NotificationService.instance.showSevereAlert(
+      const TrendInsight(
+        title: 'Thunderstorm Alert [TEST]',
+        body:
+            'Thunderstorm expected in ~3h. Secure outdoor gear and find shelter.',
+        severity: InsightSeverity.severe,
+      ),
+    );
 
-    // Test insight
-    await NotificationService.instance.showInsight(const TrendInsight(
-      title: '📈 Warming Trend [TEST]',
-      body: 'Temperatures rising over the next 7 days — highs climbing from 24° to ~31°C.',
-    ));
+    await NotificationService.instance.showInsight(
+      const TrendInsight(
+        title: 'Warming Trend [TEST]',
+        body:
+            'Temperatures rising over the next 7 days — highs climbing from 24° to ~31°C.',
+      ),
+    );
 
-    // Persistent preview
     if (_latestWeather != null) {
       await NotificationService.instance.showPersistent(_latestWeather!);
     }
@@ -115,9 +108,11 @@ class _SettingsScreenState extends State<SettingsScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final themeProvider = context.watch<ThemeProvider>();
+    final t = themeProvider.current;
+
     return Consumer2<LocationProvider, WeatherProvider>(
       builder: (context, locationProvider, weatherProvider, _) {
-        // Get the current weather code and isDay, fallback to clear day
         final currentLocation = locationProvider.selectedLocation;
         final weather = currentLocation != null
             ? weatherProvider.getWeather(currentLocation)
@@ -126,7 +121,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
         final isDay = weather?.current.isDay ?? true;
         _latestWeather = weather;
 
-        return CyberpunkBackground(
+        return ThemedBackground(
           weatherCode: weatherCode,
           isDay: isDay,
           child: Scaffold(
@@ -134,10 +129,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
             appBar: AppBar(
               backgroundColor: Colors.transparent,
               elevation: 0,
-              title: Text(
-                'Settings',
-                style: TextStyle(shadows: _textShadows),
-              ),
+              title: Text('Settings', style: TextStyle(shadows: t.textShadows)),
               leading: IconButton(
                 icon: const Icon(Icons.arrow_back_rounded),
                 onPressed: () => Navigator.pop(context),
@@ -148,19 +140,17 @@ class _SettingsScreenState extends State<SettingsScreen> {
                 return OrientationBuilder(
                   builder: (context, orientation) {
                     if (orientation == Orientation.landscape) {
-                      // Enable immersive fullscreen mode in landscape
                       SystemChrome.setEnabledSystemUIMode(
                         SystemUiMode.immersiveSticky,
                         overlays: [],
                       );
-                      return _buildLandscapeLayout(settings);
+                      return _buildLandscapeLayout(settings, t);
                     }
-                    // Restore normal UI in portrait
                     SystemChrome.setEnabledSystemUIMode(
                       SystemUiMode.edgeToEdge,
                       overlays: SystemUiOverlay.values,
                     );
-                    return _buildPortraitLayout(settings);
+                    return _buildPortraitLayout(settings, t);
                   },
                 );
               },
@@ -171,44 +161,46 @@ class _SettingsScreenState extends State<SettingsScreen> {
     );
   }
 
-  Widget _buildPortraitLayout(SettingsProvider settings) {
+  Widget _buildPortraitLayout(SettingsProvider settings, AppThemeData t) {
     return ListView(
       padding: const EdgeInsets.all(16),
       children: [
-        ..._buildControlsSection(settings),
+        _buildThemePickerSection(t),
         const SizedBox(height: 16),
-        _buildAboutSection(),
-        ..._buildDeveloperSection(settings),
+        ..._buildControlsSection(settings, t),
+        const SizedBox(height: 16),
+        _buildAboutSection(t),
+        ..._buildDeveloperSection(settings, t),
         const SizedBox(height: 32),
       ],
     );
   }
 
-  Widget _buildLandscapeLayout(SettingsProvider settings) {
+  Widget _buildLandscapeLayout(SettingsProvider settings, AppThemeData t) {
     return Row(
       children: [
-        // Left panel - About section (static)
         SizedBox(
           width: MediaQuery.of(context).size.width * 0.38,
           child: Center(
             child: SingleChildScrollView(
               padding: const EdgeInsets.all(16),
-              child: _buildAboutSection(),
+              child: Column(
+                children: [
+                  _buildAboutSection(t),
+                  const SizedBox(height: 16),
+                  _buildThemePickerSection(t),
+                ],
+              ),
             ),
           ),
         ),
-        // Divider
-        Container(
-          width: 1,
-          color: Colors.white.withValues(alpha: 0.1),
-        ),
-        // Right panel - Controls (scrollable)
+        Container(width: 1, color: t.textTertiary.withValues(alpha: 0.15)),
         Expanded(
           child: ListView(
             padding: const EdgeInsets.all(16),
             children: [
-              ..._buildControlsSection(settings),
-              ..._buildDeveloperSection(settings),
+              ..._buildControlsSection(settings, t),
+              ..._buildDeveloperSection(settings, t),
               const SizedBox(height: 32),
             ],
           ),
@@ -217,23 +209,77 @@ class _SettingsScreenState extends State<SettingsScreen> {
     );
   }
 
-  List<Widget> _buildControlsSection(SettingsProvider settings) {
+  // ── Theme Picker ────────────────────────────────────────
+  Widget _buildThemePickerSection(AppThemeData t) {
+    final themeProvider = context.read<ThemeProvider>();
+
+    return ThemedCard(
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Icon(Icons.palette_rounded, size: 20, color: t.accentColor),
+              const SizedBox(width: 8),
+              Text(
+                'Theme',
+                style: Theme.of(
+                  context,
+                ).textTheme.titleMedium?.copyWith(shadows: t.textShadows),
+              ),
+            ],
+          ),
+          const SizedBox(height: 16),
+          LayoutBuilder(
+            builder: (context, constraints) {
+              final columns = constraints.maxWidth > 500 ? 3 : 3;
+              final spacing = 10.0;
+              final cardWidth =
+                  (constraints.maxWidth - spacing * (columns - 1)) / columns;
+              return Wrap(
+                spacing: spacing,
+                runSpacing: spacing,
+                children: AppThemeType.values.map((type) {
+                  final isSelected = themeProvider.currentType == type;
+                  return SizedBox(
+                    width: cardWidth,
+                    child: _ThemePreviewCard(
+                      type: type,
+                      isSelected: isSelected,
+                      currentTheme: t,
+                      onTap: () => themeProvider.setTheme(type),
+                    ),
+                  );
+                }).toList(),
+              );
+            },
+          ),
+        ],
+      ),
+    );
+  }
+
+  List<Widget> _buildControlsSection(
+    SettingsProvider settings,
+    AppThemeData t,
+  ) {
     return [
       // Temperature unit
-      CyberGlassCard(
+      ThemedCard(
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Text(
               'Temperature Unit',
-              style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                shadows: _textShadows,
-              ),
+              style: Theme.of(
+                context,
+              ).textTheme.titleMedium?.copyWith(shadows: t.textShadows),
             ),
             const SizedBox(height: 16),
             _TemperatureUnitSelector(
               currentUnit: settings.temperatureUnit,
               onChanged: settings.setTemperatureUnit,
+              theme: t,
             ),
           ],
         ),
@@ -242,7 +288,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
       const SizedBox(height: 16),
 
       // Advanced View toggle
-      CyberGlassCard(
+      ThemedCard(
         child: Row(
           children: [
             Expanded(
@@ -251,16 +297,16 @@ class _SettingsScreenState extends State<SettingsScreen> {
                 children: [
                   Text(
                     'Advanced View',
-                    style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                      shadows: _textShadows,
-                    ),
+                    style: Theme.of(
+                      context,
+                    ).textTheme.titleMedium?.copyWith(shadows: t.textShadows),
                   ),
                   const SizedBox(height: 4),
                   Text(
                     'Show detailed weather data with extra metrics',
                     style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                      color: Colors.white.withValues(alpha: 0.7),
-                      shadows: _textShadows,
+                      color: t.textSecondary,
+                      shadows: t.textShadows,
                     ),
                   ),
                 ],
@@ -269,10 +315,10 @@ class _SettingsScreenState extends State<SettingsScreen> {
             Switch(
               value: settings.advancedViewEnabled,
               onChanged: (value) => settings.setAdvancedViewEnabled(value),
-              activeThumbColor: Colors.white,
-              activeTrackColor: Colors.white.withValues(alpha: 0.5),
-              inactiveThumbColor: Colors.white.withValues(alpha: 0.7),
-              inactiveTrackColor: Colors.white.withValues(alpha: 0.2),
+              activeThumbColor: t.accentColor,
+              activeTrackColor: t.accentColor.withValues(alpha: 0.4),
+              inactiveThumbColor: t.textTertiary,
+              inactiveTrackColor: t.textTertiary.withValues(alpha: 0.3),
             ),
           ],
         ),
@@ -280,8 +326,8 @@ class _SettingsScreenState extends State<SettingsScreen> {
 
       const SizedBox(height: 16),
 
-      // ── Notification Controls ────────────────────────────────
-      CyberGlassCard(
+      // Notification Controls
+      ThemedCard(
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
@@ -289,139 +335,123 @@ class _SettingsScreenState extends State<SettingsScreen> {
               children: [
                 Icon(
                   Icons.notifications_active_rounded,
-                  color: CyberpunkTheme.neonCyan,
+                  color: t.accentColor,
                   size: 20,
-                  shadows: CyberpunkTheme.subtleCyanGlow,
                 ),
                 const SizedBox(width: 8),
                 Text(
                   'Notifications',
-                  style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                    shadows: _textShadows,
-                  ),
+                  style: Theme.of(
+                    context,
+                  ).textTheme.titleMedium?.copyWith(shadows: t.textShadows),
                 ),
               ],
             ),
             const SizedBox(height: 16),
 
-            // Persistent weather status
             _NotifToggle(
               icon: Icons.pin_rounded,
               title: 'Live Weather Status',
               subtitle: 'Ongoing notification with current conditions',
               value: settings.persistentNotificationEnabled,
+              theme: t,
               onChanged: (val) async {
                 await settings.setPersistentNotificationEnabled(val);
                 if (val && _latestWeather != null) {
-                  await NotificationService.instance.showPersistent(_latestWeather!);
+                  await NotificationService.instance.showPersistent(
+                    _latestWeather!,
+                  );
                 } else if (!val) {
                   await NotificationService.instance.cancelPersistent();
                 }
               },
             ),
-            _notifDivider(),
+            Divider(height: 1, color: t.accentColor.withValues(alpha: 0.1)),
 
-            // Morning briefing
             _NotifToggle(
               icon: Icons.wb_sunny_rounded,
               title: 'Morning Briefing',
               subtitle: 'Daily summary at ~7 AM with rain, UV, wind',
               value: settings.morningBriefingEnabled,
+              theme: t,
               onChanged: (val) => settings.setMorningBriefingEnabled(val),
             ),
-            _notifDivider(),
+            Divider(height: 1, color: t.accentColor.withValues(alpha: 0.1)),
 
-            // Evening outlook
             _NotifToggle(
               icon: Icons.nightlight_round,
               title: 'Evening Outlook',
               subtitle: 'Tomorrow preview + week range at ~5 PM',
               value: settings.eveningOutlookEnabled,
+              theme: t,
               onChanged: (val) => settings.setEveningOutlookEnabled(val),
             ),
-            _notifDivider(),
+            Divider(height: 1, color: t.accentColor.withValues(alpha: 0.1)),
 
-            // Severe weather alerts
             _NotifToggle(
               icon: Icons.warning_amber_rounded,
               title: 'Severe Weather Alerts',
               subtitle: 'Thunderstorms, extreme heat/cold, heavy rain',
               value: settings.severeAlertsEnabled,
+              theme: t,
               onChanged: (val) => settings.setSevereAlertsEnabled(val),
-              accentColor: CyberpunkTheme.neonRed,
+              accentColor: t.dangerColor,
             ),
-            _notifDivider(),
+            Divider(height: 1, color: t.accentColor.withValues(alpha: 0.1)),
 
-            // Trend insights
             _NotifToggle(
               icon: Icons.insights_rounded,
               title: 'Weather Insights',
               subtitle: 'Warming/cooling trends, rain probability, UV',
               value: settings.trendInsightsEnabled,
+              theme: t,
               onChanged: (val) => settings.setTrendInsightsEnabled(val),
             ),
           ],
         ),
       ),
-
     ];
   }
 
-  Widget _notifDivider() {
-    return Divider(
-      height: 1,
-      color: CyberpunkTheme.neonCyan.withValues(alpha: 0.1),
-    );
-  }
-
-  Widget _buildAboutSection() {
-    return CyberGlassCard(
+  Widget _buildAboutSection(AppThemeData t) {
+    return ThemedCard(
       child: SizedBox(
         width: double.infinity,
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.center,
           children: [
             const SizedBox(height: 8),
-            // App icon/name - tap 7 times to unlock developer options
             GestureDetector(
               onTap: _onCloudTap,
-              child: Icon(
-                Icons.cloud_rounded,
-                size: 48,
-                color: CyberpunkTheme.neonCyan,
-                shadows: CyberpunkTheme.neonCyanGlow,
-              ),
+              child: Icon(Icons.cloud_rounded, size: 48, color: t.accentColor),
             ),
             const SizedBox(height: 12),
             Text(
-              'CyberWeather',
+              'SappyWeather',
               style: TextStyle(
-                fontFamily: 'monospace',
                 fontSize: 24,
                 fontWeight: FontWeight.bold,
-                color: CyberpunkTheme.neonCyan,
+                color: t.accentColor,
                 letterSpacing: 3,
-                shadows: CyberpunkTheme.subtleCyanGlow,
+                shadows: t.subtleGlow,
               ),
             ),
             const SizedBox(height: 4),
             Text(
-              'v1.1.0_CYBER',
+              'v2.0.0',
               style: TextStyle(
-                fontFamily: 'monospace',
                 fontSize: 12,
-                color: CyberpunkTheme.textTertiary,
+                color: t.textTertiary,
                 letterSpacing: 2,
               ),
             ),
             const SizedBox(height: 20),
             Text(
-              'Coded with ❤️ by Sappy',
+              'Coded with love by Sappy',
               style: TextStyle(
-                fontFamily: 'monospace',
                 fontSize: 14,
-                color: CyberpunkTheme.neonBlue,
-                shadows: CyberpunkTheme.neonCyanGlow,
+                color: t.accentColorSecondary,
+                shadows: t.subtleGlow,
               ),
             ),
             const SizedBox(height: 8),
@@ -431,36 +461,33 @@ class _SettingsScreenState extends State<SettingsScreen> {
                 mode: LaunchMode.externalApplication,
               ),
               child: Text(
-                '> VISIT_NODE →',
+                'Visit Website',
                 style: TextStyle(
-                  fontFamily: 'monospace',
                   fontSize: 13,
-                  color: CyberpunkTheme.neonCyan,
+                  color: t.accentColor,
                   decoration: TextDecoration.underline,
-                  decorationColor: CyberpunkTheme.neonCyan.withValues(alpha: 0.5),
+                  decorationColor: t.accentColor.withValues(alpha: 0.5),
                   letterSpacing: 1,
                 ),
               ),
             ),
             const SizedBox(height: 20),
-            Divider(color: CyberpunkTheme.neonCyan.withValues(alpha: 0.15)),
+            Divider(color: t.accentColor.withValues(alpha: 0.15)),
             const SizedBox(height: 12),
             Text(
-              '// DATA_SRC: Open-Meteo //',
+              'Data: Open-Meteo',
               style: TextStyle(
-                fontFamily: 'monospace',
                 fontSize: 11,
-                color: CyberpunkTheme.textTertiary,
+                color: t.textTertiary,
                 letterSpacing: 1,
               ),
             ),
             const SizedBox(height: 4),
             Text(
-              '// FRAMEWORK: Flutter //',
+              'Framework: Flutter',
               style: TextStyle(
-                fontFamily: 'monospace',
                 fontSize: 11,
-                color: CyberpunkTheme.textTertiary,
+                color: t.textTertiary,
                 letterSpacing: 1,
               ),
             ),
@@ -471,34 +498,29 @@ class _SettingsScreenState extends State<SettingsScreen> {
     );
   }
 
-  List<Widget> _buildDeveloperSection(SettingsProvider settings) {
+  List<Widget> _buildDeveloperSection(
+    SettingsProvider settings,
+    AppThemeData t,
+  ) {
     if (!kDebugMode && !_developerOptionsUnlocked) {
       return [];
     }
 
     return [
       const SizedBox(height: 16),
-      CyberGlassCard(
+      ThemedCard(
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Row(
               children: [
-                Icon(
-                  Icons.bug_report_rounded,
-                  color: CyberpunkTheme.neonYellow,
-                  size: 20,
-                  shadows: CyberpunkTheme.neonYellowGlow,
-                ),
+                Icon(Icons.bug_report_rounded, color: t.warningColor, size: 20),
                 const SizedBox(width: 8),
                 Text(
-                  '// DEV_OPTIONS //',
-                  style: TextStyle(
-                    fontFamily: 'monospace',
-                    fontSize: 14,
-                    color: CyberpunkTheme.neonYellow,
-                    letterSpacing: 2,
-                    shadows: CyberpunkTheme.neonYellowGlow,
+                  'Developer Options',
+                  style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                    color: t.warningColor,
+                    shadows: t.textShadows,
                   ),
                 ),
               ],
@@ -506,8 +528,9 @@ class _SettingsScreenState extends State<SettingsScreen> {
             const SizedBox(height: 16),
             _DebugButton(
               icon: Icons.palette_outlined,
-              title: 'DEBUG_CONSOLE',
+              title: 'Debug Console',
               subtitle: 'Weather FX + Alert simulator',
+              theme: t,
               onTap: () {
                 Navigator.push(
                   context,
@@ -520,15 +543,17 @@ class _SettingsScreenState extends State<SettingsScreen> {
             const SizedBox(height: 12),
             _DebugButton(
               icon: Icons.notifications_active,
-              title: 'DEBUG_NOTIFICATION',
+              title: 'Debug Notification',
               subtitle: 'Send a test briefing notification',
+              theme: t,
               onTap: _sendDebugNotification,
             ),
             const SizedBox(height: 12),
             _DebugButton(
               icon: Icons.science,
-              title: 'TEST_ALERTS',
+              title: 'Test Alerts',
               subtitle: 'Test morning, evening, and trend alerts',
+              theme: t,
               onTap: _sendAllTestNotifications,
             ),
           ],
@@ -538,44 +563,172 @@ class _SettingsScreenState extends State<SettingsScreen> {
   }
 }
 
+// ── Theme Preview Card ────────────────────────────────────
+
+class _ThemePreviewCard extends StatelessWidget {
+  final AppThemeType type;
+  final bool isSelected;
+  final AppThemeData currentTheme;
+  final VoidCallback onTap;
+
+  const _ThemePreviewCard({
+    required this.type,
+    required this.isSelected,
+    required this.currentTheme,
+    required this.onTap,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final (String label, List<Color> colors, IconData icon) = switch (type) {
+      AppThemeType.clean => (
+        'Clean',
+        [
+          const Color(0xFF1A2340),
+          const Color(0xFF2D3561),
+          const Color(0xFF4B6CB7),
+        ],
+        Icons.water_drop_rounded,
+      ),
+      AppThemeType.cyberpunk => (
+        'Cyber',
+        [
+          const Color(0xFF0a0a1a),
+          const Color(0xFF00e5ff),
+          const Color(0xFFff2a6d),
+        ],
+        Icons.bolt_rounded,
+      ),
+      // AppThemeType.pastel => (
+      //     'Pastel',
+      //     [const Color(0xFFB8A9E8), const Color(0xFF98E4C9), const Color(0xFFFFC3A0)],
+      //     Icons.favorite_rounded,
+      //   ),
+      AppThemeType.pastelDark => (
+        'Pastel Dark',
+        [
+          const Color(0xFF1A1525),
+          const Color(0xFF7B5EAE),
+          const Color(0xFFCBB8F0),
+        ],
+        Icons.nightlight_round,
+      ),
+      AppThemeType.sunset => (
+        'Sunset',
+        [
+          const Color(0xFF1A1018),
+          const Color(0xFFFF8A50),
+          const Color(0xFFFF6B8A),
+        ],
+        Icons.wb_twilight_rounded,
+      ),
+      AppThemeType.ocean => (
+        'Ocean',
+        [
+          const Color(0xFF0A1520),
+          const Color(0xFF00BFA5),
+          const Color(0xFF40C4FF),
+        ],
+        Icons.waves_rounded,
+      ),
+    };
+
+    final t = currentTheme;
+
+    return GestureDetector(
+      onTap: onTap,
+      child: AnimatedContainer(
+        duration: const Duration(milliseconds: 250),
+        padding: const EdgeInsets.symmetric(vertical: 14, horizontal: 8),
+        decoration: BoxDecoration(
+          borderRadius: BorderRadius.circular(t.cardBorderRadius),
+          border: Border.all(
+            color: isSelected
+                ? t.accentColor.withValues(alpha: 0.8)
+                : t.textTertiary.withValues(alpha: 0.2),
+            width: isSelected ? 2 : 1,
+          ),
+          color: isSelected
+              ? t.accentColor.withValues(alpha: 0.08)
+              : t.cardColor.withValues(alpha: 0.3),
+        ),
+        child: Column(
+          children: [
+            // Color preview dots
+            Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: colors
+                  .map(
+                    (c) => Container(
+                      width: 14,
+                      height: 14,
+                      margin: const EdgeInsets.symmetric(horizontal: 2),
+                      decoration: BoxDecoration(
+                        color: c,
+                        shape: BoxShape.circle,
+                        border: Border.all(
+                          color: Colors.white.withValues(alpha: 0.3),
+                          width: 0.5,
+                        ),
+                      ),
+                    ),
+                  )
+                  .toList(),
+            ),
+            const SizedBox(height: 10),
+            Icon(
+              icon,
+              size: 18,
+              color: isSelected ? t.accentColor : t.textSecondary,
+            ),
+            const SizedBox(height: 6),
+            Text(
+              label,
+              style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                color: isSelected ? t.accentColor : t.textSecondary,
+                fontWeight: isSelected ? FontWeight.w700 : FontWeight.w500,
+                shadows: t.textShadows,
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+// ── Debug Button ──────────────────────────────────────────
+
 class _DebugButton extends StatelessWidget {
   final IconData icon;
   final String title;
   final String subtitle;
   final VoidCallback onTap;
-
-  // Text shadows for legibility
-  static const List<Shadow> _textShadows = [
-    Shadow(
-      color: Color(0x80000000),
-      blurRadius: 4,
-      offset: Offset(0, 1),
-    ),
-  ];
+  final AppThemeData theme;
 
   const _DebugButton({
     required this.icon,
     required this.title,
     required this.subtitle,
     required this.onTap,
+    required this.theme,
   });
 
   @override
   Widget build(BuildContext context) {
+    final t = theme;
     return GestureDetector(
       onTap: onTap,
       child: Container(
         padding: const EdgeInsets.all(12),
         decoration: BoxDecoration(
-          color: CyberpunkTheme.neonYellow.withValues(alpha: 0.08),
-          borderRadius: BorderRadius.circular(4),
-          border: Border.all(
-            color: CyberpunkTheme.neonYellow.withValues(alpha: 0.3),
-          ),
+          color: t.warningColor.withValues(alpha: 0.08),
+          borderRadius: BorderRadius.circular(t.cardBorderRadius * 0.5),
+          border: Border.all(color: t.warningColor.withValues(alpha: 0.3)),
         ),
         child: Row(
           children: [
-            Icon(icon, color: CyberpunkTheme.neonYellow, shadows: CyberpunkTheme.neonYellowGlow),
+            Icon(icon, color: t.warningColor),
             const SizedBox(width: 12),
             Expanded(
               child: Column(
@@ -585,20 +738,20 @@ class _DebugButton extends StatelessWidget {
                     title,
                     style: Theme.of(context).textTheme.bodyLarge?.copyWith(
                       fontWeight: FontWeight.w500,
-                      shadows: _textShadows,
+                      shadows: t.textShadows,
                     ),
                   ),
                   Text(
                     subtitle,
                     style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                      color: CyberpunkTheme.textSecondary,
-                      shadows: _textShadows,
+                      color: t.textSecondary,
+                      shadows: t.textShadows,
                     ),
                   ),
                 ],
               ),
             ),
-            Icon(Icons.chevron_right_rounded, color: CyberpunkTheme.neonYellow),
+            Icon(Icons.chevron_right_rounded, color: t.warningColor),
           ],
         ),
       ),
@@ -606,13 +759,17 @@ class _DebugButton extends StatelessWidget {
   }
 }
 
+// ── Temperature Unit Selector ─────────────────────────────
+
 class _TemperatureUnitSelector extends StatelessWidget {
   final TemperatureUnit currentUnit;
   final ValueChanged<TemperatureUnit> onChanged;
+  final AppThemeData theme;
 
   const _TemperatureUnitSelector({
     required this.currentUnit,
     required this.onChanged,
+    required this.theme,
   });
 
   @override
@@ -625,6 +782,7 @@ class _TemperatureUnitSelector extends StatelessWidget {
             symbol: '°C',
             isSelected: currentUnit == TemperatureUnit.celsius,
             onTap: () => onChanged(TemperatureUnit.celsius),
+            theme: theme,
           ),
         ),
         const SizedBox(width: 12),
@@ -634,6 +792,7 @@ class _TemperatureUnitSelector extends StatelessWidget {
             symbol: '°F',
             isSelected: currentUnit == TemperatureUnit.fahrenheit,
             onTap: () => onChanged(TemperatureUnit.fahrenheit),
+            theme: theme,
           ),
         ),
       ],
@@ -646,25 +805,19 @@ class _UnitButton extends StatelessWidget {
   final String symbol;
   final bool isSelected;
   final VoidCallback onTap;
-
-  // Text shadows for legibility
-  static const List<Shadow> _textShadows = [
-    Shadow(
-      color: Color(0x80000000),
-      blurRadius: 4,
-      offset: Offset(0, 1),
-    ),
-  ];
+  final AppThemeData theme;
 
   const _UnitButton({
     required this.label,
     required this.symbol,
     required this.isSelected,
     required this.onTap,
+    required this.theme,
   });
 
   @override
   Widget build(BuildContext context) {
+    final t = theme;
     return GestureDetector(
       onTap: onTap,
       child: AnimatedContainer(
@@ -672,13 +825,13 @@ class _UnitButton extends StatelessWidget {
         padding: const EdgeInsets.symmetric(vertical: 16),
         decoration: BoxDecoration(
           color: isSelected
-              ? CyberpunkTheme.neonCyan.withValues(alpha: 0.1)
-              : CyberpunkTheme.bgPanel.withValues(alpha: 0.5),
-          borderRadius: BorderRadius.circular(4),
+              ? t.accentColor.withValues(alpha: 0.1)
+              : t.cardColor.withValues(alpha: 0.3),
+          borderRadius: BorderRadius.circular(t.cardBorderRadius * 0.5),
           border: Border.all(
             color: isSelected
-                ? CyberpunkTheme.neonCyan.withValues(alpha: 0.5)
-                : CyberpunkTheme.neonCyan.withValues(alpha: 0.15),
+                ? t.accentColor.withValues(alpha: 0.5)
+                : t.textTertiary.withValues(alpha: 0.15),
             width: isSelected ? 1.5 : 0.5,
           ),
         ),
@@ -688,15 +841,15 @@ class _UnitButton extends StatelessWidget {
               symbol,
               style: Theme.of(context).textTheme.headlineMedium?.copyWith(
                 fontWeight: isSelected ? FontWeight.w600 : FontWeight.w400,
-                shadows: _textShadows,
+                shadows: t.textShadows,
               ),
             ),
             const SizedBox(height: 4),
             Text(
               label,
               style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                color: isSelected ? CyberpunkTheme.textPrimary : CyberpunkTheme.textSecondary,
-                shadows: _textShadows,
+                color: isSelected ? t.textPrimary : t.textSecondary,
+                shadows: t.textShadows,
               ),
             ),
           ],
@@ -706,23 +859,16 @@ class _UnitButton extends StatelessWidget {
   }
 }
 
-/// Notification toggle row widget
+// ── Notification Toggle ───────────────────────────────────
+
 class _NotifToggle extends StatelessWidget {
   final IconData icon;
   final String title;
   final String subtitle;
   final bool value;
   final ValueChanged<bool> onChanged;
+  final AppThemeData theme;
   final Color? accentColor;
-
-  // Text shadows for legibility
-  static const List<Shadow> _textShadows = [
-    Shadow(
-      color: Color(0x80000000),
-      blurRadius: 4,
-      offset: Offset(0, 1),
-    ),
-  ];
 
   const _NotifToggle({
     required this.icon,
@@ -730,19 +876,19 @@ class _NotifToggle extends StatelessWidget {
     required this.subtitle,
     required this.value,
     required this.onChanged,
+    required this.theme,
     this.accentColor,
   });
 
   @override
   Widget build(BuildContext context) {
-    final color = accentColor ?? CyberpunkTheme.neonCyan;
+    final t = theme;
+    final color = accentColor ?? t.accentColor;
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: 10),
       child: Row(
         children: [
-          Icon(icon, color: color, size: 20, shadows: [
-            Shadow(color: color.withValues(alpha: 0.5), blurRadius: 6),
-          ]),
+          Icon(icon, color: color, size: 20),
           const SizedBox(width: 12),
           Expanded(
             child: Column(
@@ -752,15 +898,15 @@ class _NotifToggle extends StatelessWidget {
                   title,
                   style: Theme.of(context).textTheme.bodyLarge?.copyWith(
                     fontWeight: FontWeight.w500,
-                    shadows: _textShadows,
+                    shadows: t.textShadows,
                   ),
                 ),
                 const SizedBox(height: 2),
                 Text(
                   subtitle,
                   style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                    color: Colors.white.withValues(alpha: 0.6),
-                    shadows: _textShadows,
+                    color: t.textSecondary,
+                    shadows: t.textShadows,
                   ),
                 ),
               ],
@@ -769,10 +915,10 @@ class _NotifToggle extends StatelessWidget {
           Switch(
             value: value,
             onChanged: onChanged,
-            activeThumbColor: Colors.white,
-            activeTrackColor: color.withValues(alpha: 0.5),
-            inactiveThumbColor: Colors.white.withValues(alpha: 0.7),
-            inactiveTrackColor: Colors.white.withValues(alpha: 0.2),
+            activeThumbColor: color,
+            activeTrackColor: color.withValues(alpha: 0.4),
+            inactiveThumbColor: t.textTertiary,
+            inactiveTrackColor: t.textTertiary.withValues(alpha: 0.3),
           ),
         ],
       ),

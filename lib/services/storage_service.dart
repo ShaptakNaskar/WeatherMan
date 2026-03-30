@@ -1,5 +1,6 @@
 import 'dart:convert';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:weatherman/config/app_theme_data.dart';
 import 'package:weatherman/models/location.dart';
 import 'package:weatherman/models/weather.dart';
 import 'package:weatherman/utils/unit_converter.dart';
@@ -22,6 +23,8 @@ class StorageService {
   static const String _notifPromptedKey = 'notif_prompted';
   static const String _batteryPromptedKey = 'battery_prompted';
   static const String _lastSevereHashKey = 'last_severe_hash';
+  static const String _themeKey = 'app_theme';
+  static const String _onboardingCompleteKey = 'onboarding_complete';
 
   SharedPreferences? _prefs;
 
@@ -58,10 +61,10 @@ class StorageService {
   /// Add a location to saved list
   Future<void> addLocation(LocationModel location) async {
     final locations = await getSavedLocations();
-    
+
     // Check if already exists
     if (locations.any((l) => l == location)) return;
-    
+
     locations.add(location);
     await saveLocations(locations);
   }
@@ -295,5 +298,31 @@ class StorageService {
   Future<void> _setDate(String key, DateTime value) async {
     final p = await prefs;
     await p.setString(key, value.toIso8601String());
+  }
+
+  // --- Theme ---
+  Future<AppThemeType> getTheme() async {
+    final p = await prefs;
+    final value = p.getString(_themeKey);
+    for (final t in AppThemeType.values) {
+      if (t.name == value) return t;
+    }
+    return AppThemeType.clean;
+  }
+
+  Future<void> setTheme(AppThemeType theme) async {
+    final p = await prefs;
+    await p.setString(_themeKey, theme.name);
+  }
+
+  // --- Onboarding ---
+  Future<bool> getOnboardingComplete() async {
+    final p = await prefs;
+    return p.getBool(_onboardingCompleteKey) ?? false;
+  }
+
+  Future<void> setOnboardingComplete() async {
+    final p = await prefs;
+    await p.setBool(_onboardingCompleteKey, true);
   }
 }

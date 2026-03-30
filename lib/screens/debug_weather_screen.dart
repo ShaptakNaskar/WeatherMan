@@ -1,12 +1,17 @@
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:provider/provider.dart';
+import 'package:weatherman/config/app_theme_data.dart';
 import 'package:weatherman/config/cyberpunk_theme.dart';
 import 'package:weatherman/models/weather.dart';
+import 'package:weatherman/providers/theme_provider.dart';
 import 'package:weatherman/widgets/cyberpunk/cyber_background.dart';
 import 'package:weatherman/widgets/cyberpunk/cyber_glass_card.dart';
 import 'package:weatherman/widgets/cyberpunk/glitch_effects.dart';
 import 'package:weatherman/widgets/cyberpunk/hud_warnings.dart';
+import 'package:weatherman/widgets/themed/themed_background.dart';
+import 'package:weatherman/widgets/themed/themed_card.dart';
 
 /// Debug screen to preview weather styles AND test warning/danger alerts
 class DebugWeatherScreen extends StatefulWidget {
@@ -74,92 +79,159 @@ class _DebugWeatherScreenState extends State<DebugWeatherScreen>
 
   @override
   Widget build(BuildContext context) {
-    final alerts = _currentTab == 1 ? _debugAlerts : <EnvironmentAlert>[];
+    final themeProvider = context.watch<ThemeProvider>();
+    final isCyberpunk = themeProvider.currentType == AppThemeType.cyberpunk;
+    final t = themeProvider.current;
+    final alerts = (_currentTab == 1 && isCyberpunk)
+        ? _debugAlerts
+        : <EnvironmentAlert>[];
     final hasDanger = alerts.any((a) => a.severity == AlertSeverity.danger);
 
-    return DangerFlashOverlay(
-      hasDanger: hasDanger,
-      child: CyberpunkBackground(
+    // Use themed background for non-cyberpunk themes
+    Widget background;
+    if (isCyberpunk) {
+      background = DangerFlashOverlay(
+        hasDanger: hasDanger,
+        child: CyberpunkBackground(
+          weatherCode: _currentWeatherCode,
+          isDay: _isDay,
+          child: _buildScaffold(context, isCyberpunk, t, alerts),
+        ),
+      );
+    } else {
+      background = ThemedBackground(
         weatherCode: _currentWeatherCode,
         isDay: _isDay,
-        child: Stack(
-          children: [
-            // Vignette - REMOVED for cleaner look
-            Scaffold(
-              backgroundColor: Colors.transparent,
-              appBar: AppBar(
-                backgroundColor: Colors.transparent,
-                elevation: 0,
-                title: GlitchText(
-                  text: '// DEBUG_CONSOLE //',
-                  style: TextStyle(
-                    fontFamily: 'monospace',
-                    fontSize: 16,
-                    color: CyberpunkTheme.neonCyan,
-                    letterSpacing: 2,
-                    shadows: CyberpunkTheme.subtleCyanGlow,
+        child: _buildScaffold(context, isCyberpunk, t, alerts),
+      );
+    }
+
+    return background;
+  }
+
+  Widget _buildScaffold(
+    BuildContext context,
+    bool isCyberpunk,
+    AppThemeData t,
+    List<EnvironmentAlert> alerts,
+  ) {
+    return Stack(
+      children: [
+        Scaffold(
+          backgroundColor: Colors.transparent,
+          appBar: AppBar(
+            backgroundColor: Colors.transparent,
+            elevation: 0,
+            title: isCyberpunk
+                ? GlitchText(
+                    text: '// DEBUG_CONSOLE //',
+                    style: TextStyle(
+                      fontFamily: 'monospace',
+                      fontSize: 16,
+                      color: CyberpunkTheme.neonCyan,
+                      letterSpacing: 2,
+                      shadows: CyberpunkTheme.subtleCyanGlow,
+                    ),
+                    glitchIntensity: 0.4,
+                  )
+                : Text(
+                    'Debug Console',
+                    style: TextStyle(
+                      fontSize: 18,
+                      fontWeight: FontWeight.w600,
+                      color: t.textPrimary,
+                    ),
                   ),
-                  glitchIntensity: 0.4,
-                ),
-                leading: IconButton(
-                  icon: Icon(Icons.arrow_back_rounded, color: CyberpunkTheme.neonCyan),
-                  onPressed: () => Navigator.pop(context),
-                ),
+            leading: IconButton(
+              icon: Icon(
+                Icons.arrow_back_rounded,
+                color: isCyberpunk ? CyberpunkTheme.neonCyan : t.textPrimary,
               ),
-              body: OrientationBuilder(
-                builder: (context, orientation) {
-                  if (orientation == Orientation.landscape) {
-                    SystemChrome.setEnabledSystemUIMode(
-                      SystemUiMode.immersiveSticky,
-                      overlays: [],
-                    );
-                  } else {
-                    SystemChrome.setEnabledSystemUIMode(
-                      SystemUiMode.edgeToEdge,
-                      overlays: SystemUiOverlay.values,
-                    );
-                  }
-                  return _buildContent();
-                },
-              ),
+              onPressed: () => Navigator.pop(context),
             ),
-            if (_currentTab == 1)
-              HudWarningOverlay(alerts: alerts),
-          ],
+          ),
+          body: OrientationBuilder(
+            builder: (context, orientation) {
+              final isLandscape = orientation == Orientation.landscape;
+              if (isLandscape) {
+                SystemChrome.setEnabledSystemUIMode(
+                  SystemUiMode.immersiveSticky,
+                  overlays: [],
+                );
+              } else {
+                SystemChrome.setEnabledSystemUIMode(
+                  SystemUiMode.edgeToEdge,
+                  overlays: SystemUiOverlay.values,
+                );
+              }
+              return _buildContent(isCyberpunk, t, isLandscape);
+            },
+          ),
         ),
-      ),
+        if (_currentTab == 1 && isCyberpunk) HudWarningOverlay(alerts: alerts),
+      ],
     );
   }
 
-  Widget _buildContent() {
+  Widget _buildContent(bool isCyberpunk, AppThemeData t, bool isLandscape) {
+    // For non-cyberpunk themes, only show weather tab (no alerts)
+    final showAlerts = isCyberpunk;
+
     return Column(
       children: [
-        _buildTabBar(),
+        _buildTabBar(isCyberpunk, t, showAlerts),
         Expanded(
-          child: _currentTab == 0
-              ? _buildWeatherTab()
+          child: (_currentTab == 0 || !showAlerts)
+              ? _buildWeatherTab(isCyberpunk, t, isLandscape)
               : _buildAlertsTab(),
         ),
       ],
     );
   }
 
-  Widget _buildTabBar() {
+  Widget _buildTabBar(bool isCyberpunk, AppThemeData t, bool showAlerts) {
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
       child: Row(
         children: [
-          _buildTab(0, 'WEATHER_FX', Icons.cloud_outlined),
-          const SizedBox(width: 8),
-          _buildTab(1, 'ALERT_SIM', Icons.warning_amber_rounded),
+          _buildTab(
+            0,
+            isCyberpunk ? 'WEATHER_FX' : 'Weather FX',
+            Icons.cloud_outlined,
+            isCyberpunk,
+            t,
+          ),
+          if (showAlerts) ...[
+            const SizedBox(width: 8),
+            _buildTab(
+              1,
+              'ALERT_SIM',
+              Icons.warning_amber_rounded,
+              isCyberpunk,
+              t,
+            ),
+          ],
         ],
       ),
     );
   }
 
-  Widget _buildTab(int index, String label, IconData icon) {
+  Widget _buildTab(
+    int index,
+    String label,
+    IconData icon,
+    bool isCyberpunk,
+    AppThemeData t,
+  ) {
     final isSelected = _currentTab == index;
-    final color = isSelected ? CyberpunkTheme.neonCyan : CyberpunkTheme.textTertiary;
+
+    final Color selectedColor = isCyberpunk
+        ? CyberpunkTheme.neonCyan
+        : t.accentColor;
+    final Color unselectedColor = isCyberpunk
+        ? CyberpunkTheme.textTertiary
+        : t.textSecondary;
+    final color = isSelected ? selectedColor : unselectedColor;
 
     return Expanded(
       child: GestureDetector(
@@ -169,13 +241,13 @@ class _DebugWeatherScreenState extends State<DebugWeatherScreen>
           padding: const EdgeInsets.symmetric(vertical: 10),
           decoration: BoxDecoration(
             color: isSelected
-                ? CyberpunkTheme.neonCyan.withValues(alpha: 0.1)
+                ? selectedColor.withValues(alpha: 0.1)
                 : Colors.transparent,
-            borderRadius: BorderRadius.circular(2),
+            borderRadius: BorderRadius.circular(isCyberpunk ? 2 : 8),
             border: Border.all(
               color: isSelected
-                  ? CyberpunkTheme.neonCyan.withValues(alpha: 0.5)
-                  : CyberpunkTheme.textTertiary.withValues(alpha: 0.3),
+                  ? selectedColor.withValues(alpha: 0.5)
+                  : unselectedColor.withValues(alpha: 0.3),
               width: 1,
             ),
           ),
@@ -187,11 +259,11 @@ class _DebugWeatherScreenState extends State<DebugWeatherScreen>
               Text(
                 label,
                 style: TextStyle(
-                  fontFamily: 'monospace',
+                  fontFamily: isCyberpunk ? 'monospace' : null,
                   fontSize: 11,
                   color: color,
                   fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
-                  letterSpacing: 1,
+                  letterSpacing: isCyberpunk ? 1 : 0,
                 ),
               ),
             ],
@@ -202,108 +274,239 @@ class _DebugWeatherScreenState extends State<DebugWeatherScreen>
   }
 
   // === WEATHER TAB ===
-  Widget _buildWeatherTab() {
-    return Column(
-      children: [
-        Expanded(
-          flex: 2,
-          child: Center(child: _buildWeatherPreviewCard()),
-        ),
-        _buildDayNightToggle(),
-        const SizedBox(height: 12),
-        Expanded(
-          flex: 3,
-          child: _buildPresetsGrid(),
-        ),
-        _buildSliderControl(),
-      ],
-    );
+  Widget _buildWeatherTab(bool isCyberpunk, AppThemeData t, bool isLandscape) {
+    if (isLandscape) {
+      // Landscape layout: side-by-side
+      return Row(
+        children: [
+          // Left side: preview card and day/night toggle
+          Expanded(
+            flex: 2,
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Expanded(
+                  child: Center(
+                    child: _buildWeatherPreviewCard(isCyberpunk, t),
+                  ),
+                ),
+                _buildDayNightToggle(isCyberpunk, t),
+                const SizedBox(height: 8),
+                _buildSliderControl(isCyberpunk, t),
+              ],
+            ),
+          ),
+          // Right side: presets grid
+          Expanded(flex: 3, child: _buildPresetsGrid(isCyberpunk, t)),
+        ],
+      );
+    } else {
+      // Portrait layout: stacked
+      return Column(
+        children: [
+          Expanded(
+            flex: 2,
+            child: Center(child: _buildWeatherPreviewCard(isCyberpunk, t)),
+          ),
+          _buildDayNightToggle(isCyberpunk, t),
+          const SizedBox(height: 12),
+          Expanded(flex: 3, child: _buildPresetsGrid(isCyberpunk, t)),
+          _buildSliderControl(isCyberpunk, t),
+        ],
+      );
+    }
   }
 
-  Widget _buildWeatherPreviewCard() {
-    return CyberGlassCard(
-      padding: const EdgeInsets.all(24),
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Text(
-            'CODE: $_currentWeatherCode',
-            style: TextStyle(
-              fontFamily: 'monospace',
-              fontSize: 14,
-              color: CyberpunkTheme.neonCyan,
-              letterSpacing: 2,
-            ),
+  Widget _buildWeatherPreviewCard(bool isCyberpunk, AppThemeData t) {
+    final presetName = _presets
+        .firstWhere(
+          (p) => p.code == _currentWeatherCode,
+          orElse: () => _WeatherPreset(
+            code: _currentWeatherCode,
+            name: 'UNKNOWN',
+            icon: Icons.help,
           ),
-          const SizedBox(height: 8),
-          GlitchText(
-            text: _presets.firstWhere(
-              (p) => p.code == _currentWeatherCode,
-              orElse: () => _WeatherPreset(
-                code: _currentWeatherCode,
-                name: 'UNKNOWN',
-                icon: Icons.help,
+        )
+        .name;
+
+    if (isCyberpunk) {
+      return CyberGlassCard(
+        padding: const EdgeInsets.all(24),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Text(
+              'CODE: $_currentWeatherCode',
+              style: TextStyle(
+                fontFamily: 'monospace',
+                fontSize: 14,
+                color: CyberpunkTheme.neonCyan,
+                letterSpacing: 2,
               ),
-            ).name,
-            style: Theme.of(context).textTheme.headlineMedium?.copyWith(
-              fontFamily: 'monospace',
-              letterSpacing: 3,
             ),
-            glitchIntensity: 0.5,
-          ),
-          const SizedBox(height: 12),
-          Row(
-            mainAxisSize: MainAxisSize.min,
+            const SizedBox(height: 8),
+            GlitchText(
+              text: presetName,
+              style: Theme.of(context).textTheme.headlineMedium?.copyWith(
+                fontFamily: 'monospace',
+                letterSpacing: 3,
+              ),
+              glitchIntensity: 0.5,
+            ),
+            const SizedBox(height: 12),
+            Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Icon(
+                  _isDay ? Icons.wb_sunny : Icons.nightlight_round,
+                  size: 36,
+                  color: _isDay
+                      ? CyberpunkTheme.neonYellow
+                      : CyberpunkTheme.neonBlue,
+                ),
+                const SizedBox(width: 8),
+                Text(
+                  _isDay ? 'DAY' : 'NIGHT',
+                  style: TextStyle(
+                    fontFamily: 'monospace',
+                    fontSize: 16,
+                    color: CyberpunkTheme.textSecondary,
+                    letterSpacing: 2,
+                  ),
+                ),
+              ],
+            ),
+          ],
+        ),
+      );
+    } else {
+      // Non-cyberpunk themed card
+      return ThemedCard(
+        padding: const EdgeInsets.all(24),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Text(
+              'Code: $_currentWeatherCode',
+              style: TextStyle(fontSize: 14, color: t.textSecondary),
+            ),
+            const SizedBox(height: 8),
+            Text(
+              presetName,
+              style: Theme.of(context).textTheme.headlineMedium?.copyWith(
+                color: t.textPrimary,
+                fontWeight: FontWeight.bold,
+              ),
+            ),
+            const SizedBox(height: 12),
+            Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Icon(
+                  _isDay ? Icons.wb_sunny : Icons.nightlight_round,
+                  size: 36,
+                  color: _isDay ? Colors.orange : Colors.indigo,
+                ),
+                const SizedBox(width: 8),
+                Text(
+                  _isDay ? 'Day' : 'Night',
+                  style: TextStyle(fontSize: 16, color: t.textSecondary),
+                ),
+              ],
+            ),
+          ],
+        ),
+      );
+    }
+  }
+
+  Widget _buildDayNightToggle(bool isCyberpunk, AppThemeData t) {
+    if (isCyberpunk) {
+      return Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 16),
+        child: CyberGlassCard(
+          child: Row(
             children: [
-              Icon(
-                _isDay ? Icons.wb_sunny : Icons.nightlight_round,
-                size: 36,
-                color: _isDay ? CyberpunkTheme.neonYellow : CyberpunkTheme.neonBlue,
-              ),
+              Icon(Icons.wb_sunny, color: CyberpunkTheme.neonYellow, size: 20),
               const SizedBox(width: 8),
               Text(
-                _isDay ? 'DAY' : 'NIGHT',
+                'DAY',
                 style: TextStyle(
                   fontFamily: 'monospace',
-                  fontSize: 16,
+                  fontSize: 12,
                   color: CyberpunkTheme.textSecondary,
-                  letterSpacing: 2,
                 ),
+              ),
+              const Spacer(),
+              Switch(
+                value: _isDay,
+                onChanged: (value) => setState(() => _isDay = value),
+                activeThumbColor: CyberpunkTheme.neonCyan,
+                activeTrackColor: CyberpunkTheme.neonCyan.withValues(
+                  alpha: 0.3,
+                ),
+              ),
+              const Spacer(),
+              Text(
+                'NIGHT',
+                style: TextStyle(
+                  fontFamily: 'monospace',
+                  fontSize: 12,
+                  color: CyberpunkTheme.textSecondary,
+                ),
+              ),
+              const SizedBox(width: 8),
+              Icon(
+                Icons.nightlight_round,
+                color: CyberpunkTheme.neonBlue,
+                size: 20,
               ),
             ],
           ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildDayNightToggle() {
-    return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 16),
-      child: CyberGlassCard(
-        child: Row(
-          children: [
-            Icon(Icons.wb_sunny, color: CyberpunkTheme.neonYellow, size: 20),
-            const SizedBox(width: 8),
-            Text('DAY', style: TextStyle(fontFamily: 'monospace', fontSize: 12, color: CyberpunkTheme.textSecondary)),
-            const Spacer(),
-            Switch(
-              value: _isDay,
-              onChanged: (value) => setState(() => _isDay = value),
-              activeThumbColor: CyberpunkTheme.neonCyan,
-              activeTrackColor: CyberpunkTheme.neonCyan.withValues(alpha: 0.3),
-            ),
-            const Spacer(),
-            Text('NIGHT', style: TextStyle(fontFamily: 'monospace', fontSize: 12, color: CyberpunkTheme.textSecondary)),
-            const SizedBox(width: 8),
-            Icon(Icons.nightlight_round, color: CyberpunkTheme.neonBlue, size: 20),
-          ],
         ),
-      ),
-    );
+      );
+    } else {
+      return Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 16),
+        child: ThemedCard(
+          child: Row(
+            children: [
+              Icon(Icons.wb_sunny, color: Colors.orange, size: 20),
+              const SizedBox(width: 8),
+              Text(
+                'Day',
+                style: TextStyle(fontSize: 12, color: t.textSecondary),
+              ),
+              const Spacer(),
+              Switch(
+                value: _isDay,
+                onChanged: (value) => setState(() => _isDay = value),
+                activeThumbColor: t.accentColor,
+                activeTrackColor: t.accentColor.withValues(alpha: 0.3),
+              ),
+              const Spacer(),
+              Text(
+                'Night',
+                style: TextStyle(fontSize: 12, color: t.textSecondary),
+              ),
+              const SizedBox(width: 8),
+              Icon(Icons.nightlight_round, color: Colors.indigo, size: 20),
+            ],
+          ),
+        ),
+      );
+    }
   }
 
-  Widget _buildPresetsGrid() {
+  Widget _buildPresetsGrid(bool isCyberpunk, AppThemeData t) {
+    final selectedColor = isCyberpunk ? CyberpunkTheme.neonCyan : t.accentColor;
+    final unselectedColor = isCyberpunk
+        ? CyberpunkTheme.textTertiary
+        : t.textSecondary;
+    final bgColor = isCyberpunk
+        ? CyberpunkTheme.bgPanel.withValues(alpha: 0.5)
+        : t.cardColor.withValues(alpha: 0.5);
+
     return GridView.builder(
       padding: const EdgeInsets.all(16),
       gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
@@ -316,7 +519,7 @@ class _DebugWeatherScreenState extends State<DebugWeatherScreen>
       itemBuilder: (context, index) {
         final preset = _presets[index];
         final isSelected = preset.code == _currentWeatherCode;
-        final color = isSelected ? CyberpunkTheme.neonCyan : CyberpunkTheme.textTertiary;
+        final color = isSelected ? selectedColor : unselectedColor;
 
         return GestureDetector(
           onTap: () => setState(() => _currentWeatherCode = preset.code),
@@ -324,17 +527,22 @@ class _DebugWeatherScreenState extends State<DebugWeatherScreen>
             duration: const Duration(milliseconds: 200),
             decoration: BoxDecoration(
               color: isSelected
-                  ? CyberpunkTheme.neonCyan.withValues(alpha: 0.1)
-                  : CyberpunkTheme.bgPanel.withValues(alpha: 0.5),
-              borderRadius: BorderRadius.circular(4),
+                  ? selectedColor.withValues(alpha: 0.1)
+                  : bgColor,
+              borderRadius: BorderRadius.circular(isCyberpunk ? 4 : 12),
               border: Border.all(
                 color: isSelected
-                    ? CyberpunkTheme.neonCyan.withValues(alpha: 0.6)
-                    : CyberpunkTheme.neonCyan.withValues(alpha: 0.15),
+                    ? selectedColor.withValues(alpha: 0.6)
+                    : selectedColor.withValues(alpha: 0.15),
                 width: isSelected ? 1.5 : 0.5,
               ),
               boxShadow: isSelected
-                  ? [BoxShadow(color: CyberpunkTheme.neonCyan.withValues(alpha: 0.15), blurRadius: 8)]
+                  ? [
+                      BoxShadow(
+                        color: selectedColor.withValues(alpha: 0.15),
+                        blurRadius: 8,
+                      ),
+                    ]
                   : null,
             ),
             child: Column(
@@ -343,13 +551,17 @@ class _DebugWeatherScreenState extends State<DebugWeatherScreen>
                 Icon(preset.icon, size: 28, color: color),
                 const SizedBox(height: 6),
                 Text(
-                  preset.name,
+                  isCyberpunk
+                      ? preset.name
+                      : preset.name.toLowerCase().replaceAll('_', ' '),
                   style: TextStyle(
-                    fontFamily: 'monospace',
+                    fontFamily: isCyberpunk ? 'monospace' : null,
                     fontSize: 9,
                     color: color,
-                    fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
-                    letterSpacing: 1,
+                    fontWeight: isSelected
+                        ? FontWeight.bold
+                        : FontWeight.normal,
+                    letterSpacing: isCyberpunk ? 1 : 0,
                   ),
                   textAlign: TextAlign.center,
                   maxLines: 1,
@@ -362,48 +574,59 @@ class _DebugWeatherScreenState extends State<DebugWeatherScreen>
     );
   }
 
-  Widget _buildSliderControl() {
+  Widget _buildSliderControl(bool isCyberpunk, AppThemeData t) {
+    final accentColor = isCyberpunk ? CyberpunkTheme.neonCyan : t.accentColor;
+
+    Widget content = Row(
+      children: [
+        Text(
+          isCyberpunk ? 'CODE:' : 'Code:',
+          style: TextStyle(
+            fontFamily: isCyberpunk ? 'monospace' : null,
+            fontSize: 11,
+            color: isCyberpunk ? CyberpunkTheme.textSecondary : t.textSecondary,
+          ),
+        ),
+        const SizedBox(width: 8),
+        Expanded(
+          child: SliderTheme(
+            data: SliderThemeData(
+              activeTrackColor: accentColor,
+              inactiveTrackColor: accentColor.withValues(alpha: 0.15),
+              thumbColor: accentColor,
+              overlayColor: accentColor.withValues(alpha: 0.1),
+            ),
+            child: Slider(
+              value: _currentWeatherCode.toDouble(),
+              min: 0,
+              max: 99,
+              divisions: 99,
+              label: _currentWeatherCode.toString(),
+              onChanged: (value) =>
+                  setState(() => _currentWeatherCode = value.round()),
+            ),
+          ),
+        ),
+        SizedBox(
+          width: 36,
+          child: Text(
+            _currentWeatherCode.toString(),
+            style: TextStyle(
+              fontFamily: isCyberpunk ? 'monospace' : null,
+              fontWeight: FontWeight.bold,
+              color: accentColor,
+            ),
+            textAlign: TextAlign.center,
+          ),
+        ),
+      ],
+    );
+
     return Padding(
       padding: const EdgeInsets.all(16),
-      child: CyberGlassCard(
-        child: Row(
-          children: [
-            Text('CODE:', style: TextStyle(fontFamily: 'monospace', fontSize: 11, color: CyberpunkTheme.textSecondary)),
-            const SizedBox(width: 8),
-            Expanded(
-              child: SliderTheme(
-                data: SliderThemeData(
-                  activeTrackColor: CyberpunkTheme.neonCyan,
-                  inactiveTrackColor: CyberpunkTheme.neonCyan.withValues(alpha: 0.15),
-                  thumbColor: CyberpunkTheme.neonCyan,
-                  overlayColor: CyberpunkTheme.neonCyan.withValues(alpha: 0.1),
-                ),
-                child: Slider(
-                  value: _currentWeatherCode.toDouble(),
-                  min: 0,
-                  max: 99,
-                  divisions: 99,
-                  label: _currentWeatherCode.toString(),
-                  onChanged: (value) =>
-                      setState(() => _currentWeatherCode = value.round()),
-                ),
-              ),
-            ),
-            SizedBox(
-              width: 36,
-              child: Text(
-                _currentWeatherCode.toString(),
-                style: TextStyle(
-                  fontFamily: 'monospace',
-                  fontWeight: FontWeight.bold,
-                  color: CyberpunkTheme.neonCyan,
-                ),
-                textAlign: TextAlign.center,
-              ),
-            ),
-          ],
-        ),
-      ),
+      child: isCyberpunk
+          ? CyberGlassCard(child: content)
+          : ThemedCard(child: content),
     );
   }
 
@@ -414,30 +637,75 @@ class _DebugWeatherScreenState extends State<DebugWeatherScreen>
       children: [
         _buildAlertStatus(),
         const SizedBox(height: 16),
-        _buildAlertSlider('AQI', _debugAqi, 0, 500, CyberpunkTheme.neonMagenta,
-            (v) => setState(() => _debugAqi = v),
-            formatValue: (v) => v.round().toString(),
-            warningThreshold: 100, dangerThreshold: 200),
-        _buildAlertSlider('TEMP °C', _debugTemp, -30, 55, CyberpunkTheme.neonRed,
-            (v) => setState(() => _debugTemp = v),
-            formatValue: (v) => '${v.round()}°',
-            warningThreshold: 38, dangerThreshold: 45),
-        _buildAlertSlider('HUMIDITY %', _debugHumidity, 0, 100, CyberpunkTheme.neonCyan,
-            (v) => setState(() => _debugHumidity = v),
-            formatValue: (v) => '${v.round()}%',
-            warningThreshold: 75, dangerThreshold: 90),
-        _buildAlertSlider('UV INDEX', _debugUv, 0, 15, CyberpunkTheme.neonYellow,
-            (v) => setState(() => _debugUv = v),
-            formatValue: (v) => v.toStringAsFixed(1),
-            warningThreshold: 8, dangerThreshold: 11),
-        _buildAlertSlider('WIND km/h', _debugWind, 0, 120, CyberpunkTheme.neonGreen,
-            (v) => setState(() => _debugWind = v),
-            formatValue: (v) => '${v.round()}',
-            warningThreshold: 50, dangerThreshold: 90),
-        _buildAlertSlider('VISIBILITY m', _debugVisibility, 0, 20000, CyberpunkTheme.neonPurple,
-            (v) => setState(() => _debugVisibility = v),
-            formatValue: (v) => v >= 1000 ? '${(v / 1000).toStringAsFixed(1)}km' : '${v.round()}m',
-            warningThreshold: 1000, dangerThreshold: 200, invertThreshold: true),
+        _buildAlertSlider(
+          'AQI',
+          _debugAqi,
+          0,
+          500,
+          CyberpunkTheme.neonMagenta,
+          (v) => setState(() => _debugAqi = v),
+          formatValue: (v) => v.round().toString(),
+          warningThreshold: 100,
+          dangerThreshold: 200,
+        ),
+        _buildAlertSlider(
+          'TEMP °C',
+          _debugTemp,
+          -30,
+          55,
+          CyberpunkTheme.neonRed,
+          (v) => setState(() => _debugTemp = v),
+          formatValue: (v) => '${v.round()}°',
+          warningThreshold: 38,
+          dangerThreshold: 45,
+        ),
+        _buildAlertSlider(
+          'HUMIDITY %',
+          _debugHumidity,
+          0,
+          100,
+          CyberpunkTheme.neonCyan,
+          (v) => setState(() => _debugHumidity = v),
+          formatValue: (v) => '${v.round()}%',
+          warningThreshold: 75,
+          dangerThreshold: 90,
+        ),
+        _buildAlertSlider(
+          'UV INDEX',
+          _debugUv,
+          0,
+          15,
+          CyberpunkTheme.neonYellow,
+          (v) => setState(() => _debugUv = v),
+          formatValue: (v) => v.toStringAsFixed(1),
+          warningThreshold: 8,
+          dangerThreshold: 11,
+        ),
+        _buildAlertSlider(
+          'WIND km/h',
+          _debugWind,
+          0,
+          120,
+          CyberpunkTheme.neonGreen,
+          (v) => setState(() => _debugWind = v),
+          formatValue: (v) => '${v.round()}',
+          warningThreshold: 50,
+          dangerThreshold: 90,
+        ),
+        _buildAlertSlider(
+          'VISIBILITY m',
+          _debugVisibility,
+          0,
+          20000,
+          CyberpunkTheme.neonPurple,
+          (v) => setState(() => _debugVisibility = v),
+          formatValue: (v) => v >= 1000
+              ? '${(v / 1000).toStringAsFixed(1)}km'
+              : '${v.round()}m',
+          warningThreshold: 1000,
+          dangerThreshold: 200,
+          invertThreshold: true,
+        ),
         const SizedBox(height: 16),
         _buildQuickPresets(),
         const SizedBox(height: 32),
@@ -447,8 +715,12 @@ class _DebugWeatherScreenState extends State<DebugWeatherScreen>
 
   Widget _buildAlertStatus() {
     final alerts = _debugAlerts;
-    final dangers = alerts.where((a) => a.severity == AlertSeverity.danger).length;
-    final warnings = alerts.where((a) => a.severity == AlertSeverity.warning).length;
+    final dangers = alerts
+        .where((a) => a.severity == AlertSeverity.danger)
+        .length;
+    final warnings = alerts
+        .where((a) => a.severity == AlertSeverity.warning)
+        .length;
 
     Color statusColor;
     String statusText;
@@ -473,8 +745,8 @@ class _DebugWeatherScreenState extends State<DebugWeatherScreen>
             dangers > 0
                 ? Icons.dangerous_rounded
                 : warnings > 0
-                    ? Icons.warning_amber_rounded
-                    : Icons.check_circle_outline,
+                ? Icons.warning_amber_rounded
+                : Icons.check_circle_outline,
             color: statusColor,
             size: 24,
           ),
@@ -501,7 +773,12 @@ class _DebugWeatherScreenState extends State<DebugWeatherScreen>
                     color: statusColor,
                     fontWeight: FontWeight.bold,
                     letterSpacing: 1,
-                    shadows: [Shadow(color: statusColor.withValues(alpha: 0.4), blurRadius: 6)],
+                    shadows: [
+                      Shadow(
+                        color: statusColor.withValues(alpha: 0.4),
+                        blurRadius: 6,
+                      ),
+                    ],
                   ),
                 ),
               ],
@@ -580,17 +857,27 @@ class _DebugWeatherScreenState extends State<DebugWeatherScreen>
                     fontSize: 14,
                     color: activeColor,
                     fontWeight: FontWeight.bold,
-                    shadows: [Shadow(color: activeColor.withValues(alpha: 0.4), blurRadius: 4)],
+                    shadows: [
+                      Shadow(
+                        color: activeColor.withValues(alpha: 0.4),
+                        blurRadius: 4,
+                      ),
+                    ],
                   ),
                 ),
                 if (severity != AlertSeverity.normal) ...[
                   const SizedBox(width: 8),
                   Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 6,
+                      vertical: 2,
+                    ),
                     decoration: BoxDecoration(
                       color: activeColor.withValues(alpha: 0.15),
                       borderRadius: BorderRadius.circular(2),
-                      border: Border.all(color: activeColor.withValues(alpha: 0.5)),
+                      border: Border.all(
+                        color: activeColor.withValues(alpha: 0.5),
+                      ),
                     ),
                     child: Text(
                       severity == AlertSeverity.danger ? 'DANGER' : 'WARN',

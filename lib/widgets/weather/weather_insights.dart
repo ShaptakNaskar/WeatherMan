@@ -1,8 +1,10 @@
 import 'package:flutter/material.dart';
-import 'package:weatherman/config/cyberpunk_theme.dart';
+import 'package:provider/provider.dart';
+import 'package:weatherman/config/app_theme_data.dart';
 import 'package:weatherman/models/weather.dart';
+import 'package:weatherman/providers/theme_provider.dart';
 import 'package:weatherman/utils/trend_analyzer.dart';
-import 'package:weatherman/widgets/cyberpunk/cyber_glass_card.dart';
+import 'package:weatherman/widgets/themed/themed_card.dart';
 
 /// Displays smart weather insights inline on the home screen
 class WeatherInsightsCard extends StatefulWidget {
@@ -19,16 +21,17 @@ class _WeatherInsightsCardState extends State<WeatherInsightsCard> {
 
   @override
   Widget build(BuildContext context) {
-    final insights = TrendAnalyzer.detectAll(widget.weather);
+    final t = context.watch<ThemeProvider>().current;
+    final style = context.watch<ThemeProvider>().textStyle;
+    final insights = TrendAnalyzer.detectAll(widget.weather, style);
     if (insights.isEmpty) return const SizedBox.shrink();
 
-    // Show up to 3 insights by default, expand for all
     final displayCount = _expanded ? insights.length : insights.length.clamp(0, 3);
     final hasMore = insights.length > 3;
 
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 16),
-      child: CyberGlassCard(
+      child: ThemedCard(
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
@@ -37,38 +40,35 @@ class _WeatherInsightsCardState extends State<WeatherInsightsCard> {
               children: [
                 Icon(
                   Icons.insights_rounded,
-                  color: CyberpunkTheme.neonCyan,
+                  color: t.accentColor,
                   size: 18,
-                  shadows: CyberpunkTheme.subtleCyanGlow,
                 ),
                 const SizedBox(width: 8),
                 Text(
-                  'INTEL FEED',
+                  'INSIGHTS',
                   style: TextStyle(
-                    fontFamily: 'monospace',
                     fontSize: 12,
-                    color: CyberpunkTheme.neonCyan,
+                    color: t.accentColor,
                     letterSpacing: 2,
                     fontWeight: FontWeight.bold,
-                    shadows: CyberpunkTheme.subtleCyanGlow,
+                    shadows: t.subtleGlow,
                   ),
                 ),
                 const Spacer(),
                 Container(
                   padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
                   decoration: BoxDecoration(
-                    color: CyberpunkTheme.neonCyan.withValues(alpha: 0.1),
-                    borderRadius: BorderRadius.circular(4),
+                    color: t.accentColor.withValues(alpha: 0.1),
+                    borderRadius: BorderRadius.circular(t.cardBorderRadius * 0.5),
                     border: Border.all(
-                      color: CyberpunkTheme.neonCyan.withValues(alpha: 0.3),
+                      color: t.accentColor.withValues(alpha: 0.3),
                     ),
                   ),
                   child: Text(
                     '${insights.length}',
                     style: TextStyle(
-                      fontFamily: 'monospace',
                       fontSize: 11,
-                      color: CyberpunkTheme.neonCyan,
+                      color: t.accentColor,
                       fontWeight: FontWeight.bold,
                     ),
                   ),
@@ -79,8 +79,8 @@ class _WeatherInsightsCardState extends State<WeatherInsightsCard> {
 
             // Insight items
             ...insights.take(displayCount).map((insight) => _InsightItem(
-              insight: insight,
-            )),
+                  insight: insight,
+                )),
 
             // Show more / less
             if (hasMore) ...[
@@ -92,18 +92,17 @@ class _WeatherInsightsCardState extends State<WeatherInsightsCard> {
                   children: [
                     Icon(
                       _expanded ? Icons.expand_less : Icons.expand_more,
-                      color: CyberpunkTheme.neonCyan.withValues(alpha: 0.7),
+                      color: t.accentColor.withValues(alpha: 0.7),
                       size: 18,
                     ),
                     const SizedBox(width: 4),
                     Text(
                       _expanded
-                          ? 'Collapse feed'
-                          : '+${insights.length - 3} intel${insights.length - 3 > 1 ? '' : ''}',
+                          ? 'Show less'
+                          : '+${insights.length - 3} more',
                       style: TextStyle(
-                        fontFamily: 'monospace',
                         fontSize: 11,
-                        color: CyberpunkTheme.neonCyan.withValues(alpha: 0.7),
+                        color: t.accentColor.withValues(alpha: 0.7),
                         letterSpacing: 1,
                       ),
                     ),
@@ -125,14 +124,15 @@ class _InsightItem extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final color = _severityColor(insight.severity);
-    
+    final t = context.watch<ThemeProvider>().current;
+    final color = t.severityColor(insight.severity);
+
     return Container(
       margin: const EdgeInsets.only(bottom: 8),
       padding: const EdgeInsets.all(10),
       decoration: BoxDecoration(
         color: color.withValues(alpha: 0.06),
-        borderRadius: BorderRadius.circular(4),
+        borderRadius: BorderRadius.circular(t.cardBorderRadius * 0.5),
         border: Border(
           left: BorderSide(color: color.withValues(alpha: 0.6), width: 2),
         ),
@@ -146,7 +146,6 @@ class _InsightItem extends StatelessWidget {
                 child: Text(
                   insight.title,
                   style: TextStyle(
-                    fontFamily: 'monospace',
                     fontSize: 12,
                     fontWeight: FontWeight.bold,
                     color: color,
@@ -155,7 +154,7 @@ class _InsightItem extends StatelessWidget {
                 ),
               ),
               if (insight.severity == InsightSeverity.severe)
-                _AnimatedAlertBadge(color: color)
+                _AnimatedAlertBadge(color: color, theme: t)
               else if (insight.severity == InsightSeverity.warning)
                 Container(
                   padding: const EdgeInsets.symmetric(horizontal: 5, vertical: 1),
@@ -166,7 +165,6 @@ class _InsightItem extends StatelessWidget {
                   child: Text(
                     'WARN',
                     style: TextStyle(
-                      fontFamily: 'monospace',
                       fontSize: 9,
                       color: color,
                       fontWeight: FontWeight.bold,
@@ -181,7 +179,7 @@ class _InsightItem extends StatelessWidget {
             insight.body,
             style: TextStyle(
               fontSize: 12,
-              color: Colors.white.withValues(alpha: 0.8),
+              color: t.textSecondary,
               height: 1.3,
             ),
           ),
@@ -189,23 +187,13 @@ class _InsightItem extends StatelessWidget {
       ),
     );
   }
-
-  Color _severityColor(InsightSeverity severity) {
-    switch (severity) {
-      case InsightSeverity.severe:
-        return CyberpunkTheme.neonRed;
-      case InsightSeverity.warning:
-        return CyberpunkTheme.neonYellow;
-      case InsightSeverity.info:
-        return CyberpunkTheme.neonCyan;
-    }
-  }
 }
 
 /// Pulsing ALERT badge for severe insights
 class _AnimatedAlertBadge extends StatefulWidget {
   final Color color;
-  const _AnimatedAlertBadge({required this.color});
+  final AppThemeData theme;
+  const _AnimatedAlertBadge({required this.color, required this.theme});
 
   @override
   State<_AnimatedAlertBadge> createState() => _AnimatedAlertBadgeState();
@@ -254,7 +242,6 @@ class _AnimatedAlertBadgeState extends State<_AnimatedAlertBadge>
           child: Text(
             'ALERT',
             style: TextStyle(
-              fontFamily: 'monospace',
               fontSize: 9,
               color: widget.color,
               fontWeight: FontWeight.bold,

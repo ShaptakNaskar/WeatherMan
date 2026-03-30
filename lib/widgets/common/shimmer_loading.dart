@@ -1,18 +1,125 @@
 import 'dart:async';
 import 'dart:math';
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 import 'package:weatherman/config/cyberpunk_theme.dart';
+import 'package:weatherman/providers/theme_provider.dart';
 
-/// Cyberpunk HUD-style loading widget with animated scan lines,
-/// data stream text, and neon pulse effects.
-class WeatherLoadingShimmer extends StatefulWidget {
+/// Theme-aware loading widget.
+/// Cyberpunk: HUD-style scan lines + data stream.
+/// Clean/Pastel: Simple pulsing icon with progress indicator.
+class WeatherLoadingShimmer extends StatelessWidget {
   const WeatherLoadingShimmer({super.key});
 
   @override
-  State<WeatherLoadingShimmer> createState() => _WeatherLoadingShimmerState();
+  Widget build(BuildContext context) {
+    final themeProvider = context.watch<ThemeProvider>();
+    if (themeProvider.isCyberpunk) {
+      return const _CyberpunkLoading();
+    }
+    return const _SimpleLoading();
+  }
 }
 
-class _WeatherLoadingShimmerState extends State<WeatherLoadingShimmer>
+// ── Simple themed loading (Clean / Pastel) ────────────────
+
+class _SimpleLoading extends StatefulWidget {
+  const _SimpleLoading();
+
+  @override
+  State<_SimpleLoading> createState() => _SimpleLoadingState();
+}
+
+class _SimpleLoadingState extends State<_SimpleLoading>
+    with SingleTickerProviderStateMixin {
+  late AnimationController _ctrl;
+
+  @override
+  void initState() {
+    super.initState();
+    _ctrl = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 1500),
+    )..repeat(reverse: true);
+  }
+
+  @override
+  void dispose() {
+    _ctrl.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final t = context.watch<ThemeProvider>().current;
+
+    return Center(
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          AnimatedBuilder(
+            animation: _ctrl,
+            builder: (context, child) {
+              return Container(
+                width: 80,
+                height: 80,
+                decoration: BoxDecoration(
+                  shape: BoxShape.circle,
+                  color: t.accentColor.withValues(alpha: 0.05 + _ctrl.value * 0.08),
+                  border: Border.all(
+                    color: t.accentColor.withValues(alpha: 0.2 + _ctrl.value * 0.3),
+                    width: 2,
+                  ),
+                  boxShadow: [
+                    BoxShadow(
+                      color: t.accentColor.withValues(alpha: _ctrl.value * 0.15),
+                      blurRadius: 20,
+                      spreadRadius: 2,
+                    ),
+                  ],
+                ),
+                child: Icon(
+                  Icons.cloud_rounded,
+                  size: 36,
+                  color: t.accentColor.withValues(alpha: 0.6 + _ctrl.value * 0.4),
+                ),
+              );
+            },
+          ),
+          const SizedBox(height: 24),
+          SizedBox(
+            width: 160,
+            child: LinearProgressIndicator(
+              backgroundColor: t.accentColor.withValues(alpha: 0.1),
+              valueColor: AlwaysStoppedAnimation(t.accentColor.withValues(alpha: 0.6)),
+              borderRadius: BorderRadius.circular(4),
+            ),
+          ),
+          const SizedBox(height: 16),
+          Text(
+            'Loading weather...',
+            style: TextStyle(
+              fontSize: 14,
+              color: t.textSecondary,
+              letterSpacing: 0.5,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+// ── Cyberpunk HUD loading ─────────────────────────────────
+
+class _CyberpunkLoading extends StatefulWidget {
+  const _CyberpunkLoading();
+
+  @override
+  State<_CyberpunkLoading> createState() => _CyberpunkLoadingState();
+}
+
+class _CyberpunkLoadingState extends State<_CyberpunkLoading>
     with TickerProviderStateMixin {
   late AnimationController _scanController;
   late AnimationController _pulseController;
@@ -56,20 +163,17 @@ class _WeatherLoadingShimmerState extends State<WeatherLoadingShimmer>
       duration: const Duration(milliseconds: 100),
     );
 
-    // Stream data lines periodically
     _streamTimer = Timer.periodic(const Duration(milliseconds: 600), (_) {
       if (!mounted) return;
       setState(() {
         if (_dataStream.length >= 6) _dataStream.removeAt(0);
         _dataStream.add(_streamLines[_rng.nextInt(_streamLines.length)]);
       });
-      // Occasional glitch
       if (_rng.nextDouble() < 0.2) {
         _glitchController.forward(from: 0);
       }
     });
 
-    // Animate dots for loading label
     _dotTimer = Timer.periodic(const Duration(milliseconds: 500), (_) {
       if (!mounted) return;
       setState(() => _dotCount = (_dotCount + 1) % 4);
@@ -97,14 +201,13 @@ class _WeatherLoadingShimmerState extends State<WeatherLoadingShimmer>
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            // ── HUD ring + scan animation ──
+            // HUD ring + scan animation
             SizedBox(
               height: 120,
               width: 120,
               child: Stack(
                 alignment: Alignment.center,
                 children: [
-                  // Outer rotating ring
                   AnimatedBuilder(
                     animation: _scanController,
                     builder: (context, child) {
@@ -120,7 +223,6 @@ class _WeatherLoadingShimmerState extends State<WeatherLoadingShimmer>
                       );
                     },
                   ),
-                  // Inner pulsing glow
                   AnimatedBuilder(
                     animation: _pulseController,
                     builder: (context, child) {
@@ -130,12 +232,14 @@ class _WeatherLoadingShimmerState extends State<WeatherLoadingShimmer>
                         decoration: BoxDecoration(
                           shape: BoxShape.circle,
                           border: Border.all(
-                            color: CyberpunkTheme.neonCyan.withValues(alpha: 0.3 + _pulseController.value * 0.3),
+                            color: CyberpunkTheme.neonCyan.withValues(
+                                alpha: 0.3 + _pulseController.value * 0.3),
                             width: 1.5,
                           ),
                           boxShadow: [
                             BoxShadow(
-                              color: CyberpunkTheme.neonCyan.withValues(alpha: 0.15 + _pulseController.value * 0.15),
+                              color: CyberpunkTheme.neonCyan.withValues(
+                                  alpha: 0.15 + _pulseController.value * 0.15),
                               blurRadius: 20,
                               spreadRadius: 5,
                             ),
@@ -144,7 +248,6 @@ class _WeatherLoadingShimmerState extends State<WeatherLoadingShimmer>
                       );
                     },
                   ),
-                  // Center icon
                   Icon(
                     Icons.radar_rounded,
                     color: CyberpunkTheme.neonCyan.withValues(alpha: 0.9),
@@ -156,7 +259,6 @@ class _WeatherLoadingShimmerState extends State<WeatherLoadingShimmer>
 
             const SizedBox(height: 24),
 
-            // ── Main loading label ──
             Text(
               'SYNCING WEATHER FEED$padded',
               style: const TextStyle(
@@ -173,7 +275,6 @@ class _WeatherLoadingShimmerState extends State<WeatherLoadingShimmer>
 
             const SizedBox(height: 20),
 
-            // ── Data stream panel ──
             AnimatedBuilder(
               animation: _glitchController,
               builder: (context, child) {
@@ -195,7 +296,6 @@ class _WeatherLoadingShimmerState extends State<WeatherLoadingShimmer>
                     crossAxisAlignment: CrossAxisAlignment.start,
                     mainAxisSize: MainAxisSize.min,
                     children: [
-                      // Header
                       Row(
                         children: [
                           Container(
@@ -225,7 +325,6 @@ class _WeatherLoadingShimmerState extends State<WeatherLoadingShimmer>
                         ],
                       ),
                       const SizedBox(height: 8),
-                      // Stream lines
                       ..._dataStream.asMap().entries.map((entry) {
                         final opacity = 0.3 + (entry.key / _dataStream.length) * 0.7;
                         return Padding(
@@ -260,7 +359,6 @@ class _WeatherLoadingShimmerState extends State<WeatherLoadingShimmer>
 
             const SizedBox(height: 16),
 
-            // ── Bottom scanline bar ──
             ClipRRect(
               borderRadius: BorderRadius.circular(2),
               child: SizedBox(
@@ -298,13 +396,11 @@ class _HudRingPainter extends CustomPainter {
     final center = Offset(size.width / 2, size.height / 2);
     final radius = size.width / 2 - 4;
 
-    // Outer segmented ring
     final paint = Paint()
       ..color = color.withValues(alpha: 0.3)
       ..style = PaintingStyle.stroke
       ..strokeWidth = 2;
 
-    // Draw segmented arcs
     const segments = 8;
     const gapAngle = 0.15;
     const segAngle = (2 * pi / segments) - gapAngle;
@@ -320,7 +416,6 @@ class _HudRingPainter extends CustomPainter {
       );
     }
 
-    // Active arc (brighter, follows progress)
     final activePaint = Paint()
       ..color = color.withValues(alpha: 0.9)
       ..style = PaintingStyle.stroke
@@ -335,7 +430,6 @@ class _HudRingPainter extends CustomPainter {
       activePaint,
     );
 
-    // Glow for active arc
     final glowPaint = Paint()
       ..color = color.withValues(alpha: 0.2)
       ..style = PaintingStyle.stroke
@@ -364,11 +458,9 @@ class _ScanBarPainter extends CustomPainter {
 
   @override
   void paint(Canvas canvas, Size size) {
-    // Background track
     final bgPaint = Paint()..color = color.withValues(alpha: 0.1);
     canvas.drawRect(Rect.fromLTWH(0, 0, size.width, size.height), bgPaint);
 
-    // Moving highlight
     const barWidth = 80.0;
     final x = (size.width + barWidth) * progress - barWidth;
     final gradient = LinearGradient(

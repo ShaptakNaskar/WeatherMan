@@ -1,11 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import 'package:weatherman/config/cyberpunk_theme.dart';
 import 'package:weatherman/models/weather.dart';
 import 'package:weatherman/providers/settings_provider.dart';
+import 'package:weatherman/providers/theme_provider.dart';
 import 'package:weatherman/utils/date_utils.dart';
 import 'package:weatherman/utils/weather_utils.dart';
-import 'package:weatherman/widgets/cyberpunk/cyber_glass_card.dart';
+import 'package:weatherman/widgets/themed/themed_card.dart';
 
 /// 10-day forecast list widget
 class DailyForecastCard extends StatelessWidget {
@@ -19,14 +19,14 @@ class DailyForecastCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final settings = context.watch<SettingsProvider>();
-    
-    // Find min and max temps for the bar visualization
+    final t = context.watch<ThemeProvider>().current;
+
     final allTemps = daily.expand((d) => [d.temperatureMax, d.temperatureMin]).toList();
     final globalMin = allTemps.reduce((a, b) => a < b ? a : b);
     final globalMax = allTemps.reduce((a, b) => a > b ? a : b);
     final tempRange = globalMax - globalMin;
 
-    return CyberGlassCard(
+    return ThemedCard(
       padding: const EdgeInsets.symmetric(vertical: 16),
       margin: const EdgeInsets.symmetric(horizontal: 16),
       child: Column(
@@ -40,25 +40,24 @@ class DailyForecastCard extends StatelessWidget {
                 Icon(
                   Icons.calendar_today_rounded,
                   size: 16,
-                  color: CyberpunkTheme.textSecondary,
+                  color: t.textSecondary,
                 ),
                 const SizedBox(width: 8),
                 Text(
                   '10-DAY FORECAST',
                   style: Theme.of(context).textTheme.labelLarge?.copyWith(
-                    color: CyberpunkTheme.textSecondary,
-                    letterSpacing: 1,
-                  ),
+                        color: t.textSecondary,
+                        letterSpacing: 1,
+                      ),
                 ),
               ],
             ),
           ),
 
           const SizedBox(height: 12),
-          
-          // Divider
+
           Divider(
-            color: CyberpunkTheme.glassBorder,
+            color: t.cardBorderColor.withValues(alpha: 0.3),
             height: 1,
           ),
 
@@ -67,7 +66,7 @@ class DailyForecastCard extends StatelessWidget {
             final index = entry.key;
             final day = entry.value;
             final isLast = index == daily.length - 1;
-            
+
             return _DailyItem(
               forecast: day,
               globalMin: globalMin,
@@ -99,7 +98,7 @@ class _DailyItem extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    // Calculate positions for the temperature bar
+    final t = context.watch<ThemeProvider>().current;
     final lowPercent = tempRange > 0 ? (forecast.temperatureMin - globalMin) / tempRange : 0.0;
     final highPercent = tempRange > 0 ? (forecast.temperatureMax - globalMin) / tempRange : 1.0;
 
@@ -115,10 +114,10 @@ class _DailyItem extends StatelessWidget {
                 child: Text(
                   DateTimeUtils.formatDayName(forecast.date),
                   style: Theme.of(context).textTheme.bodyLarge?.copyWith(
-                    fontWeight: DateTimeUtils.isToday(forecast.date)
-                        ? FontWeight.w600
-                        : FontWeight.w400,
-                  ),
+                        fontWeight: DateTimeUtils.isToday(forecast.date)
+                            ? FontWeight.w600
+                            : FontWeight.w400,
+                      ),
                 ),
               ),
 
@@ -146,9 +145,9 @@ class _DailyItem extends StatelessWidget {
                     ? Text(
                         '${forecast.precipitationProbabilityMax}%',
                         style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                          color: CyberpunkTheme.textSecondary, // Monochromatic (was blue)
-                          fontWeight: FontWeight.w600,
-                        ),
+                              color: t.textSecondary,
+                              fontWeight: FontWeight.w600,
+                            ),
                       )
                     : null,
               ),
@@ -159,8 +158,8 @@ class _DailyItem extends StatelessWidget {
                 child: Text(
                   settings.formatTempShort(forecast.temperatureMin),
                   style: Theme.of(context).textTheme.bodyLarge?.copyWith(
-                    color: CyberpunkTheme.textSecondary,
-                  ),
+                        color: t.textSecondary,
+                      ),
                   textAlign: TextAlign.right,
                 ),
               ),
@@ -178,7 +177,7 @@ class _DailyItem extends StatelessWidget {
                     return Container(
                       height: 6,
                       decoration: BoxDecoration(
-                        color: Colors.white.withValues(alpha: 0.1),
+                        color: t.textTertiary.withValues(alpha: 0.15),
                         borderRadius: BorderRadius.circular(3),
                       ),
                       child: Stack(
@@ -189,10 +188,10 @@ class _DailyItem extends StatelessWidget {
                               width: barLength.clamp(8.0, barWidth),
                               height: 6,
                               decoration: BoxDecoration(
-                                gradient: LinearGradient(
+                                gradient: const LinearGradient(
                                   colors: [
-                                    const Color(0xFF64B5F6),
-                                    const Color(0xFFFFB74D),
+                                    Color(0xFF64B5F6),
+                                    Color(0xFFFFB74D),
                                   ],
                                 ),
                                 borderRadius: BorderRadius.circular(3),
@@ -225,7 +224,7 @@ class _DailyItem extends StatelessWidget {
           Padding(
             padding: const EdgeInsets.symmetric(horizontal: 16),
             child: Divider(
-              color: CyberpunkTheme.glassBorder,
+              color: t.cardBorderColor.withValues(alpha: 0.3),
               height: 1,
             ),
           ),
