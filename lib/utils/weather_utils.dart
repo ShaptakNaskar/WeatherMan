@@ -112,10 +112,26 @@ class WeatherUtils {
     }
   }
 
-  /// Get weather icon color
-  /// Overridden to always return white for monochromatic look
-  static Color getWeatherIconColor(int code, {bool isDay = true}) {
-    return Colors.white;
+  static bool isBrightSkyCode(int code) {
+    return code == 0 ||
+        code == 1 ||
+        code == 2 ||
+        code == 3 ||
+        code == 45 ||
+        code == 48;
+  }
+
+  /// Get weather icon color with optional bright-sky override.
+  static Color getWeatherIconColor(
+    int code, {
+    bool isDay = true,
+    Color? brightSkyColor,
+    Color defaultColor = Colors.white,
+  }) {
+    if (isDay && isBrightSkyCode(code)) {
+      return brightSkyColor ?? defaultColor;
+    }
+    return defaultColor;
   }
 
   /// Get UV index description
@@ -131,7 +147,7 @@ class WeatherUtils {
   /// Overridden to return white for monochromatic look, but can be used for indicators if needed
   static Color getUvColor(double uvIndex) {
     // Return white for text/icon consistency
-    return Colors.white; 
+    return Colors.white;
   }
 
   /// Get wind direction text

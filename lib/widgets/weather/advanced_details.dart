@@ -31,9 +31,9 @@ class AdvancedDetailsCard extends StatelessWidget {
           child: Text(
             'Detailed Conditions',
             style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                  fontWeight: FontWeight.w600,
-                  shadows: t.textShadows,
-                ),
+              fontWeight: FontWeight.w600,
+              shadows: t.textShadows,
+            ),
           ),
         ),
 
@@ -49,7 +49,10 @@ class AdvancedDetailsCard extends StatelessWidget {
             _DetailItem('Cloud Cover', '${current.cloudCover}%'),
             _DetailItem('Pressure', '${current.pressure.round()} hPa'),
             if (current.surfacePressure > 0)
-              _DetailItem('Surface Pressure', '${current.surfacePressure.round()} hPa'),
+              _DetailItem(
+                'Surface Pressure',
+                '${current.surfacePressure.round()} hPa',
+              ),
           ],
         ),
 
@@ -64,9 +67,15 @@ class AdvancedDetailsCard extends StatelessWidget {
           items: [
             _DetailItem('Speed', '${current.windSpeed.round()} km/h'),
             _DetailItem('Gusts', '${current.windGusts.round()} km/h'),
-            _DetailItem('Direction', _formatWindDirection(current.windDirection)),
+            _DetailItem(
+              'Direction',
+              _formatWindDirection(current.windDirection),
+            ),
             if (today != null && today.windGustsMax > 0)
-              _DetailItem('Max Gusts Today', '${today.windGustsMax.round()} km/h'),
+              _DetailItem(
+                'Max Gusts Today',
+                '${today.windGustsMax.round()} km/h',
+              ),
           ],
         ),
 
@@ -82,12 +91,21 @@ class AdvancedDetailsCard extends StatelessWidget {
             if (current.rain > 0)
               _DetailItem('Rain', '${current.rain.toStringAsFixed(1)} mm'),
             if (current.snowfall > 0)
-              _DetailItem('Snowfall', '${current.snowfall.toStringAsFixed(1)} cm'),
+              _DetailItem(
+                'Snowfall',
+                '${current.snowfall.toStringAsFixed(1)} cm',
+              ),
             if (today != null) ...[
               if (today.rainSum > 0)
-                _DetailItem('Rain Today', '${today.rainSum.toStringAsFixed(1)} mm'),
+                _DetailItem(
+                  'Rain Today',
+                  '${today.rainSum.toStringAsFixed(1)} mm',
+                ),
               if (today.snowfallSum > 0)
-                _DetailItem('Snow Today', '${today.snowfallSum.toStringAsFixed(1)} cm'),
+                _DetailItem(
+                  'Snow Today',
+                  '${today.snowfallSum.toStringAsFixed(1)} cm',
+                ),
               _DetailItem('Chance', '${today.precipitationProbabilityMax}%'),
             ],
           ],
@@ -155,14 +173,19 @@ class AdvancedDetailsCard extends StatelessWidget {
         children: [
           Row(
             children: [
-              Icon(icon, size: 20, color: t.textSecondary, shadows: t.textShadows),
+              Icon(
+                icon,
+                size: 20,
+                color: t.textSecondary,
+                shadows: t.textShadows,
+              ),
               const SizedBox(width: 8),
               Text(
                 title,
                 style: Theme.of(context).textTheme.titleSmall?.copyWith(
-                      fontWeight: FontWeight.w600,
-                      shadows: t.textShadows,
-                    ),
+                  fontWeight: FontWeight.w600,
+                  shadows: t.textShadows,
+                ),
               ),
             ],
           ),
@@ -170,7 +193,9 @@ class AdvancedDetailsCard extends StatelessWidget {
           Wrap(
             spacing: 16,
             runSpacing: 8,
-            children: validItems.map((item) => _buildDetailItem(context, t, item)).toList(),
+            children: validItems
+                .map((item) => _buildDetailItem(context, t, item))
+                .toList(),
           ),
         ],
       ),
@@ -186,23 +211,27 @@ class AdvancedDetailsCard extends StatelessWidget {
           Text(
             item.label,
             style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                  color: t.textSecondary,
-                  shadows: t.textShadows,
-                ),
+              color: t.textSecondary,
+              shadows: t.textShadows,
+            ),
           ),
           Text(
             item.value,
             style: Theme.of(context).textTheme.bodyLarge?.copyWith(
-                  fontWeight: FontWeight.w500,
-                  shadows: t.textShadows,
-                ),
+              fontWeight: FontWeight.w500,
+              shadows: t.textShadows,
+            ),
           ),
         ],
       ),
     );
   }
 
-  Widget _buildAirQualitySection(BuildContext context, dynamic t, AirQuality aq) {
+  Widget _buildAirQualitySection(
+    BuildContext context,
+    dynamic t,
+    AirQuality aq,
+  ) {
     final category = aq.category;
 
     return ThemedCard(
@@ -211,29 +240,60 @@ class AdvancedDetailsCard extends StatelessWidget {
         children: [
           Row(
             children: [
-              Icon(Icons.air_rounded, size: 20, color: t.textSecondary, shadows: t.textShadows),
+              Icon(
+                Icons.air_rounded,
+                size: 20,
+                color: t.textSecondary,
+                shadows: t.textShadows,
+              ),
               const SizedBox(width: 8),
               Text(
                 'Air Quality',
                 style: Theme.of(context).textTheme.titleSmall?.copyWith(
-                      fontWeight: FontWeight.w600,
-                      shadows: t.textShadows,
-                    ),
+                  fontWeight: FontWeight.w600,
+                  shadows: t.textShadows,
+                ),
               ),
               const Spacer(),
               Container(
-                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 12,
+                  vertical: 4,
+                ),
                 decoration: BoxDecoration(
                   color: Color(category.color),
                   borderRadius: BorderRadius.circular(12),
-                ),
-                child: Text(
-                  'AQI ${aq.usAqi}',
-                  style: const TextStyle(
-                    color: Colors.white,
-                    fontWeight: FontWeight.bold,
-                    fontSize: 12,
+                  border: Border.all(
+                    color: _bestReadableTextColor(
+                      Color(category.color),
+                    ).withValues(alpha: 0.75),
+                    width: 1,
                   ),
+                ),
+                child: Stack(
+                  children: [
+                    Text(
+                      'AQI ${aq.usAqi}',
+                      style: TextStyle(
+                        foreground: Paint()
+                          ..style = PaintingStyle.stroke
+                          ..strokeWidth = 2.2
+                          ..color = _bestReadableTextStrokeColor(
+                            _bestReadableTextColor(Color(category.color)),
+                          ),
+                        fontWeight: FontWeight.bold,
+                        fontSize: 12,
+                      ),
+                    ),
+                    Text(
+                      'AQI ${aq.usAqi}',
+                      style: TextStyle(
+                        color: _bestReadableTextColor(Color(category.color)),
+                        fontWeight: FontWeight.bold,
+                        fontSize: 12,
+                      ),
+                    ),
+                  ],
                 ),
               ),
             ],
@@ -242,20 +302,36 @@ class AdvancedDetailsCard extends StatelessWidget {
           Text(
             category.label,
             style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                  color: Color(category.color),
-                  fontWeight: FontWeight.w500,
-                  shadows: t.textShadows,
-                ),
+              color: Color(category.color),
+              fontWeight: FontWeight.w500,
+              shadows: t.textShadows,
+            ),
           ),
           const SizedBox(height: 12),
           Wrap(
             spacing: 16,
             runSpacing: 8,
             children: [
-              _buildDetailItem(context, t, _DetailItem('PM2.5', '${aq.pm2_5.round()} µg/m³')),
-              _buildDetailItem(context, t, _DetailItem('PM10', '${aq.pm10.round()} µg/m³')),
-              _buildDetailItem(context, t, _DetailItem('Ozone', '${aq.ozone.round()} µg/m³')),
-              _buildDetailItem(context, t, _DetailItem('NO₂', '${aq.nitrogenDioxide.round()} µg/m³')),
+              _buildDetailItem(
+                context,
+                t,
+                _DetailItem('PM2.5', '${aq.pm2_5.round()} µg/m³'),
+              ),
+              _buildDetailItem(
+                context,
+                t,
+                _DetailItem('PM10', '${aq.pm10.round()} µg/m³'),
+              ),
+              _buildDetailItem(
+                context,
+                t,
+                _DetailItem('Ozone', '${aq.ozone.round()} µg/m³'),
+              ),
+              _buildDetailItem(
+                context,
+                t,
+                _DetailItem('NO₂', '${aq.nitrogenDioxide.round()} µg/m³'),
+              ),
             ],
           ),
         ],
@@ -275,8 +351,22 @@ class AdvancedDetailsCard extends StatelessWidget {
 
   String _formatWindDirection(int degrees) {
     const directions = [
-      'N', 'NNE', 'NE', 'ENE', 'E', 'ESE', 'SE', 'SSE',
-      'S', 'SSW', 'SW', 'WSW', 'W', 'WNW', 'NW', 'NNW'
+      'N',
+      'NNE',
+      'NE',
+      'ENE',
+      'E',
+      'ESE',
+      'SE',
+      'SSE',
+      'S',
+      'SSW',
+      'SW',
+      'WSW',
+      'W',
+      'WNW',
+      'NW',
+      'NNW',
     ];
     final index = ((degrees + 11.25) / 22.5).floor() % 16;
     return '${directions[index]} ($degrees°)';
@@ -296,6 +386,16 @@ class AdvancedDetailsCard extends StatelessWidget {
     if (uv <= 7) return 'High';
     if (uv <= 10) return 'Very High';
     return 'Extreme';
+  }
+
+  Color _bestReadableTextColor(Color background) {
+    return background.computeLuminance() > 0.55 ? Colors.black : Colors.white;
+  }
+
+  Color _bestReadableTextStrokeColor(Color textColor) {
+    return textColor == Colors.black
+        ? Colors.white.withValues(alpha: 0.55)
+        : Colors.black.withValues(alpha: 0.65);
   }
 }
 

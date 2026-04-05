@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:weatherman/utils/trend_analyzer.dart';
 
 /// Enum for available app themes
-enum AppThemeType { clean, cyberpunk, /* pastel, */ pastelDark, sunset, ocean }
+enum AppThemeType { clean, cyberpunk, pastel, sunset, ocean }
 
 /// Abstract interface that all app themes implement.
 /// Provides colors, gradients, card builders, and text styles
@@ -50,6 +50,22 @@ abstract class AppThemeData {
       case InsightSeverity.info:
         return accentColor;
     }
+  }
+
+  // ── Contrast helpers ──
+  bool get prefersWarmAccentsOnDark {
+    if (themeData.brightness != Brightness.dark) return false;
+    return accentColor.computeLuminance() > 0.55;
+  }
+
+  Color get primaryUiAccent {
+    if (!prefersWarmAccentsOnDark) return accentColor;
+    return warningColor;
+  }
+
+  Color get secondaryUiAccent {
+    if (!prefersWarmAccentsOnDark) return accentColorSecondary;
+    return accentColorSecondary.withValues(alpha: 0.9);
   }
 
   // ── Helpers ──

@@ -2,6 +2,7 @@ import 'dart:math';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:weatherman/providers/theme_provider.dart';
+import 'package:weatherman/widgets/backgrounds/premium_scene_layer.dart';
 
 /// Sunset/Golden Hour theme background with warm amber/coral weather effects
 /// Day: Golden hour warm tones with sun flares and dust particles
@@ -37,6 +38,19 @@ class SunsetBackground extends StatelessWidget {
       decoration: BoxDecoration(gradient: gradient),
       child: Stack(
         children: [
+          Positioned.fill(
+            child: RepaintBoundary(
+              child: IgnorePointer(
+                child: ExcludeSemantics(
+                  child: PremiumSceneLayer(
+                    flavor: PremiumThemeFlavor.sunset,
+                    weatherCode: weatherCode,
+                    isDay: isDay,
+                  ),
+                ),
+              ),
+            ),
+          ),
           // Golden hour ambient (day) or warm twilight (night)
           Positioned.fill(
             child: RepaintBoundary(

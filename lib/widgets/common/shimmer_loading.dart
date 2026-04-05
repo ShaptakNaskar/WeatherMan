@@ -52,6 +52,7 @@ class _SimpleLoadingState extends State<_SimpleLoading>
   @override
   Widget build(BuildContext context) {
     final t = context.watch<ThemeProvider>().current;
+    final accent = t.primaryUiAccent;
 
     return Center(
       child: Column(
@@ -65,14 +66,14 @@ class _SimpleLoadingState extends State<_SimpleLoading>
                 height: 80,
                 decoration: BoxDecoration(
                   shape: BoxShape.circle,
-                  color: t.accentColor.withValues(alpha: 0.05 + _ctrl.value * 0.08),
+                  color: accent.withValues(alpha: 0.05 + _ctrl.value * 0.08),
                   border: Border.all(
-                    color: t.accentColor.withValues(alpha: 0.2 + _ctrl.value * 0.3),
+                    color: accent.withValues(alpha: 0.2 + _ctrl.value * 0.3),
                     width: 2,
                   ),
                   boxShadow: [
                     BoxShadow(
-                      color: t.accentColor.withValues(alpha: _ctrl.value * 0.15),
+                      color: accent.withValues(alpha: _ctrl.value * 0.15),
                       blurRadius: 20,
                       spreadRadius: 2,
                     ),
@@ -81,7 +82,7 @@ class _SimpleLoadingState extends State<_SimpleLoading>
                 child: Icon(
                   Icons.cloud_rounded,
                   size: 36,
-                  color: t.accentColor.withValues(alpha: 0.6 + _ctrl.value * 0.4),
+                  color: accent.withValues(alpha: 0.6 + _ctrl.value * 0.4),
                 ),
               );
             },
@@ -90,8 +91,8 @@ class _SimpleLoadingState extends State<_SimpleLoading>
           SizedBox(
             width: 160,
             child: LinearProgressIndicator(
-              backgroundColor: t.accentColor.withValues(alpha: 0.1),
-              valueColor: AlwaysStoppedAnimation(t.accentColor.withValues(alpha: 0.6)),
+              backgroundColor: accent.withValues(alpha: 0.1),
+              valueColor: AlwaysStoppedAnimation(accent.withValues(alpha: 0.6)),
               borderRadius: BorderRadius.circular(4),
             ),
           ),
@@ -233,13 +234,15 @@ class _CyberpunkLoadingState extends State<_CyberpunkLoading>
                           shape: BoxShape.circle,
                           border: Border.all(
                             color: CyberpunkTheme.neonCyan.withValues(
-                                alpha: 0.3 + _pulseController.value * 0.3),
+                              alpha: 0.3 + _pulseController.value * 0.3,
+                            ),
                             width: 1.5,
                           ),
                           boxShadow: [
                             BoxShadow(
                               color: CyberpunkTheme.neonCyan.withValues(
-                                  alpha: 0.15 + _pulseController.value * 0.15),
+                                alpha: 0.15 + _pulseController.value * 0.15,
+                              ),
                               blurRadius: 20,
                               spreadRadius: 5,
                             ),
@@ -267,9 +270,7 @@ class _CyberpunkLoadingState extends State<_CyberpunkLoading>
                 fontWeight: FontWeight.w600,
                 color: CyberpunkTheme.neonCyan,
                 letterSpacing: 2.0,
-                shadows: [
-                  Shadow(color: Color(0x8000F0FF), blurRadius: 8),
-                ],
+                shadows: [Shadow(color: Color(0x8000F0FF), blurRadius: 8)],
               ),
             ),
 
@@ -306,7 +307,9 @@ class _CyberpunkLoadingState extends State<_CyberpunkLoading>
                               color: CyberpunkTheme.neonGreen,
                               boxShadow: [
                                 BoxShadow(
-                                  color: CyberpunkTheme.neonGreen.withValues(alpha: 0.6),
+                                  color: CyberpunkTheme.neonGreen.withValues(
+                                    alpha: 0.6,
+                                  ),
                                   blurRadius: 6,
                                 ),
                               ],
@@ -318,7 +321,9 @@ class _CyberpunkLoadingState extends State<_CyberpunkLoading>
                             style: TextStyle(
                               fontFamily: CyberpunkTheme.monoFont,
                               fontSize: 9,
-                              color: CyberpunkTheme.neonCyan.withValues(alpha: 0.7),
+                              color: CyberpunkTheme.neonCyan.withValues(
+                                alpha: 0.7,
+                              ),
                               letterSpacing: 1.5,
                             ),
                           ),
@@ -326,7 +331,8 @@ class _CyberpunkLoadingState extends State<_CyberpunkLoading>
                       ),
                       const SizedBox(height: 8),
                       ..._dataStream.asMap().entries.map((entry) {
-                        final opacity = 0.3 + (entry.key / _dataStream.length) * 0.7;
+                        final opacity =
+                            0.3 + (entry.key / _dataStream.length) * 0.7;
                         return Padding(
                           padding: const EdgeInsets.only(bottom: 2),
                           child: Text(
@@ -334,7 +340,9 @@ class _CyberpunkLoadingState extends State<_CyberpunkLoading>
                             style: TextStyle(
                               fontFamily: CyberpunkTheme.monoFont,
                               fontSize: 10,
-                              color: CyberpunkTheme.textPrimary.withValues(alpha: opacity),
+                              color: CyberpunkTheme.textPrimary.withValues(
+                                alpha: opacity,
+                              ),
                               height: 1.4,
                             ),
                             maxLines: 1,

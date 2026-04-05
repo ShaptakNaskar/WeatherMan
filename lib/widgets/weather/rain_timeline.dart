@@ -13,6 +13,7 @@ class RainTimelineCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final t = context.watch<ThemeProvider>().current;
+    final accent = t.primaryUiAccent;
     final now = DateTime.now();
     final next12h = hourly
         .where((h) => h.time.isAfter(now.subtract(const Duration(hours: 1))))
@@ -46,9 +47,9 @@ class RainTimelineCard extends StatelessWidget {
                 Text(
                   'RAIN TIMELINE',
                   style: Theme.of(context).textTheme.labelLarge?.copyWith(
-                        color: t.textSecondary,
-                        letterSpacing: 1,
-                      ),
+                    color: t.textSecondary,
+                    letterSpacing: 1,
+                  ),
                 ),
               ],
             ),
@@ -58,9 +59,9 @@ class RainTimelineCard extends StatelessWidget {
             Text(
               summary,
               style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                    fontWeight: FontWeight.w500,
-                    shadows: t.textShadows,
-                  ),
+                fontWeight: FontWeight.w500,
+                shadows: t.textShadows,
+              ),
             ),
 
             const SizedBox(height: 12),
@@ -88,9 +89,9 @@ class RainTimelineCard extends StatelessWidget {
                               final width = barWidth / next12h.length;
                               Color color;
                               if (prob > 70) {
-                                color = t.accentColor.withValues(alpha: 0.7);
+                                color = accent.withValues(alpha: 0.72);
                               } else if (prob > 30) {
-                                color = t.accentColor.withValues(alpha: 0.35);
+                                color = accent.withValues(alpha: 0.42);
                               } else {
                                 color = Colors.transparent;
                               }
@@ -106,21 +107,18 @@ class RainTimelineCard extends StatelessWidget {
                         children: [
                           Text(
                             'Now',
-                            style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                                  color: t.textTertiary,
-                                ),
+                            style: Theme.of(context).textTheme.bodySmall
+                                ?.copyWith(color: t.textTertiary),
                           ),
                           Text(
                             '+6h',
-                            style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                                  color: t.textTertiary,
-                                ),
+                            style: Theme.of(context).textTheme.bodySmall
+                                ?.copyWith(color: t.textTertiary),
                           ),
                           Text(
                             '+12h',
-                            style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                                  color: t.textTertiary,
-                                ),
+                            style: Theme.of(context).textTheme.bodySmall
+                                ?.copyWith(color: t.textTertiary),
                           ),
                         ],
                       ),
@@ -136,7 +134,8 @@ class RainTimelineCard extends StatelessWidget {
   }
 
   String _buildSummary(List<HourlyForecast> hours, DateTime now) {
-    final isRainingNow = hours.isNotEmpty && hours.first.precipitationProbability > 50;
+    final isRainingNow =
+        hours.isNotEmpty && hours.first.precipitationProbability > 50;
 
     if (isRainingNow) {
       // Find when rain stops

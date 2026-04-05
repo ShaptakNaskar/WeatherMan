@@ -92,13 +92,12 @@ class _SearchScreenState extends State<SearchScreen> {
   }
 
   Widget _buildSearchInput(dynamic t) {
+    final accent = t.primaryUiAccent;
     return Container(
       decoration: BoxDecoration(
         color: t.cardColor.withValues(alpha: 0.6),
         borderRadius: BorderRadius.circular(t.cardBorderRadius),
-        border: Border.all(
-          color: t.accentColor.withValues(alpha: 0.3),
-        ),
+        border: Border.all(color: accent.withValues(alpha: 0.45)),
         boxShadow: [
           BoxShadow(
             color: t.cardGlowColor.withValues(alpha: 0.1),
@@ -114,20 +113,11 @@ class _SearchScreenState extends State<SearchScreen> {
         style: TextStyle(color: t.textPrimary),
         decoration: InputDecoration(
           hintText: 'Search city...',
-          hintStyle: TextStyle(
-            color: t.textTertiary,
-            letterSpacing: 1,
-          ),
-          prefixIcon: Icon(
-            Icons.search_rounded,
-            color: t.accentColor,
-          ),
+          hintStyle: TextStyle(color: t.textTertiary, letterSpacing: 1),
+          prefixIcon: Icon(Icons.search_rounded, color: accent),
           suffixIcon: _searchController.text.isNotEmpty
               ? IconButton(
-                  icon: Icon(
-                    Icons.clear_rounded,
-                    color: t.accentColor,
-                  ),
+                  icon: Icon(Icons.clear_rounded, color: accent),
                   onPressed: () {
                     _searchController.clear();
                     _onSearchChanged('');
@@ -142,6 +132,10 @@ class _SearchScreenState extends State<SearchScreen> {
         ),
       ),
     );
+  }
+
+  Color _safeAccent(dynamic t) {
+    return t.primaryUiAccent as Color;
   }
 
   @override
@@ -168,13 +162,13 @@ class _SearchScreenState extends State<SearchScreen> {
               title: Text(
                 'Search',
                 style: TextStyle(
-                  color: t.accentColor,
+                  color: t.primaryUiAccent,
                   letterSpacing: 1,
                   shadows: t.subtleGlow,
                 ),
               ),
               leading: IconButton(
-                icon: Icon(Icons.arrow_back_rounded, color: t.accentColor),
+                icon: Icon(Icons.arrow_back_rounded, color: t.primaryUiAccent),
                 onPressed: () => Navigator.pop(context),
               ),
             ),
@@ -203,16 +197,14 @@ class _SearchScreenState extends State<SearchScreen> {
   Widget _buildPortraitLayout(dynamic t) {
     return Column(
       children: [
-        Padding(
-          padding: const EdgeInsets.all(16),
-          child: _buildSearchInput(t),
-        ),
+        Padding(padding: const EdgeInsets.all(16), child: _buildSearchInput(t)),
         Expanded(child: _buildResults(t)),
       ],
     );
   }
 
   Widget _buildLandscapeLayout(dynamic t) {
+    final accent = _safeAccent(t);
     return Row(
       children: [
         // Left: search input + empty state
@@ -233,7 +225,7 @@ class _SearchScreenState extends State<SearchScreen> {
                           Icon(
                             Icons.search_rounded,
                             size: 48,
-                            color: t.accentColor.withValues(alpha: 0.3),
+                            color: accent.withValues(alpha: 0.36),
                           ),
                           const SizedBox(height: 12),
                           Text(
@@ -254,10 +246,7 @@ class _SearchScreenState extends State<SearchScreen> {
           ),
         ),
         // Divider
-        Container(
-          width: 1,
-          color: t.textTertiary.withValues(alpha: 0.15),
-        ),
+        Container(width: 1, color: t.textTertiary.withValues(alpha: 0.15)),
         // Right: results
         Expanded(
           child: _searchController.text.isEmpty
@@ -272,7 +261,7 @@ class _SearchScreenState extends State<SearchScreen> {
     if (_isSearching) {
       return Center(
         child: CircularProgressIndicator(
-          valueColor: AlwaysStoppedAnimation<Color>(t.accentColor),
+          valueColor: AlwaysStoppedAnimation<Color>(t.primaryUiAccent),
         ),
       );
     }
@@ -285,7 +274,7 @@ class _SearchScreenState extends State<SearchScreen> {
             Icon(
               Icons.search_rounded,
               size: 64,
-              color: t.accentColor.withValues(alpha: 0.3),
+              color: t.primaryUiAccent.withValues(alpha: 0.36),
             ),
             const SizedBox(height: 16),
             Text(
@@ -309,7 +298,7 @@ class _SearchScreenState extends State<SearchScreen> {
             Icon(
               Icons.location_off_rounded,
               size: 64,
-              color: t.accentColor.withValues(alpha: 0.3),
+              color: t.primaryUiAccent.withValues(alpha: 0.36),
             ),
             const SizedBox(height: 16),
             Text(
@@ -354,14 +343,13 @@ class _SearchResultItem extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final t = theme;
+    final accent = t.primaryUiAccent;
     return Container(
       margin: const EdgeInsets.only(bottom: 8),
       decoration: BoxDecoration(
         color: t.cardColor.withValues(alpha: 0.6),
         borderRadius: BorderRadius.circular(t.cardBorderRadius),
-        border: Border.all(
-          color: t.accentColor.withValues(alpha: 0.2),
-        ),
+        border: Border.all(color: accent.withValues(alpha: 0.35)),
         boxShadow: [
           BoxShadow(
             color: t.cardGlowColor.withValues(alpha: 0.05),
@@ -372,30 +360,18 @@ class _SearchResultItem extends StatelessWidget {
       ),
       child: ListTile(
         onTap: onTap,
-        leading: Icon(
-          Icons.location_city_rounded,
-          color: t.accentColor,
-        ),
+        leading: Icon(Icons.location_city_rounded, color: accent),
         title: Text(
           location.name,
-          style: TextStyle(
-            color: t.textPrimary,
-            fontWeight: FontWeight.w500,
-          ),
+          style: TextStyle(color: t.textPrimary, fontWeight: FontWeight.w500),
         ),
         subtitle: Text(
           location.displayName,
-          style: TextStyle(
-            fontSize: 12,
-            color: t.textSecondary,
-          ),
+          style: TextStyle(fontSize: 12, color: t.textSecondary),
           maxLines: 1,
           overflow: TextOverflow.ellipsis,
         ),
-        trailing: Icon(
-          Icons.add_circle_outline_rounded,
-          color: t.accentColor,
-        ),
+        trailing: Icon(Icons.add_circle_outline_rounded, color: accent),
       ),
     );
   }

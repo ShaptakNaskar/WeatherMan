@@ -11,10 +11,7 @@ import 'package:weatherman/widgets/themed/themed_card.dart';
 class HourlyForecastCard extends StatelessWidget {
   final List<HourlyForecast> hourly;
 
-  const HourlyForecastCard({
-    super.key,
-    required this.hourly,
-  });
+  const HourlyForecastCard({super.key, required this.hourly});
 
   @override
   Widget build(BuildContext context) {
@@ -45,9 +42,9 @@ class HourlyForecastCard extends StatelessWidget {
                 Text(
                   'HOURLY FORECAST',
                   style: Theme.of(context).textTheme.labelLarge?.copyWith(
-                        color: t.textSecondary,
-                        letterSpacing: 1,
-                      ),
+                    color: t.textSecondary,
+                    letterSpacing: 1,
+                  ),
                 ),
               ],
             ),
@@ -55,10 +52,7 @@ class HourlyForecastCard extends StatelessWidget {
 
           const SizedBox(height: 12),
 
-          Divider(
-            color: t.cardBorderColor.withValues(alpha: 0.3),
-            height: 1,
-          ),
+          Divider(color: t.cardBorderColor.withValues(alpha: 0.3), height: 1),
 
           const SizedBox(height: 12),
 
@@ -88,15 +82,15 @@ class _HourlyItem extends StatelessWidget {
   final HourlyForecast forecast;
   final bool isFirst;
 
-  const _HourlyItem({
-    required this.forecast,
-    required this.isFirst,
-  });
+  const _HourlyItem({required this.forecast, required this.isFirst});
 
   @override
   Widget build(BuildContext context) {
     final settings = context.watch<SettingsProvider>();
     final t = context.watch<ThemeProvider>().current;
+    final brightSkyIconColor = t.themeData.brightness == Brightness.light
+        ? t.textPrimary
+        : t.primaryUiAccent;
 
     return Container(
       width: 60,
@@ -108,16 +102,24 @@ class _HourlyItem extends StatelessWidget {
           Text(
             DateTimeUtils.formatHourOrNow(forecast.time),
             style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                  color: isFirst ? t.textPrimary : t.textSecondary,
-                  fontWeight: isFirst ? FontWeight.w600 : FontWeight.w400,
-                ),
+              color: isFirst ? t.textPrimary : t.textSecondary,
+              fontWeight: isFirst ? FontWeight.w600 : FontWeight.w400,
+            ),
           ),
 
           // Icon
           Icon(
-            WeatherUtils.getWeatherIcon(forecast.weatherCode, isDay: forecast.isDay),
+            WeatherUtils.getWeatherIcon(
+              forecast.weatherCode,
+              isDay: forecast.isDay,
+            ),
             size: 28,
-            color: WeatherUtils.getWeatherIconColor(forecast.weatherCode, isDay: forecast.isDay),
+            color: WeatherUtils.getWeatherIconColor(
+              forecast.weatherCode,
+              isDay: forecast.isDay,
+              brightSkyColor: brightSkyIconColor,
+              defaultColor: t.textPrimary.withValues(alpha: 0.96),
+            ),
             shadows: const [
               Shadow(
                 color: Color(0x80000000),
@@ -132,9 +134,9 @@ class _HourlyItem extends StatelessWidget {
             Text(
               '${forecast.precipitationProbability}%',
               style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                    color: t.textSecondary,
-                    fontWeight: FontWeight.w600,
-                  ),
+                color: t.textSecondary,
+                fontWeight: FontWeight.w600,
+              ),
             )
           else
             const SizedBox(height: 14),
@@ -142,9 +144,9 @@ class _HourlyItem extends StatelessWidget {
           // Temperature
           Text(
             settings.formatTempShort(forecast.temperature),
-            style: Theme.of(context).textTheme.bodyLarge?.copyWith(
-                  fontWeight: FontWeight.w500,
-                ),
+            style: Theme.of(
+              context,
+            ).textTheme.bodyLarge?.copyWith(fontWeight: FontWeight.w500),
           ),
         ],
       ),

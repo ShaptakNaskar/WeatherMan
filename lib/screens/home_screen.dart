@@ -129,6 +129,7 @@ class _HomeScreenState extends State<HomeScreen> {
 
   Future<void> _showLocationRationale() async {
     final t = context.read<ThemeProvider>().current;
+    final accent = t.primaryUiAccent;
     await showDialog<void>(
       context: context,
       barrierDismissible: false,
@@ -141,7 +142,7 @@ class _HomeScreenState extends State<HomeScreen> {
         ),
         title: Row(
           children: [
-            Icon(Icons.location_on_rounded, color: t.accentColor, size: 24),
+            Icon(Icons.location_on_rounded, color: accent, size: 24),
             const SizedBox(width: 8),
             Text(
               'Location Access',
@@ -165,7 +166,7 @@ class _HomeScreenState extends State<HomeScreen> {
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context),
-            child: Text('Got it!', style: TextStyle(color: t.accentColor)),
+            child: Text('Got it!', style: TextStyle(color: accent)),
           ),
         ],
       ),
@@ -385,10 +386,11 @@ class _HomeScreenState extends State<HomeScreen> {
     bool isRefreshing,
   ) {
     final t = context.watch<ThemeProvider>().current;
+    final accent = t.primaryUiAccent;
 
     return RefreshIndicator(
       onRefresh: _refreshWeather,
-      color: t.accentColor,
+      color: accent,
       backgroundColor: t.cardColor.withValues(alpha: 0.8),
       child: CustomScrollView(
         physics: const BouncingScrollPhysics(
@@ -473,6 +475,7 @@ class _HomeScreenState extends State<HomeScreen> {
     bool isRefreshing,
   ) {
     final t = context.watch<ThemeProvider>().current;
+    final accent = t.primaryUiAccent;
 
     return Row(
       children: [
@@ -543,12 +546,12 @@ class _HomeScreenState extends State<HomeScreen> {
             ],
           ),
         ),
-        Container(width: 1, color: t.accentColor.withValues(alpha: 0.15)),
+        Container(width: 1, color: t.textTertiary.withValues(alpha: 0.28)),
         // Right panel
         Expanded(
           child: RefreshIndicator(
             onRefresh: _refreshWeather,
-            color: t.accentColor,
+            color: accent,
             backgroundColor: t.cardColor.withValues(alpha: 0.8),
             child: CustomScrollView(
               physics: const BouncingScrollPhysics(
@@ -611,6 +614,7 @@ class _HomeScreenState extends State<HomeScreen> {
 
   SliverToBoxAdapter _buildRefreshingIndicator() {
     final t = context.watch<ThemeProvider>().current;
+    final accent = t.primaryUiAccent;
     return SliverToBoxAdapter(
       child: Center(
         child: Padding(
@@ -621,7 +625,7 @@ class _HomeScreenState extends State<HomeScreen> {
             child: CircularProgressIndicator(
               strokeWidth: 2,
               valueColor: AlwaysStoppedAnimation<Color>(
-                t.accentColor.withValues(alpha: 0.7),
+                accent.withValues(alpha: 0.72),
               ),
             ),
           ),
@@ -787,6 +791,7 @@ class _HomeScreenState extends State<HomeScreen> {
 
   Widget _buildErrorState(String error) {
     final t = context.watch<ThemeProvider>().current;
+    final accent = t.primaryUiAccent;
     return Center(
       child: Padding(
         padding: const EdgeInsets.all(32),
@@ -821,9 +826,9 @@ class _HomeScreenState extends State<HomeScreen> {
               icon: const Icon(Icons.refresh_rounded),
               label: const Text('Retry'),
               style: ElevatedButton.styleFrom(
-                backgroundColor: t.accentColor.withValues(alpha: 0.15),
-                foregroundColor: t.accentColor,
-                side: BorderSide(color: t.accentColor.withValues(alpha: 0.5)),
+                backgroundColor: t.cardColor.withValues(alpha: 0.68),
+                foregroundColor: t.textPrimary,
+                side: BorderSide(color: accent.withValues(alpha: 0.72)),
                 shape: RoundedRectangleBorder(
                   borderRadius: BorderRadius.circular(t.cardBorderRadius),
                 ),
@@ -837,6 +842,7 @@ class _HomeScreenState extends State<HomeScreen> {
 
   Widget _buildLocationLoadingState() {
     final t = context.watch<ThemeProvider>().current;
+    final accent = t.primaryUiAccent;
     return Center(
       child: Padding(
         padding: const EdgeInsets.all(32),
@@ -848,7 +854,7 @@ class _HomeScreenState extends State<HomeScreen> {
               height: 48,
               child: CircularProgressIndicator(
                 strokeWidth: 3,
-                valueColor: AlwaysStoppedAnimation(t.accentColor),
+                valueColor: AlwaysStoppedAnimation(accent),
               ),
             ),
             const SizedBox(height: 24),
@@ -875,6 +881,7 @@ class _HomeScreenState extends State<HomeScreen> {
 
   Widget _buildNoLocationState() {
     final t = context.watch<ThemeProvider>().current;
+    final accent = t.primaryUiAccent;
     return Center(
       child: Padding(
         padding: const EdgeInsets.all(32),
@@ -909,9 +916,9 @@ class _HomeScreenState extends State<HomeScreen> {
               icon: const Icon(Icons.add_rounded),
               label: const Text('Add city'),
               style: ElevatedButton.styleFrom(
-                backgroundColor: t.accentColor.withValues(alpha: 0.15),
-                foregroundColor: t.accentColor,
-                side: BorderSide(color: t.accentColor.withValues(alpha: 0.5)),
+                backgroundColor: t.cardColor.withValues(alpha: 0.68),
+                foregroundColor: t.textPrimary,
+                side: BorderSide(color: accent.withValues(alpha: 0.75)),
                 shape: RoundedRectangleBorder(
                   borderRadius: BorderRadius.circular(t.cardBorderRadius),
                 ),
@@ -950,9 +957,10 @@ class _CityListBottomSheet extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final t = context.watch<ThemeProvider>().current;
+    final accent = t.primaryUiAccent;
 
-    return Consumer2<LocationProvider, WeatherProvider>(
-      builder: (context, locationProvider, weatherProvider, _) {
+    return Consumer3<LocationProvider, WeatherProvider, SettingsProvider>(
+      builder: (context, locationProvider, weatherProvider, settings, _) {
         final allLocations = locationProvider.allLocations;
 
         return Container(
@@ -966,7 +974,7 @@ class _CityListBottomSheet extends StatelessWidget {
             borderRadius: BorderRadius.vertical(
               top: Radius.circular(t.cardBorderRadius),
             ),
-            border: Border.all(color: t.accentColor.withValues(alpha: 0.3)),
+            border: Border.all(color: t.textTertiary.withValues(alpha: 0.35)),
           ),
           child: Column(
             mainAxisSize: MainAxisSize.min,
@@ -991,7 +999,7 @@ class _CityListBottomSheet extends StatelessWidget {
                       'Saved Locations',
                       style: Theme.of(
                         context,
-                      ).textTheme.titleLarge?.copyWith(color: t.accentColor),
+                      ).textTheme.titleLarge?.copyWith(color: accent),
                     ),
                     const Spacer(),
                     IconButton(
@@ -1038,11 +1046,11 @@ class _CityListBottomSheet extends StatelessWidget {
                             ),
                             decoration: BoxDecoration(
                               color: isSelected
-                                  ? t.accentColor.withValues(alpha: 0.08)
+                                  ? accent.withValues(alpha: 0.1)
                                   : t.cardColor.withValues(alpha: 0.5),
                               border: Border.all(
                                 color: isSelected
-                                    ? t.accentColor.withValues(alpha: 0.4)
+                                    ? accent.withValues(alpha: 0.58)
                                     : t.cardBorderColor.withValues(alpha: 0.3),
                                 width: isSelected ? 1 : 0.5,
                               ),
@@ -1059,18 +1067,14 @@ class _CityListBottomSheet extends StatelessWidget {
                                 location.isCurrentLocation
                                     ? Icons.my_location_rounded
                                     : Icons.location_city_rounded,
-                                color: isSelected
-                                    ? t.accentColor
-                                    : t.textSecondary,
+                                color: isSelected ? accent : t.textSecondary,
                                 size: 20,
                               ),
                               title: Text(
                                 location.name,
                                 style: TextStyle(
                                   fontSize: 14,
-                                  color: isSelected
-                                      ? t.accentColor
-                                      : t.textPrimary,
+                                  color: isSelected ? accent : t.textPrimary,
                                   fontWeight: isSelected
                                       ? FontWeight.bold
                                       : FontWeight.normal,
@@ -1078,7 +1082,7 @@ class _CityListBottomSheet extends StatelessWidget {
                               ),
                               subtitle: weather != null
                                   ? Text(
-                                      '${weather.current.temperature.round()}°C · ${WeatherUtils.getWeatherDescription(weather.current.weatherCode)}',
+                                      '${settings.formatTemp(weather.current.temperature)} · ${WeatherUtils.getWeatherDescription(weather.current.weatherCode)}',
                                       style: TextStyle(
                                         fontSize: 12,
                                         color: t.textTertiary,
@@ -1093,7 +1097,9 @@ class _CityListBottomSheet extends StatelessWidget {
                                     )
                                   : weather != null
                                   ? Text(
-                                      '${weather.current.temperature.round()}°',
+                                      settings.formatTempShort(
+                                        weather.current.temperature,
+                                      ),
                                       style: TextStyle(
                                         fontSize: 16,
                                         fontWeight: FontWeight.bold,

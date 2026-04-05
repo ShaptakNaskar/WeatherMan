@@ -18,8 +18,7 @@ class ThemeProvider extends ChangeNotifier {
   static final Map<AppThemeType, AppThemeData> _themes = {
     AppThemeType.clean: CleanThemeData(),
     AppThemeType.cyberpunk: CyberpunkThemeData(),
-    // AppThemeType.pastel: CatppuccinLatteTheme(),
-    AppThemeType.pastelDark: PastelDarkTheme(),
+    AppThemeType.pastel: PastelDarkTheme(),
     AppThemeType.sunset: SunsetTheme(),
     AppThemeType.ocean: OceanTheme(),
   };
@@ -34,17 +33,14 @@ class ThemeProvider extends ChangeNotifier {
   ThemeData get themeData => _currentTheme.themeData;
 
   bool get isCyberpunk => _currentType == AppThemeType.cyberpunk;
-  bool get isPastel =>
-      // _currentType == AppThemeType.pastel ||
-      _currentType == AppThemeType.pastelDark;
+  bool get isPastel => _currentType == AppThemeType.pastel;
   bool get isClean => _currentType == AppThemeType.clean;
   bool get isDark => _currentTheme.themeData.brightness == Brightness.dark;
 
   /// Text style for themed insight/advice messages
   InsightTextStyle get textStyle => switch (_currentType) {
     AppThemeType.cyberpunk => InsightTextStyle.cyber,
-    // AppThemeType.pastel ||
-    AppThemeType.pastelDark => InsightTextStyle.kawaii,
+    AppThemeType.pastel => InsightTextStyle.kawaii,
     _ => InsightTextStyle.neutral,
   };
 

@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:google_fonts/google_fonts.dart';
 import 'package:weatherman/config/app_theme_data.dart';
 
 /// Sunset theme — warm amber/coral tones on a dark background
@@ -7,69 +8,103 @@ class SunsetTheme extends AppThemeData {
   AppThemeType get type => AppThemeType.sunset;
 
   @override
-  Color get accentColor => const Color(0xFFFF8A50); // warm orange
+  Color get accentColor => const Color(0xFFFFA05F);
   @override
-  Color get accentColorSecondary => const Color(0xFFFF6B8A); // coral
+  Color get accentColorSecondary => const Color(0xFFFF6E9F);
   @override
-  Color get backgroundColor => const Color(0xFF1A1018);
+  Color get backgroundColor => const Color(0xFF140B12);
   @override
-  Color get cardColor => const Color(0xFF2A1C25);
+  Color get cardColor => const Color(0x992A1722);
   @override
-  Color get cardBorderColor => const Color(0x40FF8A50);
+  Color get cardBorderColor => const Color(0x66FFAE70);
   @override
-  Color get textPrimary => const Color(0xFFF5EDE8);
+  Color get textPrimary => const Color(0xFFFFF3EA);
   @override
-  Color get textSecondary => const Color(0xFFCCB8AA);
+  Color get textSecondary => const Color(0xCCF4D3BE);
   @override
-  Color get textTertiary => const Color(0xFF998880);
+  Color get textTertiary => const Color(0x99D5AE98);
   @override
-  Color get dangerColor => const Color(0xFFFF5252);
+  Color get dangerColor => const Color(0xFFFF6262);
   @override
-  Color get warningColor => const Color(0xFFFFCA28);
+  Color get warningColor => const Color(0xFFFFD166);
   @override
-  Color get successColor => const Color(0xFF66BB6A);
+  Color get successColor => const Color(0xFF7FCB73);
   @override
-  Color get infoColor => const Color(0xFF42A5F5);
+  Color get infoColor => const Color(0xFF7FB5FF);
 
   @override
-  double get cardBorderRadius => 14;
+  double get cardBorderRadius => 20;
   @override
-  double get cardBorderWidth => 1;
+  double get cardBorderWidth => 1.2;
   @override
-  double get cardBlurSigma => 6;
+  double get cardBlurSigma => 18;
   @override
-  Color get cardGlowColor => const Color(0x18FF8A50);
+  Color get cardGlowColor => const Color(0x22FFA05F);
 
   @override
-  String? get fontFamily => null;
+  String? get fontFamily => 'Sora';
   @override
   bool get useMonospace => false;
 
   @override
   List<Shadow> get subtleGlow => [
-        const Shadow(color: Color(0x30FF8A50), blurRadius: 6, offset: Offset.zero),
-      ];
+    const Shadow(color: Color(0x40FFA05F), blurRadius: 8, offset: Offset.zero),
+  ];
+
+  @override
+  List<Shadow> get accentGlow => [
+    const Shadow(color: Color(0x55FFA05F), blurRadius: 14, offset: Offset.zero),
+  ];
 
   @override
   LinearGradient getWeatherGradient(int weatherCode, bool isDay) {
     if (weatherCode == 0 || weatherCode == 1) {
       return isDay
           ? const LinearGradient(
-              begin: Alignment.topCenter,
-              end: Alignment.bottomCenter,
-              colors: [Color(0xFF5A3040), Color(0xFF3A2030), Color(0xFF1A1018)],
+              begin: Alignment.topLeft,
+              end: Alignment.bottomRight,
+              colors: [
+                Color(0xFFFFA964),
+                Color(0xFFFF7F79),
+                Color(0xFFB54A6A),
+                Color(0xFF4B2236),
+              ],
+              stops: [0.0, 0.26, 0.62, 1.0],
             )
           : const LinearGradient(
-              begin: Alignment.topCenter,
-              end: Alignment.bottomCenter,
-              colors: [Color(0xFF2A1820), Color(0xFF1E1018), Color(0xFF120A10)],
+              begin: Alignment.topLeft,
+              end: Alignment.bottomRight,
+              colors: [
+                Color(0xFF2A1120),
+                Color(0xFF3D1731),
+                Color(0xFF241328),
+                Color(0xFF120A14),
+              ],
+              stops: [0.0, 0.36, 0.72, 1.0],
             );
     }
     if (weatherCode == 2 || weatherCode == 3) {
       return const LinearGradient(
         begin: Alignment.topCenter,
         end: Alignment.bottomCenter,
-        colors: [Color(0xFF402838), Color(0xFF2C1C28), Color(0xFF1A1018)],
+        colors: [
+          Color(0xFF6A3646),
+          Color(0xFF4D2A3A),
+          Color(0xFF311D2B),
+          Color(0xFF1A1018),
+        ],
+      );
+    }
+    if (weatherCode == 45 || weatherCode == 48) {
+      return const LinearGradient(
+        begin: Alignment.topCenter,
+        end: Alignment.bottomCenter,
+        colors: [
+          Color(0xFF6B4251),
+          Color(0xFF4F313F),
+          Color(0xFF362432),
+          Color(0xFF211723),
+        ],
       );
     }
     if ((weatherCode >= 51 && weatherCode <= 67) ||
@@ -77,7 +112,12 @@ class SunsetTheme extends AppThemeData {
       return const LinearGradient(
         begin: Alignment.topCenter,
         end: Alignment.bottomCenter,
-        colors: [Color(0xFF302030), Color(0xFF201520), Color(0xFF150C15)],
+        colors: [
+          Color(0xFF4A2A3B),
+          Color(0xFF341E2C),
+          Color(0xFF241523),
+          Color(0xFF160D17),
+        ],
       );
     }
     if ((weatherCode >= 71 && weatherCode <= 77) ||
@@ -85,67 +125,90 @@ class SunsetTheme extends AppThemeData {
       return const LinearGradient(
         begin: Alignment.topCenter,
         end: Alignment.bottomCenter,
-        colors: [Color(0xFF382838), Color(0xFF2A1C2A), Color(0xFF1A1018)],
+        colors: [
+          Color(0xFF6A5A63),
+          Color(0xFF4D3D49),
+          Color(0xFF342732),
+          Color(0xFF211820),
+        ],
       );
     }
     if (weatherCode >= 95 && weatherCode <= 99) {
       return const LinearGradient(
         begin: Alignment.topCenter,
         end: Alignment.bottomCenter,
-        colors: [Color(0xFF2A1520), Color(0xFF1A0C15), Color(0xFF10080C)],
+        colors: [
+          Color(0xFF311326),
+          Color(0xFF270F1D),
+          Color(0xFF1B0B16),
+          Color(0xFF10070D),
+        ],
       );
     }
-    // Default / fog
+
     return isDay
         ? const LinearGradient(
-            begin: Alignment.topCenter,
-            end: Alignment.bottomCenter,
-            colors: [Color(0xFF5A3040), Color(0xFF3A2030), Color(0xFF1A1018)],
+            begin: Alignment.topLeft,
+            end: Alignment.bottomRight,
+            colors: [
+              Color(0xFFFFA964),
+              Color(0xFFFF7F79),
+              Color(0xFFB54A6A),
+              Color(0xFF4B2236),
+            ],
           )
         : const LinearGradient(
-            begin: Alignment.topCenter,
-            end: Alignment.bottomCenter,
-            colors: [Color(0xFF2A1820), Color(0xFF1E1018), Color(0xFF120A10)],
+            begin: Alignment.topLeft,
+            end: Alignment.bottomRight,
+            colors: [
+              Color(0xFF2A1120),
+              Color(0xFF3D1731),
+              Color(0xFF241328),
+              Color(0xFF120A14),
+            ],
           );
   }
 
   @override
   ThemeData get themeData => ThemeData(
-        useMaterial3: true,
-        brightness: Brightness.dark,
-        scaffoldBackgroundColor: Colors.transparent,
-        colorScheme: ColorScheme.fromSeed(
-          seedColor: accentColor,
-          brightness: Brightness.dark,
-          primary: accentColor,
-          secondary: accentColorSecondary,
-          error: dangerColor,
-          surface: cardColor,
-          onSurface: textPrimary,
-        ),
-        appBarTheme: AppBarTheme(
-          backgroundColor: Colors.transparent,
-          elevation: 0,
-          centerTitle: true,
-          titleTextStyle: TextStyle(
-            fontSize: 20,
-            fontWeight: FontWeight.w600,
-            color: textPrimary,
-          ),
-          iconTheme: IconThemeData(color: textPrimary),
-        ),
-        textTheme: TextTheme(
-          displayLarge: TextStyle(fontSize: 96, fontWeight: FontWeight.w300, color: textPrimary, letterSpacing: -1.5),
-          displayMedium: TextStyle(fontSize: 60, fontWeight: FontWeight.w300, color: textPrimary, letterSpacing: -0.5),
-          headlineLarge: TextStyle(fontSize: 32, fontWeight: FontWeight.w700, color: textPrimary),
-          headlineMedium: TextStyle(fontSize: 24, fontWeight: FontWeight.w700, color: textPrimary),
-          titleLarge: TextStyle(fontSize: 20, fontWeight: FontWeight.w600, color: textPrimary),
-          titleMedium: TextStyle(fontSize: 18, fontWeight: FontWeight.w600, color: textPrimary),
-          bodyLarge: TextStyle(fontSize: 16, fontWeight: FontWeight.w400, color: textPrimary),
-          bodyMedium: TextStyle(fontSize: 14, fontWeight: FontWeight.w400, color: textSecondary),
-          bodySmall: TextStyle(fontSize: 12, fontWeight: FontWeight.w400, color: textSecondary),
-          labelLarge: TextStyle(fontSize: 14, fontWeight: FontWeight.w600, color: textPrimary),
-          labelSmall: TextStyle(fontSize: 11, fontWeight: FontWeight.w500, color: textSecondary),
-        ),
-      );
+    useMaterial3: true,
+    brightness: Brightness.dark,
+    scaffoldBackgroundColor: Colors.transparent,
+    textTheme: GoogleFonts.soraTextTheme(
+      const TextTheme(
+        displayLarge: TextStyle(fontSize: 96, fontWeight: FontWeight.w300),
+        displayMedium: TextStyle(fontSize: 60, fontWeight: FontWeight.w300),
+        headlineLarge: TextStyle(fontSize: 32, fontWeight: FontWeight.w700),
+        headlineMedium: TextStyle(fontSize: 24, fontWeight: FontWeight.w700),
+        titleLarge: TextStyle(fontSize: 20, fontWeight: FontWeight.w600),
+        titleMedium: TextStyle(fontSize: 18, fontWeight: FontWeight.w600),
+        bodyLarge: TextStyle(fontSize: 16, fontWeight: FontWeight.w500),
+        bodyMedium: TextStyle(fontSize: 14, fontWeight: FontWeight.w500),
+        bodySmall: TextStyle(fontSize: 12, fontWeight: FontWeight.w500),
+        labelLarge: TextStyle(fontSize: 14, fontWeight: FontWeight.w700),
+        labelSmall: TextStyle(fontSize: 11, fontWeight: FontWeight.w700),
+      ),
+    ).apply(bodyColor: textPrimary, displayColor: textPrimary),
+    colorScheme: ColorScheme.fromSeed(
+      seedColor: accentColor,
+      brightness: Brightness.dark,
+      primary: accentColor,
+      secondary: accentColorSecondary,
+      error: dangerColor,
+      surface: cardColor,
+      onSurface: textPrimary,
+    ),
+    appBarTheme: AppBarTheme(
+      backgroundColor: Colors.transparent,
+      elevation: 0,
+      centerTitle: true,
+      titleTextStyle: GoogleFonts.sora(
+        fontSize: 20,
+        fontWeight: FontWeight.w700,
+        color: textPrimary,
+        letterSpacing: 0.6,
+      ),
+      iconTheme: IconThemeData(color: textPrimary),
+    ),
+  );
 }

@@ -4,10 +4,9 @@ import 'package:weatherman/config/app_theme_data.dart';
 
 /// Catppuccin Latte theme — soothing pastel light theme with harmonious colors
 /// Based on the official Catppuccin Latte palette: https://catppuccin.com/palette
-/// NOTE: Currently disabled - uncomment AppThemeType.pastel in app_theme_data.dart to enable
 class CatppuccinLatteTheme extends AppThemeData {
   @override
-  AppThemeType get type => AppThemeType.pastelDark; // Temporarily use pastelDark since pastel is commented out
+  AppThemeType get type => AppThemeType.pastel;
 
   // ══════════════════════════════════════════════════════════════════════════
   // Catppuccin Latte Palette (Official)
@@ -297,7 +296,7 @@ class CatppuccinLatteTheme extends AppThemeData {
 /// Pastel dark mode — dreamy night aesthetic with muted pastels on dark
 class PastelDarkTheme extends AppThemeData {
   @override
-  AppThemeType get type => AppThemeType.pastelDark;
+  AppThemeType get type => AppThemeType.pastel;
 
   @override
   Color get accentColor => const Color(0xFFCBB8F0); // soft lavender

@@ -4,21 +4,27 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:background="@drawable/widget_bg_clear_anim"
-    android:padding="12dp">
+    android:padding="14dp">
+
+    <View
+        android:id="@+id/widget_glass_overlay"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:background="@drawable/widget_glass_panel" />
 
     <TextView
         android:id="@+id/widget_condition"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:text="Updating..."
-        android:textColor="#FFFFFF"
+        android:textColor="#FFF8EE"
         android:textSize="14sp"
         android:textStyle="bold"
         android:letterSpacing="0.08"
-        android:shadowColor="#8000FFFF"
+        android:shadowColor="#CC000000"
         android:shadowDx="0"
         android:shadowDy="0"
-        android:shadowRadius="8" />
+        android:shadowRadius="5" />
 
     <TextView
         android:id="@+id/widget_temp"
@@ -26,14 +32,14 @@
         android:layout_height="wrap_content"
         android:layout_below="@id/widget_condition"
         android:text="--°"
-        android:textColor="#FFFFFF"
+        android:textColor="#FFF9F2"
         android:textSize="42sp"
         android:textStyle="bold"
         android:letterSpacing="0.03"
-        android:shadowColor="#BF00FFFF"
+        android:shadowColor="#D0000000"
         android:shadowDx="0"
         android:shadowDy="0"
-        android:shadowRadius="10" />
+        android:shadowRadius="6" />
 
     <TextView
         android:id="@+id/widget_high_low"
@@ -41,9 +47,13 @@
         android:layout_height="wrap_content"
         android:layout_below="@id/widget_temp"
         android:text="H -- • L --"
-        android:textColor="#E0FFFFFF"
+        android:textColor="#FFF0E0"
         android:textSize="13sp"
-        android:letterSpacing="0.05" />
+        android:letterSpacing="0.05"
+        android:shadowColor="#99000000"
+        android:shadowDx="0"
+        android:shadowDy="0"
+        android:shadowRadius="3" />
 
     <TextView
         android:id="@+id/widget_hours"
@@ -51,9 +61,13 @@
         android:layout_height="wrap_content"
         android:layout_alignParentBottom="true"
         android:text="Next: --"
-        android:textColor="#CCFFFFFF"
+        android:textColor="#FFE6D2"
         android:textSize="12sp"
         android:letterSpacing="0.05"
-        android:maxLines="2" />
+        android:maxLines="2"
+        android:shadowColor="#99000000"
+        android:shadowDx="0"
+        android:shadowDy="0"
+        android:shadowRadius="3" />
 
 </RelativeLayout>

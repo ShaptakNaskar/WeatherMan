@@ -79,14 +79,14 @@ void main() async {
           ),
         ),
       ],
-      child: const WeatherManApp(),
+      child: const SappyWeatherApp(),
     ),
   );
 }
 
-/// WeatherMan App
-class WeatherManApp extends StatelessWidget {
-  const WeatherManApp({super.key});
+/// SappyWeather app
+class SappyWeatherApp extends StatelessWidget {
+  const SappyWeatherApp({super.key});
 
   @override
   Widget build(BuildContext context) {
@@ -182,7 +182,7 @@ class _AppEntryState extends State<_AppEntry> {
         return OceanSplashScreen(onComplete: _onSplashComplete);
       // case AppThemeType.pastel:
       //   return PastelSplashScreen(onComplete: _onSplashComplete);
-      case AppThemeType.pastelDark:
+      case AppThemeType.pastel:
         return PastelDarkSplashScreen(onComplete: _onSplashComplete);
     }
   }

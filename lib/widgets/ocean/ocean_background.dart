@@ -2,6 +2,7 @@ import 'dart:math';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:weatherman/providers/theme_provider.dart';
+import 'package:weatherman/widgets/backgrounds/premium_scene_layer.dart';
 
 /// Ocean theme background with deep sea / aquatic weather effects
 /// Day: Lighter turquoise/teal tones with caustic light patterns
@@ -37,6 +38,19 @@ class OceanBackground extends StatelessWidget {
       decoration: BoxDecoration(gradient: gradient),
       child: Stack(
         children: [
+          Positioned.fill(
+            child: RepaintBoundary(
+              child: IgnorePointer(
+                child: ExcludeSemantics(
+                  child: PremiumSceneLayer(
+                    flavor: PremiumThemeFlavor.ocean,
+                    weatherCode: weatherCode,
+                    isDay: isDay,
+                  ),
+                ),
+              ),
+            ),
+          ),
           // Underwater caustic light (day) or deep sea ambient (night)
           Positioned.fill(
             child: RepaintBoundary(

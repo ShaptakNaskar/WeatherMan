@@ -42,8 +42,7 @@ class ThemedBackground extends StatelessWidget {
           isDay: isDay,
           child: child,
         );
-      // case AppThemeType.pastel:
-      case AppThemeType.pastelDark:
+      case AppThemeType.pastel:
         return PastelBackground(
           weatherCode: weatherCode,
           isDay: isDay,

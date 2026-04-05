@@ -4,6 +4,7 @@ import 'package:provider/provider.dart';
 import 'package:weatherman/config/app_theme_data.dart';
 import 'package:weatherman/config/pastel_theme.dart';
 import 'package:weatherman/providers/theme_provider.dart';
+import 'package:weatherman/widgets/backgrounds/premium_scene_layer.dart';
 
 /// Pastel/Kawaii themed background with cute weather effects
 ///
@@ -27,7 +28,7 @@ class PastelBackground extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final themeProvider = context.watch<ThemeProvider>();
-    final isDarkPastel = themeProvider.currentType == AppThemeType.pastelDark;
+    final isDarkPastel = themeProvider.currentType == AppThemeType.pastel;
     final pastelTheme = isDarkPastel
         ? PastelDarkTheme()
         : CatppuccinLatteTheme();
@@ -39,6 +40,19 @@ class PastelBackground extends StatelessWidget {
       decoration: BoxDecoration(gradient: gradient),
       child: Stack(
         children: [
+          Positioned.fill(
+            child: RepaintBoundary(
+              child: IgnorePointer(
+                child: ExcludeSemantics(
+                  child: PremiumSceneLayer(
+                    flavor: PremiumThemeFlavor.pastel,
+                    weatherCode: weatherCode,
+                    isDay: isDay,
+                  ),
+                ),
+              ),
+            ),
+          ),
           // Ambient layer (varies by mode)
           Positioned.fill(
             child: RepaintBoundary(

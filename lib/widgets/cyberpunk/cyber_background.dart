@@ -1,8 +1,8 @@
 import 'dart:math';
 import 'package:flutter/material.dart';
 import 'package:weatherman/config/cyberpunk_theme.dart';
+import 'package:weatherman/widgets/backgrounds/premium_scene_layer.dart';
 import 'package:weatherman/widgets/cyberpunk/glitch_effects.dart';
-
 
 /// Cyberpunk-styled dynamic background with neon weather overlays
 class CyberpunkBackground extends StatelessWidget {
@@ -27,6 +27,19 @@ class CyberpunkBackground extends StatelessWidget {
       decoration: BoxDecoration(gradient: gradient),
       child: Stack(
         children: [
+          Positioned.fill(
+            child: RepaintBoundary(
+              child: IgnorePointer(
+                child: ExcludeSemantics(
+                  child: PremiumSceneLayer(
+                    flavor: PremiumThemeFlavor.cyberpunk,
+                    weatherCode: weatherCode,
+                    isDay: isDay,
+                  ),
+                ),
+              ),
+            ),
+          ),
           // Grid pattern overlay
           Positioned.fill(
             child: RepaintBoundary(
@@ -44,9 +57,7 @@ class CyberpunkBackground extends StatelessWidget {
           Positioned.fill(
             child: RepaintBoundary(
               child: IgnorePointer(
-                child: ExcludeSemantics(
-                  child: _buildWeatherOverlay(context),
-                ),
+                child: ExcludeSemantics(child: _buildWeatherOverlay(context)),
               ),
             ),
           ),
@@ -54,9 +65,7 @@ class CyberpunkBackground extends StatelessWidget {
           const Positioned.fill(
             child: RepaintBoundary(
               child: IgnorePointer(
-                child: ExcludeSemantics(
-                  child: ScanlineOverlay(opacity: 0.03),
-                ),
+                child: ExcludeSemantics(child: ScanlineOverlay(opacity: 0.03)),
               ),
             ),
           ),
@@ -185,13 +194,16 @@ class _CyberRainOverlayState extends State<CyberRainOverlay>
 
   void _generateDrops() {
     final count = (12 + (20 * widget.intensity)).round();
-    _drops = List.generate(count, (_) => _CyberDrop(
-      x: _random.nextDouble(),
-      y: _random.nextDouble(),
-      speed: 0.4 + widget.intensity * 0.6 + _random.nextDouble() * 0.2,
-      length: 20 + widget.intensity * 20 + _random.nextDouble() * 10,
-      isCyan: _random.nextDouble() > 0.3,
-    ));
+    _drops = List.generate(
+      count,
+      (_) => _CyberDrop(
+        x: _random.nextDouble(),
+        y: _random.nextDouble(),
+        speed: 0.4 + widget.intensity * 0.6 + _random.nextDouble() * 0.2,
+        length: 20 + widget.intensity * 20 + _random.nextDouble() * 10,
+        isCyan: _random.nextDouble() > 0.3,
+      ),
+    );
   }
 
   @override
@@ -212,7 +224,11 @@ class _CyberRainOverlayState extends State<CyberRainOverlay>
       animation: _controller,
       builder: (context, child) {
         return CustomPaint(
-          painter: _CyberRainPainter(_drops, _controller.value, widget.intensity),
+          painter: _CyberRainPainter(
+            _drops,
+            _controller.value,
+            widget.intensity,
+          ),
           size: Size.infinite,
         );
       },
@@ -246,9 +262,10 @@ class _CyberRainPainter extends CustomPainter {
   @override
   void paint(Canvas canvas, Size size) {
     for (final drop in drops) {
-      final y = ((drop.y + animValue * drop.speed * 2) % 1.2 - 0.1) * size.height;
+      final y =
+          ((drop.y + animValue * drop.speed * 2) % 1.2 - 0.1) * size.height;
       final x = drop.x * size.width;
-      final color = drop.isCyan 
+      final color = drop.isCyan
           ? CyberpunkTheme.neonCyan.withValues(alpha: 0.4 + intensity * 0.2)
           : CyberpunkTheme.neonMagenta.withValues(alpha: 0.2 + intensity * 0.1);
 
@@ -265,7 +282,11 @@ class _CyberRainPainter extends CustomPainter {
         ..strokeWidth = 4
         ..strokeCap = StrokeCap.round
         ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 3);
-      canvas.drawLine(Offset(x, y), Offset(x + 0.5, y + drop.length), glowPaint);
+      canvas.drawLine(
+        Offset(x, y),
+        Offset(x + 0.5, y + drop.length),
+        glowPaint,
+      );
     }
   }
 
@@ -300,13 +321,16 @@ class _CyberSnowOverlayState extends State<CyberSnowOverlay>
 
   void _generateFlakes() {
     final count = (15 + (25 * widget.intensity)).round();
-    _flakes = List.generate(count, (_) => _CyberFlake(
-      x: _random.nextDouble(),
-      y: _random.nextDouble(),
-      speed: 0.08 + widget.intensity * 0.12 + _random.nextDouble() * 0.08,
-      size: 2 + widget.intensity * 3 + _random.nextDouble() * 3,
-      isHex: _random.nextDouble() > 0.5,
-    ));
+    _flakes = List.generate(
+      count,
+      (_) => _CyberFlake(
+        x: _random.nextDouble(),
+        y: _random.nextDouble(),
+        speed: 0.08 + widget.intensity * 0.12 + _random.nextDouble() * 0.08,
+        size: 2 + widget.intensity * 3 + _random.nextDouble() * 3,
+        isHex: _random.nextDouble() > 0.5,
+      ),
+    );
   }
 
   @override
@@ -360,11 +384,14 @@ class _CyberSnowPainter extends CustomPainter {
   @override
   void paint(Canvas canvas, Size size) {
     for (final flake in flakes) {
-      final y = ((flake.y + animValue * flake.speed) % 1.1 - 0.05) * size.height;
+      final y =
+          ((flake.y + animValue * flake.speed) % 1.1 - 0.05) * size.height;
       final drift = sin(animValue * 2 * pi + flake.x * 10) * 12;
       final x = ((flake.x * size.width + drift) % size.width);
 
-      final color = flake.isHex ? CyberpunkTheme.neonCyan : CyberpunkTheme.neonMagenta;
+      final color = flake.isHex
+          ? CyberpunkTheme.neonCyan
+          : CyberpunkTheme.neonMagenta;
 
       // Glowing particle
       final paint = Paint()..color = color.withValues(alpha: 0.7);
@@ -416,18 +443,22 @@ class _CyberStormOverlayState extends State<CyberStormOverlay>
     _lightningController.addListener(() {
       if (mounted) {
         setState(() {
-          _lightningOpacity = _lightningOpacity * (1.0 - _lightningController.value);
+          _lightningOpacity =
+              _lightningOpacity * (1.0 - _lightningController.value);
         });
       }
     });
 
-    _drops = List.generate(25, (_) => _CyberDrop(
-      x: _random.nextDouble(),
-      y: _random.nextDouble(),
-      speed: 0.8 + _random.nextDouble() * 0.4,
-      length: 25 + _random.nextDouble() * 15,
-      isCyan: _random.nextDouble() > 0.3,
-    ));
+    _drops = List.generate(
+      25,
+      (_) => _CyberDrop(
+        x: _random.nextDouble(),
+        y: _random.nextDouble(),
+        speed: 0.8 + _random.nextDouble() * 0.4,
+        length: 25 + _random.nextDouble() * 15,
+        isCyan: _random.nextDouble() > 0.3,
+      ),
+    );
 
     _scheduleLightning();
   }
@@ -446,7 +477,9 @@ class _CyberStormOverlayState extends State<CyberStormOverlay>
       0.2 + _random.nextDouble() * 0.6,
       0.05 + _random.nextDouble() * 0.2,
     );
-    _lightningColor = _random.nextBool() ? CyberpunkTheme.neonCyan : CyberpunkTheme.neonMagenta;
+    _lightningColor = _random.nextBool()
+        ? CyberpunkTheme.neonCyan
+        : CyberpunkTheme.neonMagenta;
     _lightningOpacity = 0.2 + _random.nextDouble() * 0.15;
     _lightningController.forward(from: 0).then((_) {
       if (mounted && _random.nextInt(3) == 0) {
@@ -553,13 +586,16 @@ class _CyberStarOverlayState extends State<CyberStarOverlay>
       duration: const Duration(seconds: 4),
     )..repeat(reverse: true);
 
-    _stars = List.generate(35, (_) => _CyberStar(
-      x: _random.nextDouble(),
-      y: _random.nextDouble() * 0.6,
-      phase: _random.nextDouble(),
-      size: 1 + _random.nextDouble() * 2,
-      isCyan: _random.nextDouble() > 0.3,
-    ));
+    _stars = List.generate(
+      35,
+      (_) => _CyberStar(
+        x: _random.nextDouble(),
+        y: _random.nextDouble() * 0.6,
+        phase: _random.nextDouble(),
+        size: 1 + _random.nextDouble() * 2,
+        isCyan: _random.nextDouble() > 0.3,
+      ),
+    );
   }
 
   @override
@@ -608,7 +644,9 @@ class _CyberStarPainter extends CustomPainter {
   void paint(Canvas canvas, Size size) {
     for (final star in stars) {
       final twinkle = 0.3 + 0.7 * sin((animValue + star.phase) * pi).abs();
-      final color = star.isCyan ? CyberpunkTheme.neonCyan : CyberpunkTheme.neonMagenta;
+      final color = star.isCyan
+          ? CyberpunkTheme.neonCyan
+          : CyberpunkTheme.neonMagenta;
 
       final paint = Paint()..color = color.withValues(alpha: twinkle * 0.8);
       final center = Offset(star.x * size.width, star.y * size.height);
@@ -628,7 +666,9 @@ class _CyberStarPainter extends CustomPainter {
         final dist = (center - otherCenter).distance;
         if (dist < 80) {
           final linePaint = Paint()
-            ..color = CyberpunkTheme.neonCyan.withValues(alpha: 0.05 * (1 - dist / 80))
+            ..color = CyberpunkTheme.neonCyan.withValues(
+              alpha: 0.05 * (1 - dist / 80),
+            )
             ..strokeWidth = 0.5;
           canvas.drawLine(center, otherCenter, linePaint);
         }
@@ -774,13 +814,16 @@ class _CyberDataMoteOverlayState extends State<CyberDataMoteOverlay>
       duration: const Duration(seconds: 8),
     )..repeat();
 
-    _motes = List.generate(15, (_) => _DataMote(
-      x: _random.nextDouble(),
-      y: _random.nextDouble(),
-      phase: _random.nextDouble(),
-      speed: 0.3 + _random.nextDouble() * 0.5,
-      size: 1.0 + _random.nextDouble() * 1.5,
-    ));
+    _motes = List.generate(
+      15,
+      (_) => _DataMote(
+        x: _random.nextDouble(),
+        y: _random.nextDouble(),
+        phase: _random.nextDouble(),
+        speed: 0.3 + _random.nextDouble() * 0.5,
+        size: 1.0 + _random.nextDouble() * 1.5,
+      ),
+    );
   }
 
   @override
@@ -806,8 +849,11 @@ class _CyberDataMoteOverlayState extends State<CyberDataMoteOverlay>
 class _DataMote {
   final double x, y, phase, speed, size;
   _DataMote({
-    required this.x, required this.y, required this.phase,
-    required this.speed, required this.size,
+    required this.x,
+    required this.y,
+    required this.phase,
+    required this.speed,
+    required this.size,
   });
 }
 
@@ -827,7 +873,8 @@ class _DataMotePainter extends CustomPainter {
       final cy = (mote.y + animValue * mote.speed * 0.05) % 1.0 * size.height;
       final center = Offset(cx, cy);
 
-      final paint = Paint()..color = CyberpunkTheme.neonCyan.withValues(alpha: alpha);
+      final paint = Paint()
+        ..color = CyberpunkTheme.neonCyan.withValues(alpha: alpha);
       canvas.drawCircle(center, mote.size, paint);
 
       final glowPaint = Paint()

@@ -11,17 +11,16 @@ import 'package:weatherman/widgets/themed/themed_card.dart';
 class DailyForecastCard extends StatelessWidget {
   final List<DailyForecast> daily;
 
-  const DailyForecastCard({
-    super.key,
-    required this.daily,
-  });
+  const DailyForecastCard({super.key, required this.daily});
 
   @override
   Widget build(BuildContext context) {
     final settings = context.watch<SettingsProvider>();
     final t = context.watch<ThemeProvider>().current;
 
-    final allTemps = daily.expand((d) => [d.temperatureMax, d.temperatureMin]).toList();
+    final allTemps = daily
+        .expand((d) => [d.temperatureMax, d.temperatureMin])
+        .toList();
     final globalMin = allTemps.reduce((a, b) => a < b ? a : b);
     final globalMax = allTemps.reduce((a, b) => a > b ? a : b);
     final tempRange = globalMax - globalMin;
@@ -46,9 +45,9 @@ class DailyForecastCard extends StatelessWidget {
                 Text(
                   '10-DAY FORECAST',
                   style: Theme.of(context).textTheme.labelLarge?.copyWith(
-                        color: t.textSecondary,
-                        letterSpacing: 1,
-                      ),
+                    color: t.textSecondary,
+                    letterSpacing: 1,
+                  ),
                 ),
               ],
             ),
@@ -56,10 +55,7 @@ class DailyForecastCard extends StatelessWidget {
 
           const SizedBox(height: 12),
 
-          Divider(
-            color: t.cardBorderColor.withValues(alpha: 0.3),
-            height: 1,
-          ),
+          Divider(color: t.cardBorderColor.withValues(alpha: 0.3), height: 1),
 
           // Daily items
           ...daily.asMap().entries.map((entry) {
@@ -99,8 +95,15 @@ class _DailyItem extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final t = context.watch<ThemeProvider>().current;
-    final lowPercent = tempRange > 0 ? (forecast.temperatureMin - globalMin) / tempRange : 0.0;
-    final highPercent = tempRange > 0 ? (forecast.temperatureMax - globalMin) / tempRange : 1.0;
+    final brightSkyIconColor = t.themeData.brightness == Brightness.light
+        ? t.textPrimary
+        : t.primaryUiAccent;
+    final lowPercent = tempRange > 0
+        ? (forecast.temperatureMin - globalMin) / tempRange
+        : 0.0;
+    final highPercent = tempRange > 0
+        ? (forecast.temperatureMax - globalMin) / tempRange
+        : 1.0;
 
     return Column(
       children: [
@@ -114,10 +117,10 @@ class _DailyItem extends StatelessWidget {
                 child: Text(
                   DateTimeUtils.formatDayName(forecast.date),
                   style: Theme.of(context).textTheme.bodyLarge?.copyWith(
-                        fontWeight: DateTimeUtils.isToday(forecast.date)
-                            ? FontWeight.w600
-                            : FontWeight.w400,
-                      ),
+                    fontWeight: DateTimeUtils.isToday(forecast.date)
+                        ? FontWeight.w600
+                        : FontWeight.w400,
+                  ),
                 ),
               ),
 
@@ -127,7 +130,11 @@ class _DailyItem extends StatelessWidget {
                 child: Icon(
                   WeatherUtils.getWeatherIcon(forecast.weatherCode),
                   size: 24,
-                  color: WeatherUtils.getWeatherIconColor(forecast.weatherCode),
+                  color: WeatherUtils.getWeatherIconColor(
+                    forecast.weatherCode,
+                    brightSkyColor: brightSkyIconColor,
+                    defaultColor: t.textPrimary.withValues(alpha: 0.96),
+                  ),
                   shadows: const [
                     Shadow(
                       color: Color(0x80000000),
@@ -145,9 +152,9 @@ class _DailyItem extends StatelessWidget {
                     ? Text(
                         '${forecast.precipitationProbabilityMax}%',
                         style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                              color: t.textSecondary,
-                              fontWeight: FontWeight.w600,
-                            ),
+                          color: t.textSecondary,
+                          fontWeight: FontWeight.w600,
+                        ),
                       )
                     : null,
               ),
@@ -157,9 +164,9 @@ class _DailyItem extends StatelessWidget {
                 width: 40,
                 child: Text(
                   settings.formatTempShort(forecast.temperatureMin),
-                  style: Theme.of(context).textTheme.bodyLarge?.copyWith(
-                        color: t.textSecondary,
-                      ),
+                  style: Theme.of(
+                    context,
+                  ).textTheme.bodyLarge?.copyWith(color: t.textSecondary),
                   textAlign: TextAlign.right,
                 ),
               ),

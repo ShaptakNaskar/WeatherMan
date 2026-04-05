@@ -224,14 +224,62 @@ class _DebugWeatherScreenState extends State<DebugWeatherScreen>
     AppThemeData t,
   ) {
     final isSelected = _currentTab == index;
+    final uiAccent = t.primaryUiAccent;
 
     final Color selectedColor = isCyberpunk
         ? CyberpunkTheme.neonCyan
-        : t.accentColor;
+        : uiAccent;
     final Color unselectedColor = isCyberpunk
         ? CyberpunkTheme.textTertiary
         : t.textSecondary;
     final color = isSelected ? selectedColor : unselectedColor;
+
+    if (!isCyberpunk) {
+      final radius = (t.cardBorderRadius * 0.5).clamp(8.0, 16.0).toDouble();
+
+      return Expanded(
+        child: GestureDetector(
+          onTap: () => setState(() => _currentTab = index),
+          child: ThemedLightCard(
+            radiusScale: 0.5,
+            padding: EdgeInsets.zero,
+            child: AnimatedContainer(
+              duration: const Duration(milliseconds: 200),
+              padding: const EdgeInsets.symmetric(vertical: 10),
+              decoration: BoxDecoration(
+                color: isSelected
+                    ? selectedColor.withValues(alpha: 0.09)
+                    : Colors.transparent,
+                borderRadius: BorderRadius.circular(radius),
+                border: Border.all(
+                  color: isSelected
+                      ? selectedColor.withValues(alpha: 0.62)
+                      : t.textTertiary.withValues(alpha: 0.18),
+                  width: isSelected ? 1.3 : 0.7,
+                ),
+              ),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Icon(icon, size: 16, color: color),
+                  const SizedBox(width: 6),
+                  Text(
+                    label,
+                    style: TextStyle(
+                      fontSize: 11,
+                      color: color,
+                      fontWeight: isSelected
+                          ? FontWeight.w600
+                          : FontWeight.w500,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ),
+        ),
+      );
+    }
 
     return Expanded(
       child: GestureDetector(
@@ -481,8 +529,8 @@ class _DebugWeatherScreenState extends State<DebugWeatherScreen>
               Switch(
                 value: _isDay,
                 onChanged: (value) => setState(() => _isDay = value),
-                activeThumbColor: t.accentColor,
-                activeTrackColor: t.accentColor.withValues(alpha: 0.3),
+                activeThumbColor: t.primaryUiAccent,
+                activeTrackColor: t.primaryUiAccent.withValues(alpha: 0.35),
               ),
               const Spacer(),
               Text(
@@ -499,13 +547,12 @@ class _DebugWeatherScreenState extends State<DebugWeatherScreen>
   }
 
   Widget _buildPresetsGrid(bool isCyberpunk, AppThemeData t) {
-    final selectedColor = isCyberpunk ? CyberpunkTheme.neonCyan : t.accentColor;
+    final selectedColor = isCyberpunk
+        ? CyberpunkTheme.neonCyan
+        : t.primaryUiAccent;
     final unselectedColor = isCyberpunk
         ? CyberpunkTheme.textTertiary
         : t.textSecondary;
-    final bgColor = isCyberpunk
-        ? CyberpunkTheme.bgPanel.withValues(alpha: 0.5)
-        : t.cardColor.withValues(alpha: 0.5);
 
     return GridView.builder(
       padding: const EdgeInsets.all(16),
@@ -521,61 +568,75 @@ class _DebugWeatherScreenState extends State<DebugWeatherScreen>
         final isSelected = preset.code == _currentWeatherCode;
         final color = isSelected ? selectedColor : unselectedColor;
 
+        final cell = AnimatedContainer(
+          duration: const Duration(milliseconds: 200),
+          decoration: BoxDecoration(
+            color: isSelected
+                ? selectedColor.withValues(alpha: 0.1)
+                : (isCyberpunk
+                      ? CyberpunkTheme.bgPanel.withValues(alpha: 0.5)
+                      : Colors.transparent),
+            borderRadius: BorderRadius.circular(isCyberpunk ? 4 : 12),
+            border: Border.all(
+              color: isSelected
+                  ? selectedColor.withValues(alpha: 0.62)
+                  : (isCyberpunk
+                        ? selectedColor.withValues(alpha: 0.15)
+                        : t.textTertiary.withValues(alpha: 0.16)),
+              width: isSelected ? 1.4 : 0.7,
+            ),
+            boxShadow: isSelected
+                ? [
+                    BoxShadow(
+                      color: selectedColor.withValues(
+                        alpha: isCyberpunk ? 0.15 : 0.09,
+                      ),
+                      blurRadius: 8,
+                    ),
+                  ]
+                : null,
+          ),
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Icon(preset.icon, size: 28, color: color),
+              const SizedBox(height: 6),
+              Text(
+                isCyberpunk
+                    ? preset.name
+                    : preset.name.toLowerCase().replaceAll('_', ' '),
+                style: TextStyle(
+                  fontFamily: isCyberpunk ? 'monospace' : null,
+                  fontSize: 9,
+                  color: color,
+                  fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
+                  letterSpacing: isCyberpunk ? 1 : 0,
+                ),
+                textAlign: TextAlign.center,
+                maxLines: 1,
+              ),
+            ],
+          ),
+        );
+
         return GestureDetector(
           onTap: () => setState(() => _currentWeatherCode = preset.code),
-          child: AnimatedContainer(
-            duration: const Duration(milliseconds: 200),
-            decoration: BoxDecoration(
-              color: isSelected
-                  ? selectedColor.withValues(alpha: 0.1)
-                  : bgColor,
-              borderRadius: BorderRadius.circular(isCyberpunk ? 4 : 12),
-              border: Border.all(
-                color: isSelected
-                    ? selectedColor.withValues(alpha: 0.6)
-                    : selectedColor.withValues(alpha: 0.15),
-                width: isSelected ? 1.5 : 0.5,
-              ),
-              boxShadow: isSelected
-                  ? [
-                      BoxShadow(
-                        color: selectedColor.withValues(alpha: 0.15),
-                        blurRadius: 8,
-                      ),
-                    ]
-                  : null,
-            ),
-            child: Column(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                Icon(preset.icon, size: 28, color: color),
-                const SizedBox(height: 6),
-                Text(
-                  isCyberpunk
-                      ? preset.name
-                      : preset.name.toLowerCase().replaceAll('_', ' '),
-                  style: TextStyle(
-                    fontFamily: isCyberpunk ? 'monospace' : null,
-                    fontSize: 9,
-                    color: color,
-                    fontWeight: isSelected
-                        ? FontWeight.bold
-                        : FontWeight.normal,
-                    letterSpacing: isCyberpunk ? 1 : 0,
-                  ),
-                  textAlign: TextAlign.center,
-                  maxLines: 1,
+          child: isCyberpunk
+              ? cell
+              : ThemedLightCard(
+                  radiusScale: 0.6,
+                  padding: EdgeInsets.zero,
+                  child: cell,
                 ),
-              ],
-            ),
-          ),
         );
       },
     );
   }
 
   Widget _buildSliderControl(bool isCyberpunk, AppThemeData t) {
-    final accentColor = isCyberpunk ? CyberpunkTheme.neonCyan : t.accentColor;
+    final accentColor = isCyberpunk
+        ? CyberpunkTheme.neonCyan
+        : t.primaryUiAccent;
 
     Widget content = Row(
       children: [

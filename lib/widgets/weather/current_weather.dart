@@ -27,6 +27,7 @@ class CurrentWeatherDisplay extends StatelessWidget {
     final settings = context.watch<SettingsProvider>();
     final themeProvider = context.watch<ThemeProvider>();
     final t = themeProvider.current;
+    final accent = t.primaryUiAccent;
 
     return SizedBox(
       width: double.infinity,
@@ -39,10 +40,10 @@ class CurrentWeatherDisplay extends StatelessWidget {
             GlitchText(
               text: locationName.toUpperCase(),
               style: Theme.of(context).textTheme.headlineLarge?.copyWith(
-                    fontWeight: FontWeight.w300,
-                    letterSpacing: 3,
-                    color: t.accentColor,
-                  ),
+                fontWeight: FontWeight.w300,
+                letterSpacing: 3,
+                color: accent,
+              ),
               textAlign: TextAlign.center,
               glitchIntensity: 0.3,
             )
@@ -50,11 +51,11 @@ class CurrentWeatherDisplay extends StatelessWidget {
             Text(
               locationName,
               style: Theme.of(context).textTheme.headlineLarge?.copyWith(
-                    fontWeight: FontWeight.w300,
-                    letterSpacing: 2,
-                    color: t.accentColor,
-                    shadows: t.subtleGlow,
-                  ),
+                fontWeight: FontWeight.w300,
+                letterSpacing: 2,
+                color: accent,
+                shadows: t.subtleGlow,
+              ),
               textAlign: TextAlign.center,
             ),
 
@@ -66,16 +67,17 @@ class CurrentWeatherDisplay extends StatelessWidget {
             children: [
               Text(
                 () {
-                  final temp = settings.temperatureUnit == TemperatureUnit.celsius
+                  final temp =
+                      settings.temperatureUnit == TemperatureUnit.celsius
                       ? weather.temperature
                       : UnitConverter.celsiusToFahrenheit(weather.temperature);
                   return '${temp.round()}';
                 }(),
                 style: Theme.of(context).textTheme.displayLarge?.copyWith(
-                      fontSize: 96,
-                      fontWeight: FontWeight.w100,
-                      height: 1,
-                    ),
+                  fontSize: 96,
+                  fontWeight: FontWeight.w100,
+                  height: 1,
+                ),
                 textAlign: TextAlign.center,
               ),
               Positioned(
@@ -84,10 +86,10 @@ class CurrentWeatherDisplay extends StatelessWidget {
                 child: Text(
                   '°',
                   style: Theme.of(context).textTheme.displayLarge?.copyWith(
-                        fontSize: 96,
-                        fontWeight: FontWeight.w100,
-                        height: 1,
-                      ),
+                    fontSize: 96,
+                    fontWeight: FontWeight.w100,
+                    height: 1,
+                  ),
                 ),
               ),
             ],
@@ -99,10 +101,10 @@ class CurrentWeatherDisplay extends StatelessWidget {
           Text(
             WeatherUtils.getWeatherDescription(weather.weatherCode),
             style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                  color: t.textSecondary,
-                  fontWeight: FontWeight.w400,
-                  letterSpacing: 1,
-                ),
+              color: t.textSecondary,
+              fontWeight: FontWeight.w400,
+              letterSpacing: 1,
+            ),
           ),
 
           const SizedBox(height: 8),
@@ -113,16 +115,16 @@ class CurrentWeatherDisplay extends StatelessWidget {
             children: [
               Text(
                 'H:${settings.formatTempShort(temperatureMax)}',
-                style: Theme.of(context).textTheme.bodyLarge?.copyWith(
-                      color: t.textSecondary,
-                    ),
+                style: Theme.of(
+                  context,
+                ).textTheme.bodyLarge?.copyWith(color: t.textSecondary),
               ),
               const SizedBox(width: 16),
               Text(
                 'L:${settings.formatTempShort(temperatureMin)}',
-                style: Theme.of(context).textTheme.bodyLarge?.copyWith(
-                      color: t.textSecondary,
-                    ),
+                style: Theme.of(
+                  context,
+                ).textTheme.bodyLarge?.copyWith(color: t.textSecondary),
               ),
             ],
           ),
@@ -149,6 +151,9 @@ class CompactWeatherDisplay extends StatelessWidget {
   Widget build(BuildContext context) {
     final settings = context.watch<SettingsProvider>();
     final t = context.watch<ThemeProvider>().current;
+    final brightSkyIconColor = t.themeData.brightness == Brightness.light
+        ? t.textPrimary
+        : t.primaryUiAccent;
 
     return Row(
       children: [
@@ -159,11 +164,7 @@ class CompactWeatherDisplay extends StatelessWidget {
               Row(
                 children: [
                   if (isCurrentLocation) ...[
-                    Icon(
-                      Icons.location_on,
-                      size: 16,
-                      color: t.textSecondary,
-                    ),
+                    Icon(Icons.location_on, size: 16, color: t.textSecondary),
                     const SizedBox(width: 4),
                   ],
                   Expanded(
@@ -178,9 +179,9 @@ class CompactWeatherDisplay extends StatelessWidget {
               const SizedBox(height: 4),
               Text(
                 WeatherUtils.getWeatherDescription(weather.weatherCode),
-                style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                      color: t.textSecondary,
-                    ),
+                style: Theme.of(
+                  context,
+                ).textTheme.bodyMedium?.copyWith(color: t.textSecondary),
               ),
             ],
           ),
@@ -188,16 +189,24 @@ class CompactWeatherDisplay extends StatelessWidget {
         Row(
           children: [
             Icon(
-              WeatherUtils.getWeatherIcon(weather.weatherCode, isDay: weather.isDay),
+              WeatherUtils.getWeatherIcon(
+                weather.weatherCode,
+                isDay: weather.isDay,
+              ),
               size: 32,
-              color: WeatherUtils.getWeatherIconColor(weather.weatherCode, isDay: weather.isDay),
+              color: WeatherUtils.getWeatherIconColor(
+                weather.weatherCode,
+                isDay: weather.isDay,
+                brightSkyColor: brightSkyIconColor,
+                defaultColor: t.textPrimary.withValues(alpha: 0.96),
+              ),
             ),
             const SizedBox(width: 12),
             Text(
               settings.formatTempShort(weather.temperature),
-              style: Theme.of(context).textTheme.headlineMedium?.copyWith(
-                    fontWeight: FontWeight.w300,
-                  ),
+              style: Theme.of(
+                context,
+              ).textTheme.headlineMedium?.copyWith(fontWeight: FontWeight.w300),
             ),
           ],
         ),

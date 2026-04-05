@@ -304,6 +304,9 @@ class StorageService {
   Future<AppThemeType> getTheme() async {
     final p = await prefs;
     final value = p.getString(_themeKey);
+    if (value == 'pastelDark') {
+      return AppThemeType.pastel;
+    }
     for (final t in AppThemeType.values) {
       if (t.name == value) return t;
     }

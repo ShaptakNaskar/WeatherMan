@@ -83,6 +83,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
   Widget build(BuildContext context) {
     final t = context.watch<ThemeProvider>().current;
     final isDark = t.themeData.brightness == Brightness.dark;
+    final accent = t.primaryUiAccent;
 
     return Scaffold(
       body: Container(
@@ -143,8 +144,8 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                       height: 8,
                       decoration: BoxDecoration(
                         color: _currentPage == index
-                            ? t.accentColor
-                            : t.accentColor.withValues(alpha: 0.3),
+                            ? accent
+                            : t.textTertiary.withValues(alpha: 0.35),
                         borderRadius: BorderRadius.circular(4),
                       ),
                     ),
@@ -161,8 +162,8 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                   child: ElevatedButton(
                     onPressed: _nextPage,
                     style: ElevatedButton.styleFrom(
-                      backgroundColor: t.accentColor,
-                      foregroundColor: Colors.white,
+                      backgroundColor: accent,
+                      foregroundColor: _onAccentTextColor(accent),
                       shape: RoundedRectangleBorder(
                         borderRadius: BorderRadius.circular(t.cardBorderRadius),
                       ),
@@ -186,6 +187,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
   }
 
   Widget _buildWelcomePage(AppThemeData t, bool isDark) {
+    final accent = t.secondaryUiAccent;
     return Padding(
       padding: const EdgeInsets.all(32),
       child: Column(
@@ -198,7 +200,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
               borderRadius: BorderRadius.circular(28),
               boxShadow: [
                 BoxShadow(
-                  color: t.accentColor.withValues(alpha: 0.3),
+                  color: accent.withValues(alpha: 0.28),
                   blurRadius: 30,
                   spreadRadius: 5,
                 ),
@@ -284,6 +286,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
     String title,
     String description,
   ) {
+    final accent = t.primaryUiAccent;
     return Padding(
       padding: const EdgeInsets.only(bottom: 24),
       child: Row(
@@ -292,10 +295,10 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
             width: 56,
             height: 56,
             decoration: BoxDecoration(
-              color: t.accentColor.withValues(alpha: 0.15),
+              color: accent.withValues(alpha: 0.16),
               borderRadius: BorderRadius.circular(16),
             ),
-            child: Icon(icon, color: t.accentColor, size: 28),
+            child: Icon(icon, color: accent, size: 28),
           ),
           const SizedBox(width: 16),
           Expanded(
@@ -406,6 +409,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
     bool isEnabled,
     VoidCallback onRequest,
   ) {
+    final accent = t.primaryUiAccent;
     return Container(
       padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
@@ -424,14 +428,14 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
             width: 48,
             height: 48,
             decoration: BoxDecoration(
-              color: (isEnabled ? t.successColor : t.accentColor).withValues(
+              color: (isEnabled ? t.successColor : accent).withValues(
                 alpha: 0.15,
               ),
               borderRadius: BorderRadius.circular(12),
             ),
             child: Icon(
               isEnabled ? Icons.check_circle_rounded : icon,
-              color: isEnabled ? t.successColor : t.accentColor,
+              color: isEnabled ? t.successColor : accent,
               size: 24,
             ),
           ),
@@ -461,10 +465,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
               onPressed: onRequest,
               child: Text(
                 'Allow',
-                style: TextStyle(
-                  color: t.accentColor,
-                  fontWeight: FontWeight.w600,
-                ),
+                style: TextStyle(color: accent, fontWeight: FontWeight.w600),
               ),
             ),
         ],
@@ -510,6 +511,10 @@ class _ThemeCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final t = context.watch<ThemeProvider>().current;
+    final accent = t.primaryUiAccent;
+    final selectedIconColor = accent.computeLuminance() > 0.55
+        ? Colors.black
+        : Colors.white;
 
     return GestureDetector(
       onTap: onTap,
@@ -519,15 +524,13 @@ class _ThemeCard extends StatelessWidget {
           gradient: _getThemePreviewGradient(type),
           borderRadius: BorderRadius.circular(16),
           border: Border.all(
-            color: isSelected
-                ? t.accentColor
-                : Colors.white.withValues(alpha: 0.2),
+            color: isSelected ? accent : Colors.white.withValues(alpha: 0.2),
             width: isSelected ? 3 : 1,
           ),
           boxShadow: isSelected
               ? [
                   BoxShadow(
-                    color: t.accentColor.withValues(alpha: 0.3),
+                    color: accent.withValues(alpha: 0.3),
                     blurRadius: 12,
                     spreadRadius: 2,
                   ),
@@ -555,10 +558,10 @@ class _ThemeCard extends StatelessWidget {
                   width: 24,
                   height: 24,
                   decoration: BoxDecoration(
-                    color: t.accentColor,
+                    color: accent,
                     shape: BoxShape.circle,
                   ),
-                  child: const Icon(Icons.check, color: Colors.white, size: 16),
+                  child: Icon(Icons.check, color: selectedIconColor, size: 16),
                 ),
               ),
           ],
@@ -579,15 +582,9 @@ class _ThemeCard extends StatelessWidget {
         return const LinearGradient(
           begin: Alignment.topCenter,
           end: Alignment.bottomCenter,
-          colors: [Color(0xFF4A90D9), Color(0xFF87CEEB), Color(0xFFB0E0E6)],
+          colors: [Color(0xFF152F4E), Color(0xFF204D79), Color(0xFF2B5F88)],
         );
-      // case AppThemeType.pastel:
-      //   return const LinearGradient(
-      //     begin: Alignment.topLeft,
-      //     end: Alignment.bottomRight,
-      //     colors: [Color(0xFFD4ECFF), Color(0xFFF0E6FF), Color(0xFFFFF0F5)],
-      //   );
-      case AppThemeType.pastelDark:
+      case AppThemeType.pastel:
         return const LinearGradient(
           begin: Alignment.topCenter,
           end: Alignment.bottomCenter,
@@ -603,7 +600,7 @@ class _ThemeCard extends StatelessWidget {
         return const LinearGradient(
           begin: Alignment.topCenter,
           end: Alignment.bottomCenter,
-          colors: [Color(0xFF0D2137), Color(0xFF1A6B8A), Color(0xFF4AC4DB)],
+          colors: [Color(0xFF10283D), Color(0xFF1A4F6D), Color(0xFF22617E)],
         );
     }
   }
@@ -614,10 +611,8 @@ class _ThemeCard extends StatelessWidget {
         return 'Cyberpunk';
       case AppThemeType.clean:
         return 'Clean';
-      // case AppThemeType.pastel:
-      //   return 'Pastel';
-      case AppThemeType.pastelDark:
-        return 'Pastel Dark';
+      case AppThemeType.pastel:
+        return 'Pastel';
       case AppThemeType.sunset:
         return 'Sunset';
       case AppThemeType.ocean:
@@ -627,10 +622,12 @@ class _ThemeCard extends StatelessWidget {
 
   Color _getTextColor(AppThemeType type) {
     switch (type) {
-      // case AppThemeType.pastel:
-      //   return const Color(0xFF4A3D6B);
       default:
         return Colors.white;
     }
   }
+}
+
+Color _onAccentTextColor(Color accent) {
+  return accent.computeLuminance() > 0.55 ? Colors.black : Colors.white;
 }

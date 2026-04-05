@@ -473,11 +473,17 @@ class _AqiCard extends StatelessWidget {
                 ),
                 const SizedBox(width: 8),
                 Container(
-                  width: 12,
-                  height: 12,
+                  width: 16,
+                  height: 16,
                   decoration: BoxDecoration(
                     color: Color(category.color),
                     shape: BoxShape.circle,
+                    border: Border.all(
+                      color: _bestReadableTextColor(
+                        Color(category.color),
+                      ).withValues(alpha: 0.75),
+                      width: 1,
+                    ),
                   ),
                 ),
               ],
@@ -496,5 +502,9 @@ class _AqiCard extends StatelessWidget {
         ),
       ),
     );
+  }
+
+  Color _bestReadableTextColor(Color background) {
+    return background.computeLuminance() > 0.55 ? Colors.black : Colors.white;
   }
 }

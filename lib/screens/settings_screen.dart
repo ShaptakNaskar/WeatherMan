@@ -212,6 +212,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
   // ── Theme Picker ────────────────────────────────────────
   Widget _buildThemePickerSection(AppThemeData t) {
     final themeProvider = context.read<ThemeProvider>();
+    final uiAccent = t.primaryUiAccent;
 
     return ThemedCard(
       child: Column(
@@ -219,7 +220,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
         children: [
           Row(
             children: [
-              Icon(Icons.palette_rounded, size: 20, color: t.accentColor),
+              Icon(Icons.palette_rounded, size: 20, color: uiAccent),
               const SizedBox(width: 8),
               Text(
                 'Theme',
@@ -263,6 +264,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
     SettingsProvider settings,
     AppThemeData t,
   ) {
+    final accent = t.primaryUiAccent;
     return [
       // Temperature unit
       ThemedCard(
@@ -315,8 +317,8 @@ class _SettingsScreenState extends State<SettingsScreen> {
             Switch(
               value: settings.advancedViewEnabled,
               onChanged: (value) => settings.setAdvancedViewEnabled(value),
-              activeThumbColor: t.accentColor,
-              activeTrackColor: t.accentColor.withValues(alpha: 0.4),
+              activeThumbColor: accent,
+              activeTrackColor: accent.withValues(alpha: 0.4),
               inactiveThumbColor: t.textTertiary,
               inactiveTrackColor: t.textTertiary.withValues(alpha: 0.3),
             ),
@@ -335,7 +337,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
               children: [
                 Icon(
                   Icons.notifications_active_rounded,
-                  color: t.accentColor,
+                  color: accent,
                   size: 20,
                 ),
                 const SizedBox(width: 8),
@@ -366,7 +368,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                 }
               },
             ),
-            Divider(height: 1, color: t.accentColor.withValues(alpha: 0.1)),
+            Divider(height: 1, color: accent.withValues(alpha: 0.15)),
 
             _NotifToggle(
               icon: Icons.wb_sunny_rounded,
@@ -376,7 +378,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
               theme: t,
               onChanged: (val) => settings.setMorningBriefingEnabled(val),
             ),
-            Divider(height: 1, color: t.accentColor.withValues(alpha: 0.1)),
+            Divider(height: 1, color: accent.withValues(alpha: 0.15)),
 
             _NotifToggle(
               icon: Icons.nightlight_round,
@@ -386,7 +388,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
               theme: t,
               onChanged: (val) => settings.setEveningOutlookEnabled(val),
             ),
-            Divider(height: 1, color: t.accentColor.withValues(alpha: 0.1)),
+            Divider(height: 1, color: accent.withValues(alpha: 0.15)),
 
             _NotifToggle(
               icon: Icons.warning_amber_rounded,
@@ -397,7 +399,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
               onChanged: (val) => settings.setSevereAlertsEnabled(val),
               accentColor: t.dangerColor,
             ),
-            Divider(height: 1, color: t.accentColor.withValues(alpha: 0.1)),
+            Divider(height: 1, color: accent.withValues(alpha: 0.15)),
 
             _NotifToggle(
               icon: Icons.insights_rounded,
@@ -414,6 +416,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
   }
 
   Widget _buildAboutSection(AppThemeData t) {
+    final accent = t.primaryUiAccent;
     return ThemedCard(
       child: SizedBox(
         width: double.infinity,
@@ -423,7 +426,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
             const SizedBox(height: 8),
             GestureDetector(
               onTap: _onCloudTap,
-              child: Icon(Icons.cloud_rounded, size: 48, color: t.accentColor),
+              child: Icon(Icons.cloud_rounded, size: 48, color: accent),
             ),
             const SizedBox(height: 12),
             Text(
@@ -431,14 +434,14 @@ class _SettingsScreenState extends State<SettingsScreen> {
               style: TextStyle(
                 fontSize: 24,
                 fontWeight: FontWeight.bold,
-                color: t.accentColor,
+                color: accent,
                 letterSpacing: 3,
                 shadows: t.subtleGlow,
               ),
             ),
             const SizedBox(height: 4),
             Text(
-              'v2.0.0',
+              'v2.0.1',
               style: TextStyle(
                 fontSize: 12,
                 color: t.textTertiary,
@@ -464,15 +467,15 @@ class _SettingsScreenState extends State<SettingsScreen> {
                 'Visit Website',
                 style: TextStyle(
                   fontSize: 13,
-                  color: t.accentColor,
+                  color: accent,
                   decoration: TextDecoration.underline,
-                  decorationColor: t.accentColor.withValues(alpha: 0.5),
+                  decorationColor: accent.withValues(alpha: 0.5),
                   letterSpacing: 1,
                 ),
               ),
             ),
             const SizedBox(height: 20),
-            Divider(color: t.accentColor.withValues(alpha: 0.15)),
+            Divider(color: accent.withValues(alpha: 0.2)),
             const SizedBox(height: 12),
             Text(
               'Data: Open-Meteo',
@@ -584,9 +587,9 @@ class _ThemePreviewCard extends StatelessWidget {
       AppThemeType.clean => (
         'Clean',
         [
-          const Color(0xFF1A2340),
-          const Color(0xFF2D3561),
-          const Color(0xFF4B6CB7),
+          const Color(0xFF17304D),
+          const Color(0xFF214E7A),
+          const Color(0xFFFFC987),
         ],
         Icons.water_drop_rounded,
       ),
@@ -599,13 +602,8 @@ class _ThemePreviewCard extends StatelessWidget {
         ],
         Icons.bolt_rounded,
       ),
-      // AppThemeType.pastel => (
-      //     'Pastel',
-      //     [const Color(0xFFB8A9E8), const Color(0xFF98E4C9), const Color(0xFFFFC3A0)],
-      //     Icons.favorite_rounded,
-      //   ),
-      AppThemeType.pastelDark => (
-        'Pastel Dark',
+      AppThemeType.pastel => (
+        'Pastel',
         [
           const Color(0xFF1A1525),
           const Color(0xFF7B5EAE),
@@ -625,15 +623,16 @@ class _ThemePreviewCard extends StatelessWidget {
       AppThemeType.ocean => (
         'Ocean',
         [
-          const Color(0xFF0A1520),
-          const Color(0xFF00BFA5),
-          const Color(0xFF40C4FF),
+          const Color(0xFF10283D),
+          const Color(0xFF1A4F6D),
+          const Color(0xFFFFC987),
         ],
         Icons.waves_rounded,
       ),
     };
 
     final t = currentTheme;
+    final accent = t.primaryUiAccent;
 
     return GestureDetector(
       onTap: onTap,
@@ -644,12 +643,12 @@ class _ThemePreviewCard extends StatelessWidget {
           borderRadius: BorderRadius.circular(t.cardBorderRadius),
           border: Border.all(
             color: isSelected
-                ? t.accentColor.withValues(alpha: 0.8)
+                ? accent.withValues(alpha: 0.85)
                 : t.textTertiary.withValues(alpha: 0.2),
             width: isSelected ? 2 : 1,
           ),
           color: isSelected
-              ? t.accentColor.withValues(alpha: 0.08)
+              ? accent.withValues(alpha: 0.1)
               : t.cardColor.withValues(alpha: 0.3),
         ),
         child: Column(
@@ -676,16 +675,12 @@ class _ThemePreviewCard extends StatelessWidget {
                   .toList(),
             ),
             const SizedBox(height: 10),
-            Icon(
-              icon,
-              size: 18,
-              color: isSelected ? t.accentColor : t.textSecondary,
-            ),
+            Icon(icon, size: 18, color: isSelected ? accent : t.textSecondary),
             const SizedBox(height: 6),
             Text(
               label,
               style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                color: isSelected ? t.accentColor : t.textSecondary,
+                color: isSelected ? accent : t.textSecondary,
                 fontWeight: isSelected ? FontWeight.w700 : FontWeight.w500,
                 shadows: t.textShadows,
               ),
@@ -818,6 +813,7 @@ class _UnitButton extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final t = theme;
+    final accent = t.primaryUiAccent;
     return GestureDetector(
       onTap: onTap,
       child: AnimatedContainer(
@@ -825,12 +821,12 @@ class _UnitButton extends StatelessWidget {
         padding: const EdgeInsets.symmetric(vertical: 16),
         decoration: BoxDecoration(
           color: isSelected
-              ? t.accentColor.withValues(alpha: 0.1)
+              ? accent.withValues(alpha: 0.14)
               : t.cardColor.withValues(alpha: 0.3),
           borderRadius: BorderRadius.circular(t.cardBorderRadius * 0.5),
           border: Border.all(
             color: isSelected
-                ? t.accentColor.withValues(alpha: 0.5)
+                ? accent.withValues(alpha: 0.75)
                 : t.textTertiary.withValues(alpha: 0.15),
             width: isSelected ? 1.5 : 0.5,
           ),
@@ -883,7 +879,7 @@ class _NotifToggle extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final t = theme;
-    final color = accentColor ?? t.accentColor;
+    final color = accentColor ?? t.primaryUiAccent;
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: 10),
       child: Row(

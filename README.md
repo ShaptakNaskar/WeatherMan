@@ -25,14 +25,13 @@ A premium weather app for Android with multiple selectable themes — from cyber
 
 ## Themes
 
-SappyWeather ships with **6 built-in themes**, switchable at runtime from Settings:
+SappyWeather ships with **5 built-in themes**, switchable at runtime from Settings:
 
 | Theme | Style |
 |-------|-------|
 | **Cyberpunk** | Neon HUD, glitch effects, particle rain/snow/lightning, scanlines |
 | **Clean** | Minimal dark gradients, smooth transitions |
-| **Pastel** | Soft lavender/mint/peach, rounded corners, light mode |
-| **Pastel Dark** | Deep purple-black with soft lavender accents |
+| **Pastel** | Dreamy pastel night aesthetic with soft lavender and candy highlights |
 | **Sunset** | Warm amber and coral tones on dark backgrounds |
 | **Ocean** | Deep sea blues and teals with aqua accents |
 
